@@ -6,7 +6,7 @@ import { Router } from '@angular/router';
   standalone: true,
   imports: [],
   templateUrl: './login-page.component.html',
-  styles: './login-page.component.css'
+  styleUrl: './login-page.component.css'
 })
 export default class LoginPageComponent {
 
