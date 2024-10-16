@@ -1,0 +1,56 @@
+<div class="container mx-auto p-6">
+    <!-- Campo de búsqueda de Socio -->
+    <div class="mb-6">
+      <h2 class="text-lg font-semibold mb-4">Buscar Socio</h2>
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="filterSocios()"
+        placeholder="Buscar socio..."
+        class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+      />
+    </div>
+  
+    <!-- Selección de Socio desde lista filtrada -->
+    <div class="mb-6">
+      <label for="selectedSocio" class="block text-sm font-medium text-gray-700">Seleccionar Socio</label>
+      <select id="selectedSocio" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+              (change)="onSelectSocio(filteredSocios[$any($event).target.selectedIndex])">
+        <option *ngFor="let socio of filteredSocios" [ngValue]="socio">{{ socio.name }}</option>
+      </select>
+    </div>
+  
+    <!-- Formulario de Pago -->
+    <div *ngIf="selectedSocio" class="mt-8">
+      <h3 class="text-xl font-semibold mb-4">Pagos para {{ selectedSocio.name }} y Asociados</h3>
+      <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
+        <div *ngFor="let control of paymentsControls; let i = index" class="mb-6 bg-white p-4 rounded-lg shadow-md">
+          <h4 class="text-lg font-medium mb-2">{{ i === 0 ? selectedSocio.name : selectedSocio.associates[i - 1]?.name }}</h4>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Monto -->
+            <div>
+              <label for="amount" class="block text-sm font-medium text-gray-700">Monto</label>
+              <input type="number" formControlName="amount" class="mt-1 block w-full border border-gray-300 p-2 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <div *ngIf="control.get('amount')?.invalid && control.get('amount')?.touched" class="text-red-500 text-sm mt-1">
+                El monto es requerido y debe ser mayor que 0
+              </div>
+            </div>
+  
+            <!-- Fecha de Pago -->
+            <div>
+              <label for="paymentDate" class="block text-sm font-medium text-gray-700">Fecha de Pago</label>
+              <input type="date" formControlName="paymentDate" class="mt-1 block w-full border border-gray-300 p-2 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+              <div *ngIf="control.get('paymentDate')?.invalid && control.get('paymentDate')?.touched" class="text-red-500 text-sm mt-1">
+                La fecha de pago es requerida
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <button type="submit" class="mt-6 w-full bg-indigo-600 text-white p-3 rounded-md hover:bg-indigo-700" [disabled]="paymentForm.invalid">
+          Registrar Pagos
+        </button>
+      </form>
+    </div>
+  </div>
+  
