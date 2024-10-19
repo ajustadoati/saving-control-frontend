@@ -14,12 +14,7 @@ export const routes: Routes = [
                 canActivate: [AuthGuard]
             },
             {
-                path: 'profile',
-                loadComponent: () => import('./business/profile/profile.component'),
-                canActivate: [AuthGuard]
-            },
-            {
-                path: 'tables',
+                path: 'payment',
                 loadComponent: () => import('./business/tables/tables.component'),
                 canActivate: [AuthGuard]
             },
