@@ -1,5 +1,5 @@
 
 
 export const environment = {
-  baseUrl: 'http://localhost:8080'
+  baseUrl: 'http://ajustadoati.com:8083'
 }

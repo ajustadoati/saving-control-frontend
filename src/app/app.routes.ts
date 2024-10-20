@@ -15,7 +15,7 @@ export const routes: Routes = [
             },
             {
                 path: 'payment',
-                loadComponent: () => import('./business/tables/tables.component'),
+                loadComponent: () => import('./business/payment/payment.component'),
                 canActivate: [AuthGuard]
             },
             {

@@ -37,6 +37,27 @@ export class UserService {
     );
   }
 
+  getAssociateByNumberId(numberId: string): Observable<any> {
+    // Primero busca en la caché
+    const cachedAssociate = this.cachedUsers.find(user => user.numberId === numberId);
+  
+    if (cachedAssociate) {
+      console.log('Using cached associate');
+      return of(cachedAssociate);
+    }
+  
+    // Si no está en la caché, busca en el backend
+    console.log('Fetching associate from API');
+    return this.http.get<any>(`${this.apiUrl}/numberId/${numberId}`).pipe(
+      map(response => {
+        // Opcionalmente, guarda el resultado en la caché si deseas que futuras búsquedas lo utilicen
+        this.cachedUsers.push(response);
+        return response;
+      })
+    );
+  }
+  
+
   clearCache(): void {
     this.cachedUsers = [];
     this.pageData = null;
