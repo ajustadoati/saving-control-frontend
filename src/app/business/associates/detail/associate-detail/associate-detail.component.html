@@ -1,0 +1,28 @@
+<div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="modal">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+      <h3 class="text-lg leading-6 font-medium text-gray-900">Detalles del Socio</h3>
+      <div class="mt-2">
+        <p><strong>ID:</strong> {{ selectedUser?.id }}</p>
+        <p><strong>Nombre:</strong> {{ selectedUser?.firstName }} {{ selectedUser?.lastName }}</p>
+        <p><strong>Cédula:</strong> {{ selectedUser?.numberId }}</p>
+        <p><strong>Teléfono:</strong> {{ selectedUser?.mobileNumber }}</p>
+        <p><strong>Email:</strong> {{ selectedUser?.email }}</p>
+        <p><strong>Empresa:</strong> {{ selectedUser?.company }}</p>
+
+        <h4 class="font-semibold mt-4">Ahorros:</h4>
+        
+      <ul>
+        <li *ngFor="let saving of savings">
+          Fecha: {{ saving.savingDate }} - Monto: {{ saving.amount | currency }}
+        </li>
+      </ul>
+      <div class="mb-2">
+        <span class="font-bold">Balance Actual:</span> {{ totalSavings| currency }}
+      </div>
+      </div>
+      <div class="flex justify-end mt-4">
+        <button (click)="closeModal()" class="px-4 py-2 bg-red-500 text-white text-sm font-medium rounded-md">Cerrar</button>
+      </div>
+    </div>
+  </div>
+  

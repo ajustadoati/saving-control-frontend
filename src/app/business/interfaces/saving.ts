@@ -1,5 +1,5 @@
 export interface Saving {
-    savingId: number;
+  savingId: number;
   savingDate: string;
   amount: number
 }
