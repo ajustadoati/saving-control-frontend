@@ -7,8 +7,8 @@
       <div class="mr-16 w-full">
         <div class="mb-4">
           <div class="mb-2">
-            <label for="location" class="mr-2">Socio:</label>
-            <input type="text" [(ngModel)]="associateId" class="p-2 rounded border">
+            <label for="location" class="mr-4">Socio:</label>
+            <input type="text" [(ngModel)]="associateId" class="p-2 rounded border mr-4">
             <button (click)="searchAssociate()" class="py-2 px-4 bg-blue-500 text-white rounded-lg">Buscar</button>
   
           </div>
@@ -86,6 +86,27 @@
     </div>
 
     <div *ngIf="paymentsActivated" class="mt-8">
-        <button (click)="registerPayments()" class="py-2 px-4 bg-green-500 text-white rounded-lg">Guardar pagos</button>
+        <button (click)="registerPayments()" class="py-2 px-4 bg-green-500 text-white rounded-lg mr-4">Guardar pagos</button>
+        <button (click)="openReceiptModal()" class="py-2 px-4 bg-red-500 text-white rounded-lg">Generar Recibo PDF</button>
       </div>
+  </div>
+
+
+  <!-- Modal para ver los detalles del recibo de pago -->
+  <div *ngIf="showReceiptModal" class="fixed inset-0 flex items-center justify-center z-50">
+    <div class="bg-white w-1/2 rounded-lg shadow-lg p-8">
+    
+      <!-- Usamos el componente PaymentReceiptComponent en lugar del HTML directamente -->
+      <app-payment-receipt 
+        [associateData]="associateData" 
+        [attendees]="attendees" 
+        [totalAmount]="totalSavings">
+      </app-payment-receipt>
+  
+      <!-- Botones del modal -->
+      <div class="mt-6 flex justify-end space-x-4 ">
+        <button class="py-2 px-4 bg-gray-500 text-white rounded-lg mr-4" (click)="closeModal()">Cerrar</button>
+        <button class="py-2 px-4 bg-green-500 text-white rounded-lg" (click)="generatePDF()">Imprimir Recibo</button>
+      </div>
+    </div>
   </div>

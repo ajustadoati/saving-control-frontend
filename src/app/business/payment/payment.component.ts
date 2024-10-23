@@ -1,16 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { UserService } from '../core/services/user.service';
 import { SavingService } from '../core/services/saving.service';
 import { map } from 'rxjs';
 import { Saving } from '../interfaces/saving';
 import Swal from 'sweetalert2';
+import { PaymentReceiptComponent } from './receipt/payment-receipt/payment-receipt.component';
 
 @Component({
   selector: 'app-payment',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, FormsModule],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule, PaymentReceiptComponent],
   templateUrl: './payment.component.html',
   styleUrl: './payment.component.css'
 })
@@ -18,11 +19,16 @@ export default class PaymentComponent {
 
   constructor(private userService: UserService, private savingService: SavingService) { }
 
+  @ViewChild(PaymentReceiptComponent, { static: false })
+  paymentReceiptComponent!: PaymentReceiptComponent; 
+
+
   associateFound: boolean = false;
 
   paymentsActivated: boolean = false;
 
   totalSavings!: number;
+  
 
   associateData: any = {
     id: '14447876',
@@ -30,45 +36,75 @@ export default class PaymentComponent {
     email: 'richardroj@gmail.com'
   };
 
-      searchAssociate() {
-        // Primero buscar el socio por el número de identificación
-        this.userService.getAssociateByNumberId(this.associateId).subscribe({
-          next: (data) => {
-            this.associateData = data; // Almacena los datos del socio
-            console.log('Datos del socio:', this.associateData); // Verificar los datos del socio
-            this.associateFound = true;
-            this.paymentsActivated = true; // Activa la sección de pagos
-      
-            // Ahora busca los ahorros de este socio
-            this.savingService.getSavingsByUserId(this.associateData.id).subscribe({
-              next: (response: any) => {
-                console.log('Ahorros obtenidos:', response.savings); // Verificar los ahorros obtenidos
-                
-                // Calcular el saldo total sumando los ahorros
-                const totalSavings = response.savings.reduce((sum: number, saving: any) => sum + saving.amount, 0);
-                this.totalSavings = totalSavings;
-                console.log('Saldo total:', this.totalSavings);
-              },
-              error: (error) => {
-                console.error('Error al obtener los ahorros:', error);
-                this.totalSavings = 0; // Si no se obtienen ahorros, saldo es 0
-              }
-            });
+  showReceiptModal = false; // Controla la visibilidad del modal
+  totalPaid: number = 0; // Total de pagos realizados
+
+  // Abre el modal
+  openReceiptModal(): void {
+    console.log("calling modal");
+    this.totalPaid = this.attendees.reduce((sum, attendee) => sum + (attendee.hourlyRate * attendee.attendeesCount), 0);
+    this.showReceiptModal = true;
+  }
+
+  ngAfterViewInit() {
+    console.log(this.paymentReceiptComponent); // Esto debería mostrar el componente en la consola si está bien cargado
+  }
+
+  // Cierra el modal
+  closeModal(): void {
+    this.showReceiptModal = false;
+  }
+
+  // Genera el PDF
+  generatePDF(): void {
+    if (this.paymentReceiptComponent) {
+      this.paymentReceiptComponent.generatePDF(); // Llama al método del componente hijo
+      this.closeModal(); // Cierra el modal después de generar el PDF
+    } else {
+      console.error('Error: No se encontró el componente PaymentReceiptComponent');
+    }
+  }
+
+
+  searchAssociate() {
+    // Primero buscar el socio por el número de identificación
+    this.userService.getAssociateByNumberId(this.associateId).subscribe({
+      next: (data) => {
+        this.associateData = data; // Almacena los datos del socio
+        console.log('Datos del socio:', this.associateData); // Verificar los datos del socio
+        this.associateFound = true;
+        this.paymentsActivated = true; // Activa la sección de pagos
+
+        // Ahora busca los ahorros de este socio
+        this.savingService.getSavingsByUserId(this.associateData.id).subscribe({
+          next: (response: any) => {
+            console.log('Ahorros obtenidos:', response.savings); // Verificar los ahorros obtenidos
+
+            // Calcular el saldo total sumando los ahorros
+            const totalSavings = response.savings.reduce((sum: number, saving: any) => sum + saving.amount, 0);
+            this.totalSavings = totalSavings;
+            console.log('Saldo total:', this.totalSavings);
           },
           error: (error) => {
-            console.error('Socio no encontrado:', error);
-            Swal.fire({
-              icon: 'error',
-              title: 'Usuario no encontrado',
-              text: 'Por favor, verifica la cédula e intenta de nuevo.'
-            });
-            this.associateFound = false;
-            this.paymentsActivated = false;
-            this.totalSavings = 0; // Si no se encuentra el socio, no hay saldo
-          },
+            console.error('Error al obtener los ahorros:', error);
+            this.totalSavings = 0; // Si no se obtienen ahorros, saldo es 0
+          }
         });
-      }
-      
+      },
+      error: (error) => {
+        console.error('Socio no encontrado:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Usuario no encontrado',
+          text: 'Por favor, verifica la cédula e intenta de nuevo.'
+        });
+        this.associateFound = false;
+        this.paymentsActivated = false;
+        this.totalSavings = 0; // Si no se encuentra el socio, no hay saldo
+      },
+    });
+  }
+
 
   hourlyRates: any = {
     US: {
@@ -92,7 +128,7 @@ export default class PaymentComponent {
   frequency = 'daily';
   duration = 1;
   attendees = [
-    { jobTitle: 'Ahorro', hourlyRate: 30, attendeesCount: 1, totalCost: 75 }
+    { jobTitle: 'Ahorro', hourlyRate: 75, attendeesCount: 1, totalCost: 75 }
   ];
   meetingTotal = 0;
   yearlyCost = 0;
@@ -164,7 +200,7 @@ export default class PaymentComponent {
   }
 
   registerPayments(): void {
-    const today = new Date().toISOString().split('T')[0]; 
+    const today = new Date().toISOString().split('T')[0];
     const payments: Saving[] = this.attendees.map((attendee) => ({
       savingId: 0,
       savingDate: '2024-10-16',
