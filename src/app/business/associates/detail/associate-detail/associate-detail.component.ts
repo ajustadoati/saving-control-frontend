@@ -44,6 +44,7 @@ export class AssociateDetailComponent implements OnInit{
         },
         error: (error) => {
           console.error('Error al obtener los ahorros:', error);
+          this.savings = [];
           this.totalSavings = 0; // Si no se obtienen ahorros, saldo es 0
         }
       }

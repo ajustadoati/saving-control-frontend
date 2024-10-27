@@ -1,32 +1,43 @@
-<!-- payment-receipt.component.html -->
-<div id="printSection" class="p-4 bg-white">
-    <h2 class="text-2xl font-bold mb-4">Recibo de Pago</h2>
-    <p><strong>ID Socio:</strong> {{ associateData?.id }}</p>
-    <p><strong>Nombre:</strong> {{ associateData?.firstName }} {{ associateData?.lastName }}</p>
-    <p><strong>Email:</strong> {{ associateData?.email }}</p>
-    <p><strong>Teléfono:</strong> {{ associateData?.mobileNumber }}</p>
-    <p><strong>Balance Actual:</strong> {{ totalAmount}}</p>
-  
-    <h3 class="mt-4 mb-2 font-semibold">Detalles de Pagos</h3>
-    <table class="w-full text-left">
+<div id="printSection" class="p-8 bg-white">
+    <div class="flex justify-between">
+        <h2 class="text-2xl font-bold mb-8 text-center w-full">Recibo de Pago</h2>
+        <p class="text-sm text-gray-500">Fecha: {{ currentDate | date: 'dd/MM/yyyy' }}</p>
+    </div>
+
+    <!-- Información del socio -->
+    <div class="mb-8">
+        <p><strong>Socio:</strong> {{ associateData?.firstName }} {{ associateData?.lastName }}</p>
+        <p><strong>Email:</strong> {{ associateData?.email }}</p>
+        <p><strong>Teléfono:</strong> {{ associateData?.mobileNumber }}</p>
+    </div>
+
+    <!-- Línea separadora -->
+    <hr class="my-6 border-t-2 border-gray-300">
+
+    <!-- Detalles de pagos -->
+    <h3 class="mt-8 mb-4 font-semibold">Detalles de Pagos</h3>
+    <table class="w-full text-left border-collapse">
       <thead>
-        <tr>
-          <th class="py-2">Tipo de Pago</th>
-          <th class="py-2">Monto</th>
-          <th class="py-2">Cantidad</th>
-          <th class="py-2">Total</th>
+        <tr class="bg-gray-100 border-b">
+          <th class="py-4 px-4">Tipo de Pago</th>
+          <th class="py-4 px-4">Monto</th>
+          <th class="py-4 px-4">Total</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let payment of attendees">
-          <td class="py-2">{{ payment.jobTitle }}</td>
-          <td class="py-2">{{ payment.hourlyRate | currency }}</td>
-          <td class="py-2">{{ payment.attendeesCount }}</td>
-          <td class="py-2">{{ (payment.hourlyRate * payment.attendeesCount) | currency }}</td>
+        <tr *ngFor="let payment of defaultPayments" class="border-b">
+          <td class="py-4 px-4">{{ payment.paymentTitle }}</td>
+          <td class="py-4 px-4">{{ payment.hourlyRate | currency }}</td>
+          <td class="py-4 px-4">{{ (payment.hourlyRate * payment.defaultPaymentsCount) | currency }}</td>
         </tr>
       </tbody>
     </table>
-  
-    <p class="mt-4"><strong>Total Pagado:</strong> {{ totalAmount | currency }}</p>
-  </div>
-  
+
+    <!-- Línea separadora -->
+    <hr class="my-6 border-t-2 border-gray-300">
+
+    <!-- Total pagado alineado a la derecha -->
+    <div class="flex justify-end mt-8">
+        <p class="text-lg font-semibold"><strong>Total Pagado:</strong> {{ total | currency }}</p>
+    </div>
+</div>

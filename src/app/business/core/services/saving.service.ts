@@ -44,6 +44,16 @@ export class SavingService {
     );
   }
 
+  getResume(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/savings/total`).pipe(
+      map((response) => {
+        return { response: response};
+      })
+    );
+
+  }
+
+
   clearCache(): void {
     this.cachedSavings = [];
     this.pageData = null;

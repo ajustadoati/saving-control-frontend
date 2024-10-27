@@ -34,37 +34,37 @@
         </div>
       </div>
     </div>
+
+    <div *ngIf="paymentsActivated" class="mb-4 mt-8">
+      <label for="paymentDate" class="block text-sm font-medium text-gray-700">Fecha del pago:</label>
+      <input [(ngModel)]="paymentDate" id="paymentDate" type="date" class="mt-1 p-2 border rounded-md" />
+    </div>
   
-    <div *ngIf="paymentsActivated" class="overflow-x-auto mt-12">
+    <div *ngIf="paymentsActivated" class="overflow-x-auto mt-8">
       <table class="w-full border-collapse border border-gray-300">
         <thead>
           <tr class="bg-gray-200">
             <th class="border-y border-gray-100 bg-gray-50/50 p-2">Tipo de pago</th>
             <th class="border-y border-gray-100 bg-gray-50/50 p-2">Monto</th>
-            <th class="border-y border-gray-100 bg-gray-50/50 p-2">Cantidad</th>
             <th class="border-y border-gray-100 bg-gray-50/50 p-2">Total</th>
             <th class="border-y border-gray-100 bg-gray-50/50 p-2">Acción</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let attendee of attendees; let i = index">
+          <tr *ngFor="let payment of defaultPayments; let i = index">
+            
             <td class="border border-gray-300 px-4 py-2">
-              <select [(ngModel)]="attendee.jobTitle" (change)="updateHourlyRates()" class="p-2 rounded border bg-white">
-                <option value="Ahorro">Ahorro</option>
-                <option value="Interes">Interés</option>
-                <option value="Lubricantes">Lubricantes</option>
-                <option value="Compartir">Compartir</option>
+              <select [(ngModel)]="payment.paymentTitle" (change)="updateHourlyRates()" class="p-2 rounded border bg-white">
+                <option *ngFor="let type of paymentTypes" [value]="type">{{ type }}</option>
               </select>
+             
             </td>
             <td class="border border-gray-300 px-4 py-2">
-              <input type="number" [(ngModel)]="attendee.hourlyRate" class="p-2 rounded border">
+              <input type="number" [(ngModel)]="payment.hourlyRate" (change)="updateHourlyRates()"  class="p-2 rounded border">
             </td>
+  
             <td class="border border-gray-300 px-4 py-2">
-              <input type="number" [(ngModel)]="attendee.attendeesCount" (input)="updateTotalCost()"
-                class="p-2 rounded border">
-            </td>
-            <td class="border border-gray-300 px-4 py-2">
-              {{ attendee.totalCost | currency }}
+              {{ payment.totalCost | currency }}
             </td>
             <td class="border border-gray-300 px-4 py-2">
               <button (click)="removeAttendee(i)" class="text-red-600">
@@ -99,8 +99,10 @@
       <!-- Usamos el componente PaymentReceiptComponent en lugar del HTML directamente -->
       <app-payment-receipt 
         [associateData]="associateData" 
-        [attendees]="attendees" 
-        [totalAmount]="totalSavings">
+        [defaultPayments]="defaultPayments" 
+        [totalAmount]="totalSavings"
+        [total]="meetingTotal" 
+        [currentDate]="currentDate">
       </app-payment-receipt>
   
       <!-- Botones del modal -->

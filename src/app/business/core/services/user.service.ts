@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable, map, of } from 'rxjs';
 import { environment } from '../../../../environments/environments';
 import { Associate } from '../../interfaces/associate';
+import { User } from '../../interfaces/user';
 
 @Injectable({
   providedIn: 'root'
@@ -13,18 +14,13 @@ export class UserService {
   
   private cachedUsers: Associate[] = []; // Almacena los usuarios en memoria
   private pageData: any; 
+  private users: User[]=[];
 
   constructor(private http: HttpClient) {}
 
 
 
   getUsers(page: number = 1, size: number = 10): Observable<any> {
-
-    if (this.cachedUsers.length > 0) {
-      console.log('Using cache');
-      return of({ users: this.cachedUsers, pageData: this.pageData });
-    }
-
     
     return this.http.get<any>(`${this.apiUrl}?page=${page}&size=${size}`).pipe(
       map((response) => {
@@ -56,6 +52,31 @@ export class UserService {
       })
     );
   }
+
+  getAllUsers(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}`).pipe(
+      map((response) => {
+        this.users = response._embedded ? response._embedded.collection : [];
+        return { users: this.users };
+      })
+    );
+  }
+
+  getUsersWithSavings(weekStart: string, weekEnd: string, page: number = 0, size: number = 15): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/savings?startDate=${weekStart}&endDate=${weekEnd}&size=${size}&page=${page}`).pipe(
+      map((response) => {
+        console.log("service", response)
+        this.users = response._embedded ? response._embedded.collection : [];
+        return { users: this.users, size: response.page.size, totalElements:response.page.totalElements, totalPages: response.page.totalPages};
+      })
+    );
+  }
+  /**
+   * "size": 15,
+        "totalElements": 71,
+        "totalPages": 5,
+        "number": 0
+   */
   
 
   clearCache(): void {

@@ -17,18 +17,24 @@ import { PaymentReceiptComponent } from './receipt/payment-receipt/payment-recei
 })
 export default class PaymentComponent {
 
-  constructor(private userService: UserService, private savingService: SavingService) { }
+  constructor(private userService: UserService, private savingService: SavingService) {
+  
+   }
 
   @ViewChild(PaymentReceiptComponent, { static: false })
   paymentReceiptComponent!: PaymentReceiptComponent; 
 
 
+  currentDate: Date = new Date();
+  
   associateFound: boolean = false;
 
   paymentsActivated: boolean = false;
 
   totalSavings!: number;
   
+  paymentDate: string = new Date().toISOString().split('T')[0]; // Fecha actual en formato YYYY-MM-DD
+
 
   associateData: any = {
     id: '14447876',
@@ -42,7 +48,7 @@ export default class PaymentComponent {
   // Abre el modal
   openReceiptModal(): void {
     console.log("calling modal");
-    this.totalPaid = this.attendees.reduce((sum, attendee) => sum + (attendee.hourlyRate * attendee.attendeesCount), 0);
+    this.totalPaid = this.defaultPayments.reduce((sum, attendee) => sum + (attendee.hourlyRate * attendee.defaultPaymentsCount), 0);
     this.showReceiptModal = true;
   }
 
@@ -65,6 +71,7 @@ export default class PaymentComponent {
     }
   }
 
+  paymentTypes: string[] = ['Ahorro', 'Interes', 'Lubricantes', 'Compartir'];
 
   searchAssociate() {
     // Primero buscar el socio por el número de identificación
@@ -74,6 +81,14 @@ export default class PaymentComponent {
         console.log('Datos del socio:', this.associateData); // Verificar los datos del socio
         this.associateFound = true;
         this.paymentsActivated = true; // Activa la sección de pagos
+
+        if (this.associateData.associates && this.associateData.associates.length > 0) {
+          this.associateData.associates.forEach((associate: { numberId: any; }) => {
+            this.paymentTypes.push(`Ahorro-${associate.numberId}`);
+            this.hourlyRates.US[`Ahorro-${associate.numberId}`]=0;
+            console.log(this.hourlyRates);
+          });
+        }
 
         // Ahora busca los ahorros de este socio
         this.savingService.getSavingsByUserId(this.associateData.id).subscribe({
@@ -105,21 +120,14 @@ export default class PaymentComponent {
     });
   }
 
-
   hourlyRates: any = {
     US: {
       Ahorro: 75,
+      AhorroAsociado: 10,
       Interes: 7,
       Capital: 100,
       Compartir: 2,
       Lubricantes: 100,
-    },
-    EU: {
-      Ahorro: 75,
-      Interes: 60,
-      Capital: 75,
-      Compartir: 30,
-      Lubricantes: 20,
     }
   };
 
@@ -127,8 +135,8 @@ export default class PaymentComponent {
   location = 'US';
   frequency = 'daily';
   duration = 1;
-  attendees = [
-    { jobTitle: 'Ahorro', hourlyRate: 75, attendeesCount: 1, totalCost: 75 }
+  defaultPayments = [
+    { paymentTitle: 'Ahorro', hourlyRate: 75, defaultPaymentsCount: 1, totalCost: 75 }
   ];
   meetingTotal = 0;
   yearlyCost = 0;
@@ -136,74 +144,42 @@ export default class PaymentComponent {
 
   // Actualizar tarifas por hora basado en la ubicación seleccionada
   updateHourlyRates() {
-    this.attendees.forEach(attendee => {
-      attendee.hourlyRate = this.hourlyRates[this.location][attendee.jobTitle];
+    this.defaultPayments.forEach(attendee => {
+      //attendee.hourlyRate = this.hourlyRates[this.location][attendee.paymentTitle];
       this.updateTotalCost();
     });
   }
 
-  // Aplicar la plantilla de "Daily Stand-up"
-  applyDailyStandUp() {
-    this.frequency = 'daily';
-    this.duration = 1; // 15 minutos
-    this.attendees = [
-      { jobTitle: 'Developer', hourlyRate: 75, attendeesCount: 1, totalCost: 75 },
-      { jobTitle: 'QA', hourlyRate: 75, attendeesCount: 1, totalCost: 75 }
-    ];
-    this.updateTotalCost();
-  }
 
   // Función para actualizar el costo total de la reunión
   updateTotalCost() {
-    this.meetingTotal = this.attendees.reduce((total, attendee) => {
-      const attendeeCost = attendee.hourlyRate * attendee.attendeesCount * this.duration;
+    console.log("attendes: ", this.defaultPayments)
+    this.meetingTotal = this.defaultPayments.reduce((total, attendee) => {
+      const attendeeCost = attendee.hourlyRate * attendee.defaultPaymentsCount * this.duration;
       attendee.totalCost = attendeeCost;
       return total + attendeeCost;
     }, 0);
-    this.updateYearlyCost();
   }
 
-  // Actualizar el costo anual basado en la frecuencia
-  updateYearlyCost() {
-    let yearlyMultiplier = 1;
-    switch (this.frequency) {
-      case 'daily':
-        yearlyMultiplier = 260; // Suponiendo 260 días laborables por año
-        break;
-      case 'weekly':
-        yearlyMultiplier = 52; // Suponiendo 52 semanas laborales por año
-        break;
-      case 'monthly':
-        yearlyMultiplier = 12;
-        break;
-      case 'quarterly':
-        yearlyMultiplier = 4;
-        break;
-      case 'yearly':
-        yearlyMultiplier = 1;
-        break;
-    }
-    this.yearlyCost = this.meetingTotal * yearlyMultiplier;
-  }
 
   // Agregar un nuevo asistente
   addAttendee() {
     this.paymentsActivated = true;
-    this.attendees.push({ jobTitle: '', hourlyRate: 0, attendeesCount: 1, totalCost: 0 });
+    this.defaultPayments.push({ paymentTitle: '', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0 });
     this.updateTotalCost();
   }
 
   // Eliminar un asistente
   removeAttendee(index: number) {
-    this.attendees.splice(index, 1);
+    this.defaultPayments.splice(index, 1);
     this.updateTotalCost();
   }
 
   registerPayments(): void {
     const today = new Date().toISOString().split('T')[0];
-    const payments: Saving[] = this.attendees.map((attendee) => ({
+    const payments: Saving[] = this.defaultPayments.map((attendee) => ({
       savingId: 0,
-      savingDate: '2024-10-16',
+      savingDate: this.currentDate.toISOString().split('T')[0],
       amount: attendee.hourlyRate,
 
     }));

@@ -18,11 +18,15 @@ export default class AssociatesComponent implements OnInit {
 
   associates: Associate[] = [];
   searchTerm: string = '';
-  currentPage: number = 0;
   totalItems: number = 0;
-  itemsPerPage: number = 10;
   showModal: any;
   selectedUser: any;
+  totalUsers = 0;
+  page:number = 0;
+  size:number = 15;
+  totalPages = 0;
+  firstItem: number = 1; // Primer elemento de la página actual
+  lastItem: number = 10; // Último elemento de la página actual
 
   constructor(private userService: UserService) { }
 
@@ -32,21 +36,44 @@ export default class AssociatesComponent implements OnInit {
   }
 
   loadUsers(): void {
-    console.log('Getting users')
-    this.userService.getUsers(this.currentPage, this.itemsPerPage).subscribe(
+    console.log('Getting users', this.page)
+    this.userService.getUsers(this.page, this.size).subscribe(
       {
-        next: (data: { users: Associate[]; totalItems: number; }) => {
+        next: (data: { users: Associate[]; totalItems: number; pageData: any; }) => {
           console.log(data);
           this.associates = data.users;  // Los usuarios vienen dentro de 'collection'
-          this.totalItems = data.totalItems; // Total de elementos para la paginación
+          this.totalItems = data.pageData.totalElements; // Total de elementos para la paginación
+          this.totalPages = data.pageData.totalPages;
+          this.updatePagination();
         },
         error: (e) => console.error(e),
       });
   }
 
-  changePage(newPage: number): void {
-    this.currentPage = newPage;
-    this.loadUsers();
+  updatePagination() {
+    const pageIndex = this.page || 0;
+    const pageSize = this.size || 1; // Evita dividir por 
+    // Calcula el índice del primer y último elemento mostrado
+    this.firstItem = (pageIndex * pageSize) + 1;
+    this.lastItem = Math.min((pageIndex + 1) * pageSize, this.totalItems);
+  } 
+
+  changePage(pageOffset: number) {
+    console.log("changing page",this.page);
+    const newPage = this.page + pageOffset;
+    if (newPage >= 0 && newPage < this.totalPages) {
+      this.page = newPage;
+      this.loadUsers();
+    }
+  }
+
+  changePageNumber(pageOffset: number) {
+    console.log("changing page",this.page);
+    const newPage = pageOffset;
+    if (newPage >= 0 && newPage < this.totalPages) {
+      this.page = newPage;
+      this.loadUsers();
+    }
   }
 
   // Método para filtrar los usuarios basado en el término de búsqueda

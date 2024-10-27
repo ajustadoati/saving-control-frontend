@@ -12,8 +12,10 @@ import { CommonModule } from '@angular/common';
 })
 export class PaymentReceiptComponent {
   @Input() associateData: any;  // Datos del socio
-  @Input() attendees: any[] = []; // Lista de pagos
+  @Input() defaultPayments: any[] = []; // Lista de pagos
   @Input() totalAmount!: number;
+  @Input() total!: number;
+  @Input() currentDate!: Date;
 
 
   // Método para generar el PDF

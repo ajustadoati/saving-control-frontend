@@ -19,6 +19,11 @@ export const routes: Routes = [
                 canActivate: [AuthGuard]
             },
             {
+                path: 'savings-weekly',
+                loadComponent: () => import('./business/payment/savings/saving-weekly/saving-weekly.component'),
+                canActivate: [AuthGuard]
+            },
+            {
                 path: 'associates',
                 loadComponent: () => import('./business/associates/associates.component'),
                 canActivate: [AuthGuard]
