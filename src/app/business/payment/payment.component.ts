@@ -83,19 +83,14 @@ export default class PaymentComponent {
         this.paymentsActivated = true; // Activa la sección de pagos
 
         if (this.associateData.associates && this.associateData.associates.length > 0) {
-          this.associateData.associates.forEach((associate: { numberId: any; }) => {
-            this.paymentTypes.push(`Ahorro-${associate.numberId}`);
-            this.hourlyRates.US[`Ahorro-${associate.numberId}`]=0;
-            console.log(this.hourlyRates);
+          this.associateData.associates.forEach((associate: { id: any; relationship: string}) => {
+            this.paymentTypes.push(`Ahorro-${associate.relationship}-${associate.id}`);
           });
         }
 
         // Ahora busca los ahorros de este socio
         this.savingService.getSavingsByUserId(this.associateData.id).subscribe({
           next: (response: any) => {
-            console.log('Ahorros obtenidos:', response.savings); // Verificar los ahorros obtenidos
-
-            // Calcular el saldo total sumando los ahorros
             const totalSavings = response.savings.reduce((sum: number, saving: any) => sum + saving.amount, 0);
             this.totalSavings = totalSavings;
             console.log('Saldo total:', this.totalSavings);
@@ -176,25 +171,25 @@ export default class PaymentComponent {
   }
 
   registerPayments(): void {
-    const today = new Date().toISOString().split('T')[0];
+
     const payments: Saving[] = this.defaultPayments.map((attendee) => ({
       savingId: 0,
-      savingDate: this.currentDate.toISOString().split('T')[0],
+      savingDate: this.paymentDate,
       amount: attendee.hourlyRate,
-
+      associateId: attendee.paymentTitle.startsWith('Ahorro-') 
+                    ? parseInt(attendee.paymentTitle.split('-')[2]) 
+                    : null, 
     }));
-
-    this.savingService.addSavingByUserId(this.associateData.id, payments[0]).subscribe(
+    console.log("Id asociado", this.associateId);
+    this.savingService.addSavingListByUserId(this.associateData.id, payments).subscribe(
       (response) => {
         console.log('Pagos registrados exitosamente:', response);
         this.paymentsActivated = false;
         this.savingService.getSavingsByUserId(this.associateData.id).subscribe({
           next: (response: any) => {
-            console.log('Ahorros obtenidos:', response.savings); // Verificar los ahorros obtenidos    
             // Calcular el saldo total sumando los ahorros
             const totalSavings = response.savings.reduce((sum: number, saving: any) => sum + saving.amount, 0);
             this.totalSavings = totalSavings;
-            console.log('Saldo total:', this.totalSavings);
           },
           error: (error) => {
             console.error('Error al obtener los ahorros:', error);
