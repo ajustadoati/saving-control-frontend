@@ -1,4 +1,5 @@
-<div class="p-4 border rounded shadow-lg">
+<div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="modal">
+  <div class="relative top-20 mx-auto p-6 border w-96 shadow-lg rounded-md bg-white">
     <h3 class="text-lg font-semibold mb-4">Registrar Pago Predeterminado</h3>
   
     <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
@@ -34,5 +35,12 @@
         Registrar Pago
       </button>
     </form>
+    <div class="flex justify-end mt-6">
+      <button (click)="closeModal()" class="px-4 py-2 bg-red-500 text-white rounded-md shadow-md hover:bg-red-600">
+        Cerrar
+      </button>
+    </div>
   </div>
+
+</div>
   

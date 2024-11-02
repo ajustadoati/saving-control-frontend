@@ -17,6 +17,8 @@ export class DefaultPaymentComponent {
 
   @Input() userId!: number; 
 
+
+
   constructor(
     private fb: FormBuilder,
     private defaultPaymentService: DefaultPaymentService
@@ -39,5 +41,14 @@ export class DefaultPaymentComponent {
         error: (err) => console.error('Error al registrar el pago:', err)
       });
     }
+  }
+
+  
+  // Output para comunicar el cierre del modal al componente padre
+  @Output() closeModalEvent = new EventEmitter<void>();
+
+  // Método para emitir el evento de cierre
+  closeModal(): void {
+    this.closeModalEvent.emit();
   }
 }

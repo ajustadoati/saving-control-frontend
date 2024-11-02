@@ -4,11 +4,13 @@ import { SavingService } from '../../../core/services/saving.service';
 import { UserService } from '../../../core/services/user.service';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { DefaultPaymentComponent } from "../../default-payments/default-payment/default-payment.component";
+import { Associate } from '../../../interfaces/associate';
 
 @Component({
   selector: 'app-associate-setup',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DefaultPaymentComponent],
   templateUrl: './associate-setup.component.html',
   styleUrl: './associate-setup.component.css'
 })
@@ -18,6 +20,7 @@ removeDefaultPayment(_t44: number) {
 throw new Error('Method not implemented.');
 }
 addDefaultPayment() {
+
 throw new Error('Method not implemented.');
 }
 
@@ -28,6 +31,7 @@ throw new Error('Method not implemented.');
   associateFound: boolean = false;
   associateId: any;
   totalSavings!: number;
+  showModal: boolean =false;
   associateData: any = {
     id: '14447876',
     name: 'Richard Rojas',
@@ -67,6 +71,17 @@ throw new Error('Method not implemented.');
         this.totalSavings = 0; // Si no se encuentra el socio, no hay saldo
       },
     });
+  }
+
+  openModal(userId: number): void {
+    this.associateId = userId;  // Almacena los detalles del socio seleccionado
+    this.showModal = true;     // Muestra el modal
+  }
+
+  // Cierra el modal y limpia los datos del usuario seleccionado
+  closeModal(): void {
+    this.showModal = false;    // Oculta el modal
+    this.associateId = null;  // Limpia el socio seleccionado
   }
 
 }

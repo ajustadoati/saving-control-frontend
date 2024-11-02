@@ -29,10 +29,6 @@
         <div class="mb-2">
           <span class="font-bold text-gray-700">Teléfono:</span> {{ associateData?.mobileNumber }}
         </div>
-        <div class="mb-2">
-          <span class="font-bold text-gray-700">Balance Actual:</span>
-          <span class="text-green-600">{{ totalSavings | currency }}</span>
-        </div>
       </div>
   
       <!-- Saldo General -->
@@ -56,55 +52,60 @@
       </div>
     </div>
   
-    <!-- Default Payments -->
-    <div *ngIf="associateFound" class="mt-8">
-      <h2 class="text-xl font-bold mb-4 text-gray-800">Pagos por Defecto</h2>
-      <table class="min-w-full bg-white border rounded-lg shadow-md">
-        <thead>
-          <tr class="bg-gray-100 border-b">
-            <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Nombre del Pago</th>
-            <th class="px-4 py-2 text-left text-sm font-medium text-gray-600">Monto</th>
-            <th class="px-4 py-2"></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let payment of defaultPayments; let i = index" class="border-b">
-            <td class="px-4 py-2 text-gray-700">{{ payment.name }}</td>
-            <td class="px-4 py-2 text-gray-700">{{ payment.amount | currency }}</td>
-            <td class="px-4 py-2 text-right">
-              <button
-                (click)="removeDefaultPayment(i)"
-                class="text-red-500 hover:text-red-700 transition"
-              >
-                Eliminar
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="mt-4">
-        <button
-          (click)="addDefaultPayment()"
-          class="py-2 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
-        >
-          Agregar Pago
-        </button>
+    <!-- Sección de Pagos por Defecto y Miembros Asociados -->
+    <div *ngIf="associateFound" class="mt-8 flex space-x-8">
+      <!-- Pagos por Defecto -->
+      <div class="bg-white border rounded-lg shadow-md p-4 w-1/2">
+        <h2 class="text-lg font-bold mb-4 text-gray-800">Pagos por Defecto</h2>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="px-2 py-2 text-left text-gray-600">Nombre</th>
+              <th class="px-2 py-2 text-left text-gray-600">Monto</th>
+              <th class="px-2 py-2"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let payment of defaultPayments; let i = index" class="border-b">
+              <td class="px-2 py-1 text-gray-700">{{ payment.name }}</td>
+              <td class="px-2 py-1 text-gray-700">{{ payment.amount | currency }}</td>
+              <td class="px-2 py-1 text-right">
+                <button
+                  (click)="removeDefaultPayment(i)"
+                  class="text-red-500 hover:text-red-700 transition"
+                >
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="mt-4">
+          <button
+          (click)="openModal(associateId)"
+            class="py-1 px-3 bg-green-500 text-white rounded hover:bg-green-600 transition"
+          >
+            Agregar Pago
+          </button>
+        </div>
       </div>
-    </div>
   
-    <!-- Miembros Asociados -->
-    <div class="mt-8">
-      <h2 class="text-xl font-bold mb-4 text-gray-800">Miembros Asociados</h2>
-      <div *ngIf="associateData?.associates && associateData.associates.length > 0; else noAssociates">
-        <ul class="list-disc pl-5 space-y-2">
-          <li *ngFor="let member of associateData.associates" class="text-gray-700">
-            {{ member.firstName }} {{ member.lastName }} - {{ member.numberId }}
-          </li>
-        </ul>
+      <!-- Miembros Asociados -->
+      <div class="bg-white border rounded-lg shadow-md p-4 w-1/2">
+        <h2 class="text-lg font-bold mb-4 text-gray-800">Miembros Asociados</h2>
+        <div *ngIf="associateData?.associates && associateData.associates.length > 0; else noAssociates">
+          <ul class="list-disc pl-5 space-y-2">
+            <li *ngFor="let member of associateData.associates" class="text-gray-700">
+              {{ member.firstName }} {{ member.lastName }} - {{member.relationship}}
+            </li>
+          </ul>
+        </div>
+        <ng-template #noAssociates>
+          <p class="text-gray-600">No hay miembros asociados.</p>
+        </ng-template>
       </div>
-      <ng-template #noAssociates>
-        <p class="text-gray-600">No hay miembros asociados.</p>
-      </ng-template>
     </div>
   </div>
   
+  <app-default-payment *ngIf="showModal" [userId]="associateData.id"
+  (closeModalEvent)="closeModal()"></app-default-payment>
