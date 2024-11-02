@@ -27,6 +27,10 @@ export const routes: Routes = [
                 path: 'associates',
                 loadComponent: () => import('./business/associates/associates.component'),
                 canActivate: [AuthGuard]
+            },{
+                path: 'associate-setup',
+                loadComponent: () => import('./business/associates/setup/associate-setup/associate-setup.component'),
+                canActivate: [AuthGuard]
             },
             {
                 path: '',

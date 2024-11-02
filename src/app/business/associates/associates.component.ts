@@ -10,7 +10,7 @@ import { AssociateDetailComponent } from './detail/associate-detail/associate-de
 @Component({
   selector: 'app-associates',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, CommonModule, FormsModule, AssociateDetailComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, AssociateDetailComponent],
   templateUrl: './associates.component.html',
   styleUrl: './associates.component.css'
 })

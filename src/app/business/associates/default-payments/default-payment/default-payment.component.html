@@ -1,0 +1,38 @@
+<div class="p-4 border rounded shadow-lg">
+    <h3 class="text-lg font-semibold mb-4">Registrar Pago Predeterminado</h3>
+  
+    <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
+      <div class="mb-4">
+        <label class="block font-medium text-gray-700">Nombre del Pago</label>
+        <input
+          type="text"
+          formControlName="paymentName"
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-200 focus:border-indigo-300"
+        />
+        <div *ngIf="paymentForm.get('paymentName')?.invalid && paymentForm.get('paymentName')?.touched" class="text-red-500 text-sm mt-1">
+          El nombre del pago es obligatorio
+        </div>
+      </div>
+  
+      <div class="mb-4">
+        <label class="block font-medium text-gray-700">Monto</label>
+        <input
+          type="number"
+          formControlName="amount"
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-200 focus:border-indigo-300"
+        />
+        <div *ngIf="paymentForm.get('amount')?.invalid && paymentForm.get('amount')?.touched" class="text-red-500 text-sm mt-1">
+          El monto debe ser mayor a 0
+        </div>
+      </div>
+  
+      <button
+        type="submit"
+        class="px-4 py-2 bg-blue-500 text-white font-semibold rounded shadow-md hover:bg-blue-600"
+        [disabled]="paymentForm.invalid"
+      >
+        Registrar Pago
+      </button>
+    </form>
+  </div>
+  
