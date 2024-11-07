@@ -6,15 +6,29 @@ import { HttpClient } from '@angular/common/http';
 import { FormGroup, FormBuilder, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { UserService } from '../core/services/user.service';
 import { AssociateDetailComponent } from './detail/associate-detail/associate-detail.component';
+import { AssociateCreateComponent } from "./create/associate-create/associate-create.component";
 
 @Component({
   selector: 'app-associates',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, AssociateDetailComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, AssociateDetailComponent, AssociateCreateComponent],
   templateUrl: './associates.component.html',
   styleUrl: './associates.component.css'
 })
 export default class AssociatesComponent implements OnInit {
+  deleteAssociate(arg0: number) {
+    throw new Error('Method not implemented.');
+  }
+
+  showCreateModal: boolean = false;
+
+  openCreateModal() {
+    this.showCreateModal = true;
+  }
+
+  closeCreateModal() {
+    this.showCreateModal = false;
+  }
 
   associates: Associate[] = [];
   searchTerm: string = '';
@@ -27,6 +41,7 @@ export default class AssociatesComponent implements OnInit {
   totalPages = 0;
   firstItem: number = 1; // Primer elemento de la página actual
   lastItem: number = 10; // Último elemento de la página actual
+  filteredAssociates: Associate[] = [];
 
   constructor(private userService: UserService) { }
 
@@ -44,6 +59,7 @@ export default class AssociatesComponent implements OnInit {
           this.associates = data.users;  // Los usuarios vienen dentro de 'collection'
           this.totalItems = data.pageData.totalElements; // Total de elementos para la paginación
           this.totalPages = data.pageData.totalPages;
+          this.filteredAssociates = this.associates;
           this.updatePagination();
         },
         error: (e) => console.error(e),
@@ -93,4 +109,15 @@ export default class AssociatesComponent implements OnInit {
     this.showModal = false;    // Oculta el modal
     this.selectedUser = null;  // Limpia el socio seleccionado
   }
+
+  searchAssociates(): void {
+    console.log("Filtering data");
+    const term = this.searchTerm.toLowerCase();
+
+    this.filteredAssociates = this.associates.filter(associate =>
+      associate.numberId.toLowerCase().includes(term) ||
+      (`${associate.firstName} ${associate.lastName}`).toLowerCase().includes(term)
+    );
+  }
+
 }

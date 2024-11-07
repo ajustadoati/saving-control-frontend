@@ -1,0 +1,36 @@
+<div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex justify-center items-center" id="modal">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+      <h2 class="text-xl font-bold mb-4">{{ isEditMode ? 'Editar Socio' : 'Registrar Nuevo Socio' }}</h2>
+      <form [formGroup]="associateForm" (ngSubmit)="onSubmit()">
+        <div class="mb-4">
+          <label for="firstName" class="block font-medium">Nombre:</label>
+          <input type="text" id="firstName" formControlName="firstName" class="p-2 border rounded w-full" />
+        </div>
+        <div class="mb-4">
+          <label for="lastName" class="block font-medium">Apellido:</label>
+          <input type="text" id="lastName" formControlName="lastName" class="p-2 border rounded w-full" />
+        </div>
+        <div class="mb-4">
+          <label for="numberId" class="block font-medium">Cédula:</label>
+          <input type="text" id="numberId" formControlName="numberId" class="p-2 border rounded w-full" />
+        </div>
+        <div class="mb-4">
+          <label for="mobileNumber" class="block font-medium">Teléfono:</label>
+          <input type="text" id="mobileNumber" formControlName="mobileNumber" class="p-2 border rounded w-full" />
+        </div>
+        <div class="mb-4">
+          <label for="email" class="block font-medium">Email:</label>
+          <input type="email" id="email" formControlName="email" class="p-2 border rounded w-full" />
+        </div>
+        <div class="mb-4">
+          <label for="company" class="block font-medium">Empresa:</label>
+          <input type="text" id="company" formControlName="company" class="p-2 border rounded w-full" />
+        </div>
+        <div class="flex justify-end mt-4">
+          <button type="button" (click)="closeModal()" class="px-4 py-2 bg-red-500 text-white rounded mr-2">Cancelar</button>
+          <button type="submit" [disabled]="associateForm.invalid" class="px-4 py-2 bg-green-500 text-white rounded">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
