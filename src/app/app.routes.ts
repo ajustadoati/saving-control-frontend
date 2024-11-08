@@ -32,6 +32,13 @@ export const routes: Routes = [
                 loadComponent: () => import('./business/associates/setup/associate-setup/associate-setup.component'),
                 canActivate: [AuthGuard]
             },
+            
+            {
+                path: 'ec-search-member',
+                loadComponent: () => import('./business/associates/ec-search-member/ec-search-member.component'),
+                canActivate: [AuthGuard]
+            },
+
             {
                 path: '',
                 redirectTo: 'dashboard',
