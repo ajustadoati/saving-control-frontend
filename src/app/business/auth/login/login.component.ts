@@ -33,7 +33,7 @@ export default class LoginComponent {
   login(): void {
     
     const { user, password } = this.myForm.value;
-    console.log("login", user, password );
+
     this.authService.login(user, password).subscribe({
       next: () => this.router.navigate(['/dashboard']),
       error: (err) => console.error('Login failed')

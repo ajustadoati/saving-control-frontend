@@ -24,7 +24,7 @@ export class DefaultPaymentComponent {
     private defaultPaymentService: DefaultPaymentService
   ) {
     this.paymentForm = this.fb.group({
-      paymentName: ['', Validators.required],
+      defaultPaymentName: ['', Validators.required],
       amount: [0, [Validators.required, Validators.min(1)]]
     });
   }

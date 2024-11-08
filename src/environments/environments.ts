@@ -1,5 +1,5 @@
 
 
 export const environment = {
-  baseUrl: 'http://ajustadoati.com:8083'
+  baseUrl: 'https://calch.ajustadoati.com'
 }

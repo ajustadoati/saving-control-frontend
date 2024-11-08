@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
+import { environment } from '../../../../environments/environments';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,7 @@ export class AuthService {
 
   constructor(private httpClient: HttpClient, private router: Router) {}
   
-  private LOGIN_URL = 'http://ajustadoati.com:8083/api/auth/login';
+  private LOGIN_URL = environment.baseUrl + '/api/auth/login';
   private tokenKey = 'authToken'
 
   login(username: string, password: string): Observable<any>{
