@@ -107,5 +107,5 @@
     </div>
   </div>
   
-  <app-default-payment *ngIf="showModal" [userId]="associateData.id"
+  <app-default-payment *ngIf="showModal" [associateData]="associateData"
   (closeModalEvent)="closeModal()"></app-default-payment>

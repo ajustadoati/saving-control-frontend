@@ -4,15 +4,18 @@
   
     <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()">
       <div class="mb-4">
-        <label class="block font-medium text-gray-700">Nombre del Pago</label>
-        <input
-          type="text"
-          formControlName="defaultPaymentName"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring focus:ring-indigo-200 focus:border-indigo-300"
-        />
-        <div *ngIf="paymentForm.get('defaultPaymentName')?.invalid && paymentForm.get('defaultPaymentName')?.touched" class="text-red-500 text-sm mt-1">
-          El nombre del pago es obligatorio
-        </div>
+        <label for="paymentName" class="block text-sm font-medium text-gray-700">Nombre del Pago</label>
+        <select defaultPaymentName="defaultPaymentName" id="paymentName" (change)="onPaymentNameChange($event)"  class="w-full mt-1 p-2 border rounded">
+          <option *ngFor="let product of products" [value]="product.name">{{ product.name }}</option>
+        </select>
+      </div>
+      
+      <div class="mb-4" *ngIf="isMemberSelected">
+        <label for="associate" class="block text-sm font-medium text-gray-700">Asociar a</label>
+        <select formControlName="selectedAssociation" id="associate" class="w-full mt-1 p-2 border rounded">
+          <option [value]="associateData.id">Socio Principal</option>
+          <option *ngFor="let member of associateData.associates" [value]="member.id">{{ member.firstName }} - {{ member.relationship }}</option>
+        </select>
       </div>
   
       <div class="mb-4">

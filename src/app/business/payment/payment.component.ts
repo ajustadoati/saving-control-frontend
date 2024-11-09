@@ -7,6 +7,7 @@ import { map } from 'rxjs';
 import { Saving } from '../interfaces/saving';
 import Swal from 'sweetalert2';
 import { PaymentReceiptComponent } from './receipt/payment-receipt/payment-receipt.component';
+import { DefaultPaymentService } from '../core/services/default-payment.service';
 
 @Component({
   selector: 'app-payment',
@@ -17,7 +18,7 @@ import { PaymentReceiptComponent } from './receipt/payment-receipt/payment-recei
 })
 export default class PaymentComponent {
 
-  constructor(private userService: UserService, private savingService: SavingService) {
+  constructor(private userService: UserService, private savingService: SavingService, private defaultPaymentService: DefaultPaymentService) {
   
    }
 
@@ -35,6 +36,9 @@ export default class PaymentComponent {
   
   paymentDate: string = new Date().toISOString().split('T')[0]; // Fecha actual en formato YYYY-MM-DD
 
+  defaultPayments = [
+    { paymentTitle: 'Ahorro', hourlyRate: 75, defaultPaymentsCount: 1, totalCost: 75 }
+  ];
 
   associateData: any = {
     id: '14447876',
@@ -47,7 +51,7 @@ export default class PaymentComponent {
 
   // Abre el modal
   openReceiptModal(): void {
-    console.log("calling modal");
+
     this.totalPaid = this.defaultPayments.reduce((sum, attendee) => sum + (attendee.hourlyRate * attendee.defaultPaymentsCount), 0);
     this.showReceiptModal = true;
   }
@@ -71,7 +75,7 @@ export default class PaymentComponent {
     }
   }
 
-  paymentTypes: string[] = ['Ahorro', 'Interes', 'Lubricantes', 'Compartir'];
+  paymentTypes: string[] = [];
 
   searchAssociate() {
     // Primero buscar el socio por el número de identificación
@@ -82,22 +86,36 @@ export default class PaymentComponent {
         this.associateFound = true;
         this.paymentsActivated = true; // Activa la sección de pagos
 
-        if (this.associateData.associates && this.associateData.associates.length > 0) {
-          this.associateData.associates.forEach((associate: { id: any; relationship: string}) => {
-            this.paymentTypes.push(`Ahorro-${associate.relationship}-${associate.id}`);
-          });
-        }
-
         // Ahora busca los ahorros de este socio
         this.savingService.getSavingsByUserId(this.associateData.id).subscribe({
           next: (response: any) => {
             const totalSavings = response.savings.reduce((sum: number, saving: any) => sum + saving.amount, 0);
             this.totalSavings = totalSavings;
-            console.log('Saldo total:', this.totalSavings);
           },
           error: (error) => {
             console.error('Error al obtener los ahorros:', error);
             this.totalSavings = 0; // Si no se obtienen ahorros, saldo es 0
+          }
+        });
+
+        this.defaultPaymentService.getDefaultPaymentsByUserId(this.associateData.id).subscribe({
+          next: (response: any) => {
+            console.log('defaultpayments:', response);
+            if (response.defaultPayments.length > 0){
+              this.defaultPayments.pop();
+              response.defaultPayments.forEach((defaultPayment: {id: number, paymentName: string, amount: number}) => {
+   
+                this.defaultPayments.push({paymentTitle: defaultPayment.paymentName, hourlyRate: defaultPayment.amount, defaultPaymentsCount: 1, totalCost: defaultPayment.amount});
+                this.paymentTypes.push(defaultPayment.paymentName);
+              })
+              this.updateHourlyRates();
+            } else {
+              this.defaultPayments.push({paymentTitle: 'Ahorro', hourlyRate: 1, defaultPaymentsCount: 0, totalCost: 0});
+         
+            }
+          }, 
+          error: (error) => {
+            console.error('Error al obtener los pagos por defecto:', error);
           }
         });
       },
@@ -115,24 +133,13 @@ export default class PaymentComponent {
     });
   }
 
-  hourlyRates: any = {
-    US: {
-      Ahorro: 75,
-      AhorroAsociado: 10,
-      Interes: 7,
-      Capital: 100,
-      Compartir: 2,
-      Lubricantes: 100,
-    }
-  };
+
 
   // Estado de   la aplicación
   location = 'US';
   frequency = 'daily';
   duration = 1;
-  defaultPayments = [
-    { paymentTitle: 'Ahorro', hourlyRate: 75, defaultPaymentsCount: 1, totalCost: 75 }
-  ];
+ 
   meetingTotal = 0;
   yearlyCost = 0;
   associateId: any;
@@ -140,7 +147,6 @@ export default class PaymentComponent {
   // Actualizar tarifas por hora basado en la ubicación seleccionada
   updateHourlyRates() {
     this.defaultPayments.forEach(attendee => {
-      //attendee.hourlyRate = this.hourlyRates[this.location][attendee.paymentTitle];
       this.updateTotalCost();
     });
   }
@@ -176,8 +182,8 @@ export default class PaymentComponent {
       savingId: 0,
       savingDate: this.paymentDate,
       amount: attendee.hourlyRate,
-      associateId: attendee.paymentTitle.startsWith('Ahorro-') 
-                    ? parseInt(attendee.paymentTitle.split('-')[2]) 
+      associateId: attendee.paymentTitle.startsWith('Ahorro -') 
+                    ? parseInt(attendee.paymentTitle.split('-')[3]) 
                     : null, 
     }));
     console.log("Id asociado", this.associateId);

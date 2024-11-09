@@ -17,7 +17,7 @@ export class DefaultPaymentService {
   constructor(private http: HttpClient) {}
 
   registerPayment(userId: number, paymentData: { defaultPaymentName: string; amount: number }): Observable<any> {
-    console.log("Saving default payment");
+    console.log("Saving default payment", paymentData);
     return this.http.post<any>(`${this.apiUrl}/${userId}/defaultPayments`, paymentData).pipe(
       map((response) => {
         return { saving: response };
@@ -30,7 +30,7 @@ export class DefaultPaymentService {
     return this.http.get<any>(`${this.apiUrl}/${userId}/defaultPayments`).pipe(
       map((response) => {
         // Extrae los usuarios desde _embedded.collection y los datos de paginación
-        this.defaultPayments  = response._embedded ? response._embedded.defaultPaymentDtoList : [];
+        this.defaultPayments  = response._embedded ? response._embedded.collection : [];
 
         return { defaultPayments: this.defaultPayments };
       })
