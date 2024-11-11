@@ -24,19 +24,12 @@ jobs:
     - name: Build Angular app
       run: npm run build --prod
 
-    - name: Setup SSH key
-      run: |
-        echo "${{ secrets.VPS_SSH_KEY }}" > /tmp/ssh_key
-        chmod 600 /tmp/ssh_key
-        eval "$(ssh-agent -s)"
-        ssh-add /tmp/ssh_key
+
+    - name: Install sshpass
+      run: sudo apt-get install -y sshpass
 
     - name: Deploy to VPS
-      env:
-        HOST: ${{ secrets.VPS_HOST }}
-        USERNAME: ${{ secrets.VPS_USERNAME }}
-        PASSWORD: ${{ secrets.VPS_PASSWORD }}
       run: |
         echo "Deploying to VPS..."
-        scp -o StrictHostKeyChecking=no -r dist/your-app-name/* $USERNAME@$HOST:/var/www/calch.ajustadoati.com
+        sshpass -p "${{ secrets.VPS_PASSWORD }}" scp -o StrictHostKeyChecking=no -r dist/browser/* $USERNAME@$HOST:/var/www/calch.ajustadoati.com
 
