@@ -41,4 +41,4 @@ jobs:
         PASSWORD: ${{ secrets.VPS_PASSWORD }}
       run: |
         echo "Deploying to VPS..."
-        sshpass -p "$PASSWORD" scp -o StrictHostKeyChecking=no -r dist/browser/* $USERNAME@$HOST:/var/www/calch.ajustadoati.com
+        sshpass -p "$PASSWORD" scp -o StrictHostKeyChecking=no -r dist/a9i-savings/browser/* $USERNAME@$HOST:/var/www/calch.ajustadoati.com
