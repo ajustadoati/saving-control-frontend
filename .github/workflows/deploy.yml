@@ -16,7 +16,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '20' # Actualiza a la versión 20 de Node.js
+        node-version: '20'
 
     - name: Install dependencies
       run: npm install
@@ -24,12 +24,14 @@ jobs:
     - name: Build Angular app
       run: npm run build --prod
 
-
     - name: Install sshpass
       run: sudo apt-get install -y sshpass
 
     - name: Deploy to VPS
+      env:
+        HOST: ${{ secrets.VPS_HOST }}
+        USERNAME: ${{ secrets.VPS_USERNAME }}
+        PASSWORD: ${{ secrets.VPS_PASSWORD }}
       run: |
         echo "Deploying to VPS..."
-        sshpass -p "${{ secrets.VPS_PASSWORD }}" scp -o StrictHostKeyChecking=no -r dist/browser/* $USERNAME@$HOST:/var/www/calch.ajustadoati.com
-
+        sshpass -p "$PASSWORD" scp -o StrictHostKeyChecking=no -r dist/browser/* $USERNAME@$HOST:/var/www/calch.ajustadoati.com
