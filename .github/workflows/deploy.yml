@@ -24,6 +24,13 @@ jobs:
     - name: Build Angular app
       run: npm run build --prod
 
+    - name: Setup SSH key
+      run: |
+        echo "${{ secrets.VPS_SSH_KEY }}" > /tmp/ssh_key
+        chmod 600 /tmp/ssh_key
+        eval "$(ssh-agent -s)"
+        ssh-add /tmp/ssh_key
+
     - name: Deploy to VPS
       env:
         HOST: ${{ secrets.VPS_HOST }}
