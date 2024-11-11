@@ -1,0 +1,35 @@
+name: Deploy Angular App to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20' # Actualiza a la versión 20 de Node.js
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build Angular app
+      run: npm run build -- --prod
+
+    - name: Deploy to VPS
+      env:
+        HOST: ${{ secrets.VPS_HOST }}
+        USERNAME: ${{ secrets.VPS_USERNAME }}
+        PASSWORD: ${{ secrets.VPS_PASSWORD }}
+      run: |
+        echo "Deploying to VPS..."
+        scp -o StrictHostKeyChecking=no -r dist/your-app-name/* $USERNAME@$HOST:/var/www/calch.ajustadoati.com
+
