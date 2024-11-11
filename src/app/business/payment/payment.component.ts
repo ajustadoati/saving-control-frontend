@@ -18,7 +18,8 @@ import { DefaultPaymentService } from '../core/services/default-payment.service'
 })
 export default class PaymentComponent {
 
-  constructor(private userService: UserService, private savingService: SavingService, private defaultPaymentService: DefaultPaymentService) {
+  constructor(private userService: UserService, private savingService: SavingService, 
+    private defaultPaymentService: DefaultPaymentService) {
   
    }
 
@@ -108,9 +109,11 @@ export default class PaymentComponent {
                 this.defaultPayments.push({paymentTitle: defaultPayment.paymentName, hourlyRate: defaultPayment.amount, defaultPaymentsCount: 1, totalCost: defaultPayment.amount});
                 this.paymentTypes.push(defaultPayment.paymentName);
               })
-              this.updateHourlyRates();
+              this.updateTotal();
             } else {
-              this.defaultPayments.push({paymentTitle: 'Ahorro', hourlyRate: 1, defaultPaymentsCount: 0, totalCost: 0});
+              this.defaultPayments.pop();
+              this.paymentTypes.push('Ahorro');
+              this.defaultPayments.push({paymentTitle: 'Ahorro', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0});
          
             }
           }, 
@@ -145,7 +148,7 @@ export default class PaymentComponent {
   associateId: any;
 
   // Actualizar tarifas por hora basado en la ubicación seleccionada
-  updateHourlyRates() {
+  updateTotal() {
     this.defaultPayments.forEach(attendee => {
       this.updateTotalCost();
     });

@@ -18,10 +18,7 @@ export class SavingService {
 
   getSavingsByUserId(userId:number, page: number = 0, size: number = 10): Observable<any> {
     console.log('Seraching paymets for: ', userId);
-    if (this.cachedSavings.length > 0) {
-      console.log('Using cache');
-      return of({ savings: this.cachedSavings, pageData: this.pageData });
-    }
+
 
     return this.http.get<any>(`${this.apiUrl}/${userId}/savings?page=${page}&size=${size}`).pipe(
       map((response) => {

@@ -18,9 +18,6 @@
     <div *ngIf="associateFound" class="mt-4">
       <div class="p-6 bg-white shadow-md rounded-lg border border-gray-200">
         <div class="mb-2">
-          <span class="font-bold">ID:</span> {{ associateData?.id }}
-        </div>
-        <div class="mb-2">
           <span class="font-bold">Nombre:</span> {{ associateData?.firstName }} {{ associateData?.lastName }}
         </div>
         <div class="mb-2">
@@ -54,13 +51,13 @@
           <tr *ngFor="let payment of defaultPayments; let i = index">
             
             <td class="border border-gray-300 px-4 py-2">
-              <select [(ngModel)]="payment.paymentTitle" (change)="updateHourlyRates()" class="p-2 rounded border bg-white">
+              <select [(ngModel)]="payment.paymentTitle" (change)="updateTotal()" class="p-2 rounded border bg-white">
                 <option *ngFor="let type of paymentTypes" [value]="type">{{ type }}</option>
               </select>
              
             </td>
             <td class="border border-gray-300 px-4 py-2">
-              <input type="number" [(ngModel)]="payment.hourlyRate" (change)="updateHourlyRates()"  class="p-2 rounded border">
+              <input type="number" [(ngModel)]="payment.hourlyRate" (change)="updateTotal()"  class="p-2 rounded border">
             </td>
   
             <td class="border border-gray-300 px-4 py-2">
