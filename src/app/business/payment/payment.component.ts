@@ -34,11 +34,13 @@ export default class PaymentComponent {
   paymentsActivated: boolean = false;
 
   totalSavings!: number;
+
+  isPrintEnabled: boolean = false;
   
   paymentDate: string = new Date().toISOString().split('T')[0]; // Fecha actual en formato YYYY-MM-DD
 
   defaultPayments = [
-    { paymentTitle: 'Ahorro', hourlyRate: 75, defaultPaymentsCount: 1, totalCost: 75 }
+    { paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10 }
   ];
 
   associateData: any = {
@@ -71,6 +73,14 @@ export default class PaymentComponent {
     if (this.paymentReceiptComponent) {
       this.paymentReceiptComponent.generatePDF(); // Llama al método del componente hijo
       this.closeModal(); // Cierra el modal después de generar el PDF
+      this.associateId = ''; // Restablece el campo de búsqueda
+    this.associateFound = false;
+    this.paymentsActivated = false;
+    this.defaultPayments = [{ paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10 }];
+    this.totalSavings = 0;
+    this.paymentTypes = [];
+    this.isPrintEnabled = false; 
+      
     } else {
       console.error('Error: No se encontró el componente PaymentReceiptComponent');
     }
@@ -86,18 +96,7 @@ export default class PaymentComponent {
         console.log('Datos del socio:', this.associateData); // Verificar los datos del socio
         this.associateFound = true;
         this.paymentsActivated = true; // Activa la sección de pagos
-
-        // Ahora busca los ahorros de este socio
-        this.savingService.getSavingsByUserId(this.associateData.id).subscribe({
-          next: (response: any) => {
-            const totalSavings = response.savings.reduce((sum: number, saving: any) => sum + saving.amount, 0);
-            this.totalSavings = totalSavings;
-          },
-          error: (error) => {
-            console.error('Error al obtener los ahorros:', error);
-            this.totalSavings = 0; // Si no se obtienen ahorros, saldo es 0
-          }
-        });
+        this.totalSavings = data.totalSavings;
 
         this.defaultPaymentService.getDefaultPaymentsByUserId(this.associateData.id).subscribe({
           next: (response: any) => {
@@ -194,17 +193,23 @@ export default class PaymentComponent {
       (response) => {
         console.log('Pagos registrados exitosamente:', response);
         this.paymentsActivated = false;
-        this.savingService.getSavingsByUserId(this.associateData.id).subscribe({
+
+        this.userService.getAssociateById(this.associateData.id).subscribe({
           next: (response: any) => {
-            // Calcular el saldo total sumando los ahorros
-            const totalSavings = response.savings.reduce((sum: number, saving: any) => sum + saving.amount, 0);
-            this.totalSavings = totalSavings;
+            this.totalSavings = response.totalSavings;
+            this.isPrintEnabled = true;
+            Swal.fire({
+              icon: 'success',
+              title: '¡Pago registrado!',
+              text: 'El pago ha sido registrado con éxito.',
+            });
+            
           },
           error: (error) => {
             console.error('Error al obtener los ahorros:', error);
             this.totalSavings = 0; // Si no se obtienen ahorros, saldo es 0
           }
-        });
+        })
       },
       (error) => {
         console.error('Error registrando pagos:', error);

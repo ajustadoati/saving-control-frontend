@@ -61,19 +61,9 @@ export default class AssociateSetupComponent {
         console.log('Datos del socio:', this.associateData); // Verificar los datos del socio
         this.associateFound = true;
         this.getDefaultPayments();
-
-        // Ahora busca los ahorros de este socio
-        this.savingService.getSavingsByUserId(this.associateData.id).subscribe({
-          next: (response: any) => {
-            const totalSavings = response.savings.reduce((sum: number, saving: any) => sum + saving.amount, 0);
-            this.totalSavings = totalSavings;
-            console.log('Saldo total:', this.totalSavings);
-          },
-          error: (error) => {
-            console.error('Error al obtener los ahorros:', error);
-            this.totalSavings = 0; // Si no se obtienen ahorros, saldo es 0
-          }
-        });
+        this.totalSavings = data.totalSavings;
+        
+        this.savingService.getResume()
       },
       error: (error) => {
         console.error('Socio no encontrado:', error);

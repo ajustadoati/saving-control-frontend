@@ -47,6 +47,8 @@ export class DefaultPaymentComponent implements OnInit {
     this.productService.getProducts().subscribe({
       next: (data: Product[]) => {
         this.products = data; // Asigna la lista de productos
+        this.paymentForm.patchValue({ defaultPaymentName: this.products[0].name });
+        this.isMemberSelected = this.products[0].name === 'Ahorro Miembro';
       },
       error: (err) => {
         console.error('Error al cargar productos:', err);
@@ -60,7 +62,7 @@ export class DefaultPaymentComponent implements OnInit {
   }
 
   onSubmit() {
-      console.log("saving form", this.isMemberSelected);
+      console.log("saving form", this.paymentForm.value);
       if (this.paymentForm.valid) {
         const paymentData = this.paymentForm.value;
       

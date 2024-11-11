@@ -12,7 +12,7 @@ export class UserService {
 
   private apiUrl = environment.baseUrl + '/api/users'; 
   
-  private cachedUsers: Associate[] = []; // Almacena los usuarios en memoria
+  private cachedUsers: User[] = []; // Almacena los usuarios en memoria
   private pageData: any; 
   private users: User[]=[];
 
@@ -35,16 +35,36 @@ export class UserService {
 
   getAssociateByNumberId(numberId: string): Observable<any> {
     // Primero busca en la caché
-    const cachedAssociate = this.cachedUsers.find(user => user.numberId === numberId);
+    const associate = this.cachedUsers.find(user => user.numberId === numberId);
   
-    if (cachedAssociate) {
+    if (associate) {
       console.log('Using cached associate');
-      return of(cachedAssociate);
+      return of(associate);
     }
   
     // Si no está en la caché, busca en el backend
     console.log('Fetching associate from API');
     return this.http.get<any>(`${this.apiUrl}/numberId/${numberId}`).pipe(
+      map(response => {
+        // Opcionalmente, guarda el resultado en la caché si deseas que futuras búsquedas lo utilicen
+        this.cachedUsers.push(response);
+        return response;
+      })
+    );
+  }
+
+  getAssociateById(id: number): Observable<any> {
+    // Primero busca en la caché
+    const associate = this.cachedUsers.find(user => user.id === id);
+  
+    if (associate) {
+      console.log('Using cached associate');
+      return of(associate);
+    }
+  
+    // Si no está en la caché, busca en el backend
+    console.log('Fetching associate from API');
+    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
       map(response => {
         // Opcionalmente, guarda el resultado en la caché si deseas que futuras búsquedas lo utilicen
         this.cachedUsers.push(response);
@@ -71,12 +91,6 @@ export class UserService {
       })
     );
   }
-  /**
-   * "size": 15,
-        "totalElements": 71,
-        "totalPages": 5,
-        "number": 0
-   */
   
 
   clearCache(): void {
