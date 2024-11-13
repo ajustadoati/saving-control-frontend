@@ -7,15 +7,17 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { DefaultPaymentComponent } from "../../default-payments/default-payment/default-payment.component";
 import { Associate } from '../../../interfaces/associate';
 import { DefaultPaymentService } from '../../../core/services/default-payment.service';
+import { AssociateMemberComponent } from "../../associate-member/associate-member/associate-member.component";
 
 @Component({
   selector: 'app-associate-setup',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, DefaultPaymentComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, DefaultPaymentComponent, AssociateMemberComponent],
   templateUrl: './associate-setup.component.html',
   styleUrl: './associate-setup.component.css'
 })
 export default class AssociateSetupComponent {
+
   defaultPayments: any;
 
   constructor(private userService: UserService, private savingService: SavingService, 
@@ -46,6 +48,7 @@ export default class AssociateSetupComponent {
   associateId: any;
   totalSavings!: number;
   showModal: boolean =false;
+  showAssociateMemberModal: boolean = false;
   associateData: any = {
     id: '14447876',
     name: 'Richard Rojas',
@@ -62,7 +65,7 @@ export default class AssociateSetupComponent {
         this.associateFound = true;
         this.getDefaultPayments();
         this.totalSavings = data.totalSavings;
-        
+
         this.savingService.getResume()
       },
       error: (error) => {
@@ -100,11 +103,19 @@ export default class AssociateSetupComponent {
     this.showModal = true;     // Muestra el modal
   }
 
+  openAssociateMemberModal(): void {
+    this.showAssociateMemberModal = true;     // Muestra el modal
+  }
+
   // Cierra el modal y limpia los datos del usuario seleccionado
   closeModal(): void {
     this.showModal = false;    // Oculta el modal
     this.associateId = null;  // Limpia el socio seleccionado
     this.getDefaultPayments();
+  }
+
+  closeAssociateMemberModal(): void {
+    this.showAssociateMemberModal = false;
   }
 
 }

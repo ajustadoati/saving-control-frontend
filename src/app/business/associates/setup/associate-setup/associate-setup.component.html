@@ -103,9 +103,14 @@
         <ng-template #noAssociates>
           <p class="text-gray-600">No hay miembros asociados.</p>
         </ng-template>
+        <div class="mt-4 flex space-x-4">
+          <button (click)="openAssociateMemberModal()" class="py-1 px-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition">Asociar Miembro</button>
+        </div>
       </div>
     </div>
   </div>
   
   <app-default-payment *ngIf="showModal" [associateData]="associateData"
   (closeModalEvent)="closeModal()"></app-default-payment>
+  <app-associate-member *ngIf="showAssociateMemberModal"
+  (closeAssociateMemberModalEvent)="closeModal()"></app-associate-member>
