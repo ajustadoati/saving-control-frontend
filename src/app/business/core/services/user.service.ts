@@ -92,6 +92,22 @@ export class UserService {
     );
   }
   
+  addAssociate(userId: number, associateId: number, relationship: string){
+    const associateRequest = {associateId: associateId, relationship: relationship};
+
+    console.log("Add associate");
+    return this.http.post(`${this.apiUrl}/${userId}/associates`, associateRequest).pipe(
+      map((response) => {
+        return { repsonse: response };
+      })
+    );
+  }
+
+  removeAssociate(userId: number, associateId: number){
+
+    return this.http.delete<void>(`${this.apiUrl}/${userId}/associates/${associateId}`);
+    
+  }
 
   clearCache(): void {
     this.cachedUsers = [];

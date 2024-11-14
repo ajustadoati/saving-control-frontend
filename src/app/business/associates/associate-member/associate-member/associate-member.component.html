@@ -1,25 +1,60 @@
 <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full" id="modal">
-    <div class="relative top-20 mx-auto p-6 border w-96 shadow-lg rounded-md bg-white">
-      <h3 class="text-xl font-semibold text-gray-900 mb-4">Buscar Miembro</h3>
-      <div class="flex items-center">
+  <div class="relative top-20 mx-auto p-6 border w-96 shadow-lg rounded-md bg-white">
+    <h3 class="text-xl font-semibold text-gray-900 mb-4">Buscar Miembro</h3>
+    
+    <!-- Campo para buscar el miembro -->
+    <div class="flex items-center">
+      <input
+        type="text"
+        [(ngModel)]="associateId"
+        class="p-2 rounded border mr-4"
+        placeholder="ID del Socio"
+      />
+      <button
+        (click)="searchAssociate()"
+        class="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+      >
+        Buscar
+      </button>
+    </div>
+
+    <!-- Datos del miembro encontrado -->
+    <div *ngIf="associateFound" class="mt-4 p-4 bg-gray-100 rounded-md">
+      <h4 class="text-lg font-medium text-gray-800">Detalles del Miembro</h4>
+      <p><strong>Nombre:</strong> {{ associateData.firstName }} {{ associateData.lastName }}</p>
+      <p><strong>Email:</strong> {{ associateData.email }}</p>
+      <p><strong>Teléfono:</strong> {{ associateData.mobileNumber }}</p>
+      
+      <!-- Campo para ingresar la relación -->
+      <div class="mt-4">
+        <label for="relationship" class="block text-sm font-medium text-gray-700">Relación</label>
         <input
           type="text"
-          [(ngModel)]="associateId"
-          class="p-2 rounded border mr-4"
-          placeholder="ID del Socio"
+          id="relationship"
+          [(ngModel)]="relationship"
+          class="mt-1 block w-full p-2 border rounded-md"
         />
-        <button
-          (click)="searchAssociate()"
-          class="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          Buscar
-        </button>
-      </div>
-  
-      <div class="flex justify-end mt-6">
-        <button (click)="closeAssociateMemberModal()" class="px-4 py-2 bg-red-500 text-white rounded-md shadow-md hover:bg-red-600">
-          Cerrar
-        </button>
+        <div *ngIf="relationshipExists" class="text-red-500 text-sm mt-1">
+          Ya existe un miembro con esta relación.
+        </div>
       </div>
     </div>
+
+    <!-- Botones -->
+    <div class="flex justify-end mt-6 space-x-4">
+      <button *ngIf="associateFound" 
+        (click)="addMember()"
+        [disabled]="!associateFound || relationshipExists || !relationship"
+        class="px-4 py-2 bg-green-500 text-white rounded-md shadow-md hover:bg-green-600"
+      >
+        Asociar Miembro
+      </button>
+      <button
+        (click)="closeAssociateMemberModal()"
+        class="px-4 py-2 bg-red-500 text-white rounded-md shadow-md hover:bg-red-600"
+      >
+        Cerrar
+      </button>
+    </div>
   </div>
+</div>

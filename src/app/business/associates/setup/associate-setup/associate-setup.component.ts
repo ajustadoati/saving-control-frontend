@@ -8,6 +8,7 @@ import { DefaultPaymentComponent } from "../../default-payments/default-payment/
 import { Associate } from '../../../interfaces/associate';
 import { DefaultPaymentService } from '../../../core/services/default-payment.service';
 import { AssociateMemberComponent } from "../../associate-member/associate-member/associate-member.component";
+import { AssociateService } from '../../../core/services/associate.service';
 
 @Component({
   selector: 'app-associate-setup',
@@ -18,10 +19,12 @@ import { AssociateMemberComponent } from "../../associate-member/associate-membe
 })
 export default class AssociateSetupComponent {
 
+
   defaultPayments: any;
+  associateMembers: any;
 
   constructor(private userService: UserService, private savingService: SavingService, 
-    private defaultPaymentService: DefaultPaymentService) {
+    private defaultPaymentService: DefaultPaymentService, private associateService: AssociateService) {
   
   }
 
@@ -37,6 +40,23 @@ export default class AssociateSetupComponent {
         console.error('Error al eliminar el pago por defecto:', err);
       }
     });
+  }
+
+  removeAssociateMember(userId: number, associateId: number) {
+    this.associateService.removeAssociate(userId, associateId).subscribe({
+      next: () => {
+        console.log('Asociado eliminado');
+        Swal.fire({
+          icon: 'success',
+          title: 'Miembro eliminado !',
+          text: 'Miembro eliminado correctamente'
+        });
+        this.getAssociates();
+      },
+      error: (err) => {
+        console.error('Error al eliminar el Associado por defecto:', err);
+      }
+    })
   }
   
   addDefaultPayment() {
@@ -64,6 +84,7 @@ export default class AssociateSetupComponent {
         console.log('Datos del socio:', this.associateData); // Verificar los datos del socio
         this.associateFound = true;
         this.getDefaultPayments();
+        this.getAssociates();
         this.totalSavings = data.totalSavings;
 
         this.savingService.getResume()
@@ -96,6 +117,21 @@ export default class AssociateSetupComponent {
     });
   }
 
+  getAssociates(){
+
+    this.associateService.getAssociatesByUserId(this.associateData.id).subscribe({
+      next: (response: any) => {
+        console.log("associates: ", response);
+        this.associateMembers = response.members;
+
+      },
+      error: (error) => {
+        console.error('Error al obtener los asociados por defecto:', error);
+        this.defaultPayments = []; // Si no se obtienen ahorros, saldo es 0
+      }
+    });
+  }
+
 
 
   openModal(userId: number): void {
@@ -116,6 +152,7 @@ export default class AssociateSetupComponent {
 
   closeAssociateMemberModal(): void {
     this.showAssociateMemberModal = false;
+    this.getAssociates();
   }
 
 }
