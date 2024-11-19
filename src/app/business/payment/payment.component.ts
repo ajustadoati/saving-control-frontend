@@ -8,6 +8,9 @@ import { Saving } from '../interfaces/saving';
 import Swal from 'sweetalert2';
 import { PaymentReceiptComponent } from './receipt/payment-receipt/payment-receipt.component';
 import { DefaultPaymentService } from '../core/services/default-payment.service';
+import { PaymentService } from '../core/services/payment.service';
+import { Payment } from '../interfaces/payment';
+import { PaymentDetail } from '../interfaces/paymentDetail';
 
 @Component({
   selector: 'app-payment',
@@ -19,7 +22,7 @@ import { DefaultPaymentService } from '../core/services/default-payment.service'
 export default class PaymentComponent {
 
   constructor(private userService: UserService, private savingService: SavingService, 
-    private defaultPaymentService: DefaultPaymentService) {
+    private defaultPaymentService: DefaultPaymentService, private paymentService: PaymentService) {
   
    }
 
@@ -32,6 +35,12 @@ export default class PaymentComponent {
   associateFound: boolean = false;
 
   paymentsActivated: boolean = false;
+
+  payment: Payment = {
+    userId: 0,
+    date: '',
+    payments: []
+  };
 
   totalSavings!: number;
 
@@ -135,8 +144,6 @@ export default class PaymentComponent {
     });
   }
 
-
-
   // Estado de   la aplicación
   location = 'US';
   frequency = 'daily';
@@ -179,21 +186,34 @@ export default class PaymentComponent {
   }
 
   registerPayments(): void {
-
-    const payments: Saving[] = this.defaultPayments.map((attendee) => ({
-      savingId: 0,
-      savingDate: this.paymentDate,
-      amount: attendee.hourlyRate,
-      associateId: attendee.paymentTitle.startsWith('Ahorro -') 
-                    ? parseInt(attendee.paymentTitle.split('-')[3]) 
-                    : null, 
-    }));
-    console.log("Id asociado", this.associateId);
-    this.savingService.addSavingListByUserId(this.associateData.id, payments).subscribe(
-      (response) => {
+    // Group defaultPayments by type
+    const groupedPayments = this.defaultPayments.reduce((acc, payment) => {
+      const type = this.getPaymentType(payment.paymentTitle); // Determine payment type dynamically
+      if (!acc[type]) {
+        acc[type] = [];
+      }
+      acc[type].push(payment);
+      return acc;
+    }, {} as { [key: string]: any[] });
+  
+    // Process grouped payments
+    const processedPayments = Object.keys(groupedPayments).flatMap((type) =>
+      groupedPayments[type].map((payment) => {
+        return this.mapPaymentToPayload(type, payment);
+      })
+    );
+  
+    // Prepare the final payload
+    this.payment.payments = processedPayments;
+    this.payment.userId = this.associateData.id;
+    this.payment.date = this.paymentDate;
+  
+    // Send the payment list to the backend
+    this.paymentService.addPaymentListByUserId(this.associateData.id, this.payment).subscribe({
+      next: (response: any) => {
         console.log('Pagos registrados exitosamente:', response);
         this.paymentsActivated = false;
-
+  
         this.userService.getAssociateById(this.associateData.id).subscribe({
           next: (response: any) => {
             this.totalSavings = response.totalSavings;
@@ -203,17 +223,62 @@ export default class PaymentComponent {
               title: '¡Pago registrado!',
               text: 'El pago ha sido registrado con éxito.',
             });
-            
           },
           error: (error) => {
             console.error('Error al obtener los ahorros:', error);
-            this.totalSavings = 0; // Si no se obtienen ahorros, saldo es 0
-          }
-        })
+            this.totalSavings = 0;
+          },
+        });
       },
-      (error) => {
-        console.error('Error registrando pagos:', error);
-      }
-    );
+      error: (error) => {
+        console.error('Error al registrar los pagos:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Hubo un error al registrar los pagos. Por favor, inténtalo de nuevo.',
+        });
+      },
+    });
   }
+
+  getPaymentType(paymentTitle: string): string {
+    if (paymentTitle.startsWith('Ahorro')) {
+      return 'SAVING';
+    } else if (paymentTitle.startsWith('Contribución')) {
+      return 'CONTRIBUTION';
+    }
+    // Add more types as needed
+    return 'OTHER'; // Default type for unknown payment types
+  }
+
+  mapPaymentToPayload(type: string, payment: any): any {
+    switch (type) {
+      case 'SAVING':
+        return {
+          paymentType: 'SAVING',
+          referenceId: null,
+          userId: payment.paymentTitle.startsWith('Ahorro -')
+            ? parseInt(payment.paymentTitle.split('-')[3])
+            : null,
+          amount: payment.hourlyRate,
+        };
+  
+      case 'CONTRIBUTION':
+        return {
+          paymentType: 'CONTRIBUTION',
+          referenceId: payment.paymentTitle.startsWith('Contribución -')
+          ? parseInt(payment.paymentTitle.split('-')[2])
+          : null,
+          amount: payment.hourlyRate,
+        };
+  
+      default:
+        return {
+          paymentType: type,
+          referenceId: null,
+          amount: payment.hourlyRate,
+        };
+    }
+  }
+  
 }

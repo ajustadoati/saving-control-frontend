@@ -6,6 +6,7 @@ import { Product } from '../../../interfaces/product';
 import { ProductService } from '../../../core/services/product.service';
 import { Associate } from '../../../interfaces/associate';
 import { User } from '../../../interfaces/user';
+import { ContributionService } from '../../../core/services/contribution.service';
 
 @Component({
   selector: 'app-default-payment',
@@ -25,21 +26,26 @@ export class DefaultPaymentComponent implements OnInit {
 
   @Input() associateData!: any; 
   isMemberSelected = false;
+  isSharingSelected = false;
+  contributions: any;
 
   constructor(
     private fb: FormBuilder,
     private defaultPaymentService: DefaultPaymentService,
-    private productService: ProductService
+    private productService: ProductService,
+    private contributionService: ContributionService
   ) {
     this.paymentForm = this.fb.group({
       defaultPaymentName: [''],
       selectedAssociation:[0],
+      selectedPaymentSharing:[0],
       amount: [0, [Validators.required, Validators.min(1)]]
     });
   }
 
   ngOnInit(): void {
     this.loadProducts();
+    this.loadContributions();
   }
 
   loadProducts(): void {
@@ -56,9 +62,24 @@ export class DefaultPaymentComponent implements OnInit {
     });
   }
 
+  loadContributions(): void {
+    console.log("locading contributions");
+    this.contributionService.getContributions().subscribe({
+      next: (data: any) => {
+        console.log("locading contributions", data);
+        this.contributions = data;
+      },
+      error: (err) => {
+        console.error('Error al cargar las contribuciones:', err);
+      }
+    });
+  }
+
   onPaymentNameChange(event: Event): void {
     const selectedValue = (event.target as HTMLSelectElement).value;
     this.isMemberSelected = selectedValue === 'Ahorro Miembro';
+    this.isSharingSelected = selectedValue === 'Contribución'
+
   }
 
   onSubmit() {
@@ -76,6 +97,18 @@ export class DefaultPaymentComponent implements OnInit {
 
         if (selectedMember) {
           paymentData.defaultPaymentName = `Ahorro - ${selectedMember.firstName} - ${selectedMember.numberId} - ${selectedMember.id}`;
+        }
+      }
+
+      if ( this.isSharingSelected) {
+        console.log ("Selected sharing", this.isSharingSelected);
+        const selectedPaymentSharingId = paymentData.selectedPaymentSharing;
+        const selectedSharing = this.contributions.find((cont: {id: any}) => cont.id === +selectedPaymentSharingId);
+
+        if(selectedSharing){
+          console.log ("Selected sharing", selectedSharing);
+          paymentData.defaultPaymentName = `Contribución - ${selectedSharing.description} - ${selectedSharing.id}`;
+          paymentData.amount = selectedSharing.amount;
         }
       }
 

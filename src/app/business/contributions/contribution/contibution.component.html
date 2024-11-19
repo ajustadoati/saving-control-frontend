@@ -1,0 +1,110 @@
+<div class="container mx-auto p-6 bg-gray-100 min-h-screen">
+    <h1 class="text-3xl font-bold mb-4">Contribuciones</h1>
+  
+    <!-- Filters -->
+    <div class="mb-6">
+      <label class="block font-medium text-gray-700 mb-2">Tipos</label>
+      <select class="border rounded p-2 w-full" [(ngModel)]="selectedContributionType">
+        <option *ngFor="let type of contributionTypes" [value]="type.id">{{ type.name }}</option>
+      </select>
+    </div>
+  
+    <!-- Table -->
+    <div>
+      <table class="table-auto w-full bg-white rounded-lg shadow-md">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-4 py-2 text-left">ID</th>
+            <th class="px-4 py-2 text-left">Tipo</th>
+            <th class="px-4 py-2 text-left">Nombre</th>
+            <th class="px-4 py-2 text-left">Monto</th>
+            <th class="px-4 py-2 text-left">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let contribution of contributions">
+            <td class="border px-4 py-2">{{ contribution.id }}</td>
+            <td class="border px-4 py-2">{{ contribution.contributionTypeName }}</td>
+            <td class="border px-4 py-2">{{ contribution.description }}</td>
+            <td class="border px-4 py-2">{{ contribution.amount}}</td>
+            <td class="border px-4 py-2">
+        
+              <button (click)="deleteContribution(contribution.id)" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  
+    <!-- Add Contribution -->
+    <div class="flex justify-end mt-4">
+      <button 
+        class="bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600"
+        (click)="openAddContributionModal()">
+        Agregar Contribución
+      </button>
+    </div>
+  </div>
+
+  <div
+  *ngIf="showAddContributionModal"
+  class="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center"
+>
+  <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+    <h3 class="text-lg font-bold mb-4">Agregar Contribución</h3>
+    <form (ngSubmit)="saveContribution()">
+      <!-- Tipo de Contribución -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">Tipo</label>
+        <select
+          [(ngModel)]="newContribution.contributionTypeId"
+          name="type"
+          class="mt-1 p-2 border rounded w-full"
+        >
+          <option *ngFor="let type of contributionTypes" [value]="type.id">
+            {{ type.name }}
+          </option>
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">Nombre</label>
+        <input
+          [(ngModel)]="newContribution.name"
+          name="name"
+          type="string"
+          class="mt-1 p-2 border rounded w-full"
+        />
+      </div>
+
+      <!-- Monto -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700">Monto</label>
+        <input
+          [(ngModel)]="newContribution.amount"
+          name="amount"
+          type="number"
+          class="mt-1 p-2 border rounded w-full"
+        />
+      </div>
+
+      <!-- Botones -->
+      <div class="flex justify-end space-x-4">
+        <button
+          type="button"
+          (click)="closeAddContributionModal()"
+          class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Guardar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+  

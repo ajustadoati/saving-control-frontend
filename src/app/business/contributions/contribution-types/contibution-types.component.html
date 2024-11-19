@@ -1,0 +1,32 @@
+<div class="container mx-auto p-6 bg-gray-100 min-h-screen">
+    <h1 class="text-3xl font-bold mb-4">Tipos de contribuciones</h1>
+    
+    <div class="flex justify-end mb-4">
+      <button 
+        class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600"
+        (click)="openAddContributionTypeModal()">
+        Add Contribution Type
+      </button>
+    </div>
+  
+    <table class="table-auto w-full bg-white rounded-lg shadow-md">
+      <thead class="bg-gray-200">
+        <tr>
+          <th class="px-4 py-2 text-left">ID</th>
+          <th class="px-4 py-2 text-left">Name</th>
+          <th class="px-4 py-2 text-left">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let type of contributionTypes">
+          <td class="border px-4 py-2">{{ type.id }}</td>
+          <td class="border px-4 py-2">{{ type.name }}</td>
+          <td class="border px-4 py-2">
+        
+            <button (click)="deleteContributionType(type.id)" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
