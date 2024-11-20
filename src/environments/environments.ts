@@ -1,5 +1,5 @@
 
 
 export const environment = {
-  baseUrl: 'http://calch.ajustadoati.com'
+  baseUrl: 'https://calch.ajustadoati.com'
 }
