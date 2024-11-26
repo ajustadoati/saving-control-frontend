@@ -108,6 +108,7 @@ export default class AssociatesComponent implements OnInit {
   closeModal(): void {
     this.showModal = false;    // Oculta el modal
     this.selectedUser = null;  // Limpia el socio seleccionado
+    this.loadUsers();
   }
 
   searchAssociates(): void {

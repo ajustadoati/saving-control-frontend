@@ -33,6 +33,10 @@ export class UserService {
     );
   }
 
+  updateUser(id: number, updates: any): Observable<any> {
+    return this.http.patch<void>(`${this.apiUrl}/${id}`, updates);
+  }
+
   getAssociateByNumberId(numberId: string): Observable<any> {
     // Primero busca en la caché
     const associate = this.cachedUsers.find(user => user.numberId === numberId);

@@ -91,8 +91,8 @@ export default class ContibutionComponent {
       next: () => {
         Swal.fire({
           icon: 'success',
-          title: '¡Contribución registrada!',
-          text: 'La contribución ha sido registrada exitosamente.'
+          title: '¡Aporte especial registrado!',
+          text: 'Aporte especial ha sido registrado exitosamente.'
         });
         this.contributionForm.reset({
           contributionTypeId: '',
@@ -106,7 +106,7 @@ export default class ContibutionComponent {
         Swal.fire({
           icon: 'error',
           title: 'Error al registrar',
-          text: 'No se pudo registrar la contribución. Intenta de nuevo más tarde.'
+          text: 'No se pudo registrar. Intenta de nuevo más tarde.'
         });
       }
     });
@@ -148,8 +148,8 @@ export default class ContibutionComponent {
       next: () => {
         Swal.fire({
           icon: 'success',
-          title: '¡Contribución registrada!',
-          text: 'La contribución ha sido registrada exitosamente.'
+          title: 'Aporte especial registrado!',
+          text: 'El aporte especial ha sido registrado exitosamente.'
         });
         this.contributionForm.reset({
           contributionTypeId: '',
@@ -159,11 +159,11 @@ export default class ContibutionComponent {
         this.loadContributions(); // Recargar la lista de contribuciones
       },
       error: (err: any) => {
-        console.error('Error al registrar la contribución:', err);
+        console.error('Error al registrar Aporte:', err);
         Swal.fire({
           icon: 'error',
           title: 'Error al registrar',
-          text: 'No se pudo registrar la contribución. Intenta de nuevo más tarde.'
+          text: 'No se pudo registrar el aporte especial. Intenta de nuevo más tarde.'
         });
       }
     });
@@ -188,16 +188,16 @@ export default class ContibutionComponent {
             Swal.fire({
               icon: 'success',
               title: '¡Contribución eliminada!',
-              text: 'La contribución ha sido eliminada exitosamente.'
+              text: 'El aporte ha sido eliminado exitosamente.'
             });
             this.loadContributions(); // Recargar la lista de contribuciones
           },
           error: (error: any) => {
-            console.error('Error al eliminar la contribución:', error);
+            console.error('Error al eliminar el aporte especial:', error);
             Swal.fire({
               icon: 'error',
               title: 'Error al eliminar',
-              text: 'No se pudo eliminar la contribución. Intenta de nuevo más tarde.'
+              text: 'No se pudo eliminar el aporte especial. Intenta de nuevo más tarde.'
             });
           }
         });

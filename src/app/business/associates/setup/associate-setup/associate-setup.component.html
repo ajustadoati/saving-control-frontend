@@ -93,7 +93,7 @@
       <!-- Miembros Asociados -->
       <!-- Miembros Asociados -->
 <div class="bg-white border rounded-lg shadow-md p-4 w-1/2">
-  <h2 class="text-lg font-bold mb-4 text-gray-800">Miembros Asociados</h2>
+  <h2 class="text-lg font-bold mb-4 text-gray-800">Asociados</h2>
   
   <!-- Tabla para mostrar los miembros -->
   <table *ngIf="associateData?.associates?.length > 0; else noAssociates" class="w-full text-sm">
@@ -122,7 +122,7 @@
 
   <!-- Mensaje si no hay miembros asociados -->
   <ng-template #noAssociates>
-    <p class="text-gray-600">No hay miembros asociados.</p>
+    <p class="text-gray-600">No hay asociados.</p>
   </ng-template>
 
   <!-- Botón para asociar nuevo miembro -->
@@ -131,7 +131,7 @@
       (click)="openAssociateMemberModal()"
       class="py-1 px-3 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
     >
-      Asociar Miembro
+      Agregar asociado
     </button>
   </div>
 </div>
