@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
+import { UserService } from '../../../core/services/user.service';
 
 @Component({
   selector: 'app-associate-create',
@@ -15,7 +16,7 @@ export class AssociateCreateComponent {
   associateForm: FormGroup;
   isEditMode: boolean = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private fb: FormBuilder, private userService: UserService) {
     this.associateForm = this.fb.group({
       firstName: ['', Validators.required],
       lastName: ['', Validators.required],
@@ -36,11 +37,29 @@ export class AssociateCreateComponent {
   onSubmit(): void {
     if (this.associateForm.valid) {
       const formData = this.associateForm.value;
-      console.log('Datos del socio:', formData);
-      // Aquí puedes enviar la información al backend para guardar
-      this.closeModal();
+      formData.roles = ['ASSOCIATE']; 
+      console.log('Datos del socio antes de enviar:', formData);
+  
+      if (this.isEditMode) {
+        // Lógica para editar el socio
+      } else {
+        this.userService.addUsers(formData).subscribe({
+          next: (response) => {
+            console.log('Socio añadido exitosamente', response.associate);
+            this.closeModal();
+          },
+          error: (error) => {
+            console.error('Error al añadir socio', error);
+          },
+          complete: () => {
+            console.log('Operación completada');
+          }
+        });
+      }
     }
   }
+  
+  
 
   closeModal(): void {
     this.closeModalEvent.emit();

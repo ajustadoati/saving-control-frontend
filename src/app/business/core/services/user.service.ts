@@ -96,6 +96,15 @@ export class UserService {
     );
   }
   
+  addUsers(associate: { firstName: string; lastName: string; numberId: string; mobileNumber: string; email: string; company: string; roles: string[] }): Observable<any> {
+    console.log("Datos del socio enviados al servidor:", associate);
+  
+    return this.http.post<any>(this.apiUrl, associate).pipe(
+      map((response) => {
+        return { associate: response };
+      })
+    );
+  }
 
 
   clearCache(): void {
