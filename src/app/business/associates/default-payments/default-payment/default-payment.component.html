@@ -11,18 +11,10 @@
       </div>
       
       <div class="mb-4" *ngIf="isMemberSelected">
-        <label for="associate" class="block text-sm font-medium text-gray-700">Contribución</label>
+        <label for="associate" class="block text-sm font-medium text-gray-700">Asociados</label>
         <select formControlName="selectedAssociation" id="associate" class="w-full mt-1 p-2 border rounded">
           <option [value]="associateData.id">Socio Principal</option>
           <option *ngFor="let member of associateData.associates" [value]="member.id">{{ member.firstName }} - {{ member.relationship }}</option>
-        </select>
-      </div>
-
-      <div class="mb-4" *ngIf="isSharingSelected">
-        <label for="contribution" class="block text-sm font-medium text-gray-700">Tipo</label>
-        <select formControlName="selectedPaymentSharing" id="contribution" class="w-full mt-1 p-2 border rounded">
-          <option [value]="associateData.id">Contribución</option>
-          <option *ngFor="let contribution of contributions" [value]="contribution.id">{{ contribution.description }}</option>
         </select>
       </div>
   

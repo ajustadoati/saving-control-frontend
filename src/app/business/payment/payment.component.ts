@@ -11,6 +11,7 @@ import { DefaultPaymentService } from '../core/services/default-payment.service'
 import { PaymentService } from '../core/services/payment.service';
 import { Payment } from '../interfaces/payment';
 import { PaymentDetail } from '../interfaces/paymentDetail';
+import { ContributionService } from '../core/services/contribution.service';
 
 @Component({
   selector: 'app-payment',
@@ -20,9 +21,11 @@ import { PaymentDetail } from '../interfaces/paymentDetail';
   styleUrl: './payment.component.css'
 })
 export default class PaymentComponent {
+  
 
   constructor(private userService: UserService, private savingService: SavingService, 
-    private defaultPaymentService: DefaultPaymentService, private paymentService: PaymentService) {
+    private defaultPaymentService: DefaultPaymentService, private paymentService: PaymentService,
+    private contributionService: ContributionService) {
   
    }
 
@@ -35,6 +38,10 @@ export default class PaymentComponent {
   associateFound: boolean = false;
 
   paymentsActivated: boolean = false;
+
+  referenceId: any;
+
+  contributions: any;
 
   payment: Payment = {
     userId: 0,
@@ -129,6 +136,14 @@ export default class PaymentComponent {
             console.error('Error al obtener los pagos por defecto:', error);
           }
         });
+
+        this.contributionService.getContributions().subscribe({
+          next: (data: any) => {
+            this.contributions = data
+          },
+        error: (error) => {
+          console.error('Error al obtener las contribuciones:', error); 
+        }});
       },
       error: (error) => {
         console.error('Socio no encontrado:', error);
@@ -242,9 +257,12 @@ export default class PaymentComponent {
   }
 
   getPaymentType(paymentTitle: string): string {
-    if (paymentTitle.startsWith('Ahorro')) {
+
+    if (paymentTitle.startsWith('Caja de Ahorro')) {
       return 'SAVING';
-    } else if (paymentTitle.startsWith('Contribución')) {
+    } else if (paymentTitle.startsWith('Administrativo') || paymentTitle.startsWith('Compartir')) {
+      let paymentType = this.contributions.find((contribution: { description: string; }) => contribution.description === paymentTitle);
+      this.referenceId = paymentType.id;
       return 'CONTRIBUTION';
     }
     // Add more types as needed
@@ -257,8 +275,8 @@ export default class PaymentComponent {
         return {
           paymentType: 'SAVING',
           referenceId: null,
-          userId: payment.paymentTitle.startsWith('Ahorro -')
-            ? parseInt(payment.paymentTitle.split('-')[3])
+          userId: payment.paymentTitle.startsWith('Caja de Ahorro -')
+            ? parseInt(payment.paymentTitle.split('-')[2])
             : null,
           amount: payment.hourlyRate,
         };
@@ -266,9 +284,7 @@ export default class PaymentComponent {
       case 'CONTRIBUTION':
         return {
           paymentType: 'CONTRIBUTION',
-          referenceId: payment.paymentTitle.startsWith('Contribución -')
-          ? parseInt(payment.paymentTitle.split('-')[2])
-          : null,
+          referenceId: this.referenceId,
           amount: payment.hourlyRate,
         };
   

@@ -18,9 +18,10 @@ import { ContributionService } from '../../../core/services/contribution.service
 export class DefaultPaymentComponent implements OnInit {
   paymentForm: FormGroup;
   products: Product[] = []; // Lista de productos obtenidos del servicio
-  selectedPaymentName: string = ''; // Pago seleccionado en el select
+  selectedPaymentName: any; // Pago seleccionado en el select
   amount: number = 0;
   selectedAssociation: number | null = null;
+
 
   @Output() paymentAdded = new EventEmitter<void>();
 
@@ -54,7 +55,7 @@ export class DefaultPaymentComponent implements OnInit {
       next: (data: Product[]) => {
         this.products = data; // Asigna la lista de productos
         this.paymentForm.patchValue({ defaultPaymentName: this.products[0].name });
-        this.isMemberSelected = this.products[0].name === 'Ahorro Miembro';
+        this.isMemberSelected = this.products[0].name === 'Esposa(o)';
       },
       error: (err) => {
         console.error('Error al cargar productos:', err);
@@ -77,8 +78,17 @@ export class DefaultPaymentComponent implements OnInit {
 
   onPaymentNameChange(event: Event): void {
     const selectedValue = (event.target as HTMLSelectElement).value;
-    this.isMemberSelected = selectedValue === 'Ahorro Miembro';
-    this.isSharingSelected = selectedValue === 'Contribución'
+    this.isMemberSelected = selectedValue === 'Esposa(o)' || selectedValue === 'Hijos';
+    this.isSharingSelected = selectedValue === 'Compartir' || selectedValue === 'Administrativo';
+    if (selectedValue === 'Compartir' || selectedValue === 'Administrativo') {
+      this.selectedPaymentName = this.contributions.find(
+        (contribution: { description: string; }) => contribution.description === selectedValue
+      );
+      console.log("Selected payment name", this.selectedPaymentName);
+    } else if(this.isMemberSelected){
+      this.selectedPaymentName = selectedValue
+    }
+    
 
   }
 
@@ -96,20 +106,16 @@ export class DefaultPaymentComponent implements OnInit {
         );
 
         if (selectedMember) {
-          paymentData.defaultPaymentName = `Ahorro - ${selectedMember.firstName} - ${selectedMember.numberId} - ${selectedMember.id}`;
+          paymentData.defaultPaymentName = `Caja de Ahorro - ${this.selectedPaymentName} - ${selectedMember.id}`;
         }
       }
 
       if ( this.isSharingSelected) {
-        console.log ("Selected sharing", this.isSharingSelected);
-        const selectedPaymentSharingId = paymentData.selectedPaymentSharing;
-        const selectedSharing = this.contributions.find((cont: {id: any}) => cont.id === +selectedPaymentSharingId);
-
-        if(selectedSharing){
-          console.log ("Selected sharing", selectedSharing);
-          paymentData.defaultPaymentName = `Contribución - ${selectedSharing.description} - ${selectedSharing.id}`;
-          paymentData.amount = selectedSharing.amount;
-        }
+        console.log ("Selected sharing", this.selectedPaymentName);
+ 
+          paymentData.defaultPaymentName = this.selectedPaymentName.description;
+          paymentData.amount = this.selectedPaymentName.amount;
+        
       }
 
       const payload = {defaultPaymentName: paymentData.defaultPaymentName, amount: paymentData.amount};
