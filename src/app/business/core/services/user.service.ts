@@ -5,6 +5,8 @@ import { environment } from '../../../../environments/environments';
 import { Associate } from '../../interfaces/associate';
 import { User } from '../../interfaces/user';
 
+import { HttpHeaders } from '@angular/common/http';
+
 @Injectable({
   providedIn: 'root'
 })
@@ -15,6 +17,7 @@ export class UserService {
   private cachedUsers: User[] = []; // Almacena los usuarios en memoria
   private pageData: any; 
   private users: User[]=[];
+  authService: any;
 
   constructor(private http: HttpClient) {}
 
@@ -102,6 +105,17 @@ export class UserService {
     return this.http.post<any>(this.apiUrl, associate).pipe(
       map((response) => {
         return { associate: response };
+      })
+    );
+  }
+
+
+  deleteUser(id: number): Observable<any> {
+    console.log("Deleting user with id:", id);
+
+    return this.http.delete<any>(`${this.apiUrl}/${id}`).pipe(
+      map((response) => {
+        return { message: 'User deleted successfully', response };
       })
     );
   }

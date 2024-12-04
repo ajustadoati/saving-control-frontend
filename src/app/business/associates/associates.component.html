@@ -74,9 +74,13 @@
           <td class="px-6 py-4 whitespace-no-wrap border-b border-gray-500 text-blue-900 text-sm leading-5">{{
             user.company }}</td>
           <td class="px-6 py-4 whitespace-no-wrap text-right border-b border-gray-500 text-sm leading-5">
-            <button (click)="openModal(user)"
-              class="px-5 py-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none">Ver
-              Detalles</button>
+            <div class="flex space-x-2">
+              <button (click)="openModal(user)"
+                      class="px-5 py-2 border-blue-500 border text-blue-500 rounded transition duration-300 hover:bg-blue-700 hover:text-white focus:outline-none">Ver Detalles</button>
+              <button (click)="deleteUser(user.id)"
+                      class="px-5 py-2 border-red-500 border text-red-500 rounded transition duration-300 hover:bg-red-700 hover:text-white focus:outline-none">Eliminar Socio</button>
+          </div>
+          
           </td>
         </tr>
       </tbody>
