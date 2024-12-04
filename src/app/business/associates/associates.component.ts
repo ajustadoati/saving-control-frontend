@@ -8,6 +8,8 @@ import { UserService } from '../core/services/user.service';
 import { AssociateDetailComponent } from './detail/associate-detail/associate-detail.component';
 import { AssociateCreateComponent } from "./create/associate-create/associate-create.component";
 
+import Swal from 'sweetalert2';
+
 @Component({
   selector: 'app-associates',
   standalone: true,
@@ -119,6 +121,31 @@ export default class AssociatesComponent implements OnInit {
       associate.numberId.toLowerCase().includes(term) ||
       (`${associate.firstName} ${associate.lastName}`).toLowerCase().includes(term)
     );
+  }
+
+  deleteUser(id: number): void {
+    this.userService.deleteUser(id).subscribe({
+      next: (response) => {
+        console.log('Usuario eliminado exitosamente', response.message);
+        this.loadUsers(); 
+        Swal.fire({
+          icon: 'success',
+          title: '¡Usuario eliminado!',
+          text: 'El usuario ha sido eliminado con éxito.',
+        });
+      },
+      error: (error) => {
+        console.error('Error al eliminar el usuario', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Hubo un error al eliminar el usuario. Por favor, inténtalo de nuevo.',
+        });
+      },
+      complete: () => {
+        console.log('Operación de eliminación completada');
+      }
+    });
   }
 
 }

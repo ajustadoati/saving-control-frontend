@@ -2,6 +2,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormGroup, FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 import { UserService } from '../../../core/services/user.service';
 
+import Swal from 'sweetalert2';
+
 @Component({
   selector: 'app-associate-create',
   standalone: true,
@@ -47,9 +49,19 @@ export class AssociateCreateComponent {
           next: (response) => {
             console.log('Socio añadido exitosamente', response.associate);
             this.closeModal();
+            Swal.fire({
+              icon: 'success',
+              title: '¡Usuario registrado!',
+              text: 'El usuario ha sido registrado con éxito.',
+            });
           },
           error: (error) => {
             console.error('Error al añadir socio', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Hubo un error al registrar el usuario. Por favor, inténtalo de nuevo.',
+            });
           },
           complete: () => {
             console.log('Operación completada');
