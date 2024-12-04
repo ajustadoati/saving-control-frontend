@@ -129,6 +129,7 @@ export default class PaymentComponent {
               this.updateTotal();
             } else {
               this.defaultPayments.pop();
+              this.loadProducts();
               //this.paymentTypes.push('Ahorro');
               //this.defaultPayments.push({paymentTitle: 'Ahorro', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0})
          
@@ -139,8 +140,6 @@ export default class PaymentComponent {
           }
         });
 
-        this.loadProducts(); 
-        
         this.contributionService.getContributions().subscribe({
           next: (data: any) => {
             this.contributions = data
@@ -195,10 +194,8 @@ export default class PaymentComponent {
   // Agregar un nuevo asistente
   addAttendee() {
     this.paymentsActivated = true;
-    if (this.paymentTypes.length == 0) {
-      this.loadProducts();
-    }
-    this.defaultPayments.push({ paymentTitle: '', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0 });
+    this.loadProducts();
+    //this.defaultPayments.push({ paymentTitle: '', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0 });
     //
     this.updateTotalCost();
   }
