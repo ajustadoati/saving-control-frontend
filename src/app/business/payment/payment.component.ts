@@ -12,6 +12,8 @@ import { PaymentService } from '../core/services/payment.service';
 import { Payment } from '../interfaces/payment';
 import { PaymentDetail } from '../interfaces/paymentDetail';
 import { ContributionService } from '../core/services/contribution.service';
+import { ProductService } from '../core/services/product.service';
+import { Product } from '../interfaces/product';
 
 @Component({
   selector: 'app-payment',
@@ -25,7 +27,7 @@ export default class PaymentComponent {
 
   constructor(private userService: UserService, private savingService: SavingService, 
     private defaultPaymentService: DefaultPaymentService, private paymentService: PaymentService,
-    private contributionService: ContributionService) {
+    private contributionService: ContributionService, private productService: ProductService) {
   
    }
 
@@ -127,8 +129,8 @@ export default class PaymentComponent {
               this.updateTotal();
             } else {
               this.defaultPayments.pop();
-              this.paymentTypes.push('Ahorro');
-              this.defaultPayments.push({paymentTitle: 'Ahorro', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0});
+              //this.paymentTypes.push('Ahorro');
+              //this.defaultPayments.push({paymentTitle: 'Ahorro', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0})
          
             }
           }, 
@@ -137,6 +139,8 @@ export default class PaymentComponent {
           }
         });
 
+        this.loadProducts(); 
+        
         this.contributionService.getContributions().subscribe({
           next: (data: any) => {
             this.contributions = data
@@ -187,11 +191,37 @@ export default class PaymentComponent {
   }
 
 
+
   // Agregar un nuevo asistente
   addAttendee() {
     this.paymentsActivated = true;
+    if (this.paymentTypes.length == 0) {
+      this.loadProducts();
+    }
     this.defaultPayments.push({ paymentTitle: '', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0 });
+    //
     this.updateTotalCost();
+  }
+
+  loadProducts(): void {
+    this.productService.getProducts().subscribe({
+      next: (products: Product[]) => {
+        console.log("Searching products", products)
+        // Mapea los productos a sus nombres para mostrarlos en el select
+        this.paymentTypes = products.map((product) => product.name);
+
+        // Agrega una nueva fila con opciones dinámicas
+        this.defaultPayments.push({
+          paymentTitle: '', // Deja el título vacío para que el usuario lo seleccione
+          hourlyRate: 0,
+          defaultPaymentsCount: 1,
+          totalCost: 0,
+        });
+      },
+      error: (error) => {
+        this.defaultPayments.push({ paymentTitle: '', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0 });
+      },
+    });
   }
 
   // Eliminar un asistente
