@@ -1,0 +1,57 @@
+<div class="max-w-lg mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4">Subir y Descargar Archivo Excel</h3>
+  
+    <!-- Selección de archivo -->
+    <div class="mb-4">
+      <label for="file" class="block text-sm font-medium text-gray-700">Selecciona un archivo:</label>
+      <input
+        type="file"
+        id="file"
+        (change)="selectFile($event)"
+        class="block w-full mt-1 text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      />
+    </div>
+  
+    <!-- Información sobre el archivo seleccionado -->
+    <div *ngIf="currentFile" class="mb-4">
+      <p class="text-sm text-gray-600">Archivo seleccionado: <span class="font-medium">{{ currentFile.name }}</span></p>
+  
+      <!-- Barra de progreso -->
+      <div class="relative pt-1">
+        <div class="overflow-hidden h-4 mb-2 text-xs flex rounded bg-gray-200">
+          <div
+            [style.width.%]="progress"
+            class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"
+          >
+            {{ progress }}%
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Botones -->
+    <div class="flex items-center space-x-4">
+      <button
+        (click)="upload()"
+        [disabled]="!selectedFiles"
+        class="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+      >
+        Subir
+      </button>
+      <button
+        (click)="download()"
+        [disabled]="isDownloaded"
+        class="px-4 py-2 text-white bg-green-600 rounded-lg hover:bg-green-700"
+      >
+        Descargar
+      </button>
+    </div>
+  
+    <!-- Mensaje -->
+    <div *ngIf="message" class="mt-4">
+      <p [class.text-red-600]="message.includes('Error')" [class.text-green-600]="!message.includes('Error')">
+        {{ message }}
+      </p>
+    </div>
+
+</div>
