@@ -1,4 +1,4 @@
-<div class="w-full h-screen bg-white">
+<div class="-my-2 py-2 overflow-x-auto sm:-mx-6 sm:px-6 lg:-mx-8 pr-10 lg:px-8">
     <div class="flex">
       <h1 class="text-3xl font-bold mb-4 w-full">Pagos</h1>
     </div>
@@ -86,7 +86,7 @@
   
     </div>
 
-    <div *ngIf="paymentsActivated" class="mt-8">
+    <div *ngIf="paymentsActivated" class="mt-8 mb-16">
         <button (click)="registerPayments()" class="py-2 px-4 bg-green-500 text-white rounded-lg mr-4">Guardar pagos</button>
         <button (click)="openReceiptModal()"  class="py-2 px-4 bg-red-500 text-white rounded-lg">Ver Recibo</button>
       </div>
