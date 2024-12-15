@@ -287,10 +287,22 @@ export default class PaymentComponent {
 
     if (paymentTitle.startsWith('Caja de Ahorro')) {
       return 'SAVING';
-    } else if (paymentTitle.startsWith('Administrativo') || paymentTitle.startsWith('Compartir')) {
+    } if (paymentTitle.startsWith('Esposa(o)')) {
+      return 'PARTNER_SAVING';
+    }if (paymentTitle.startsWith('Hijos')) {
+      return 'CHILDRENS_SAVING';
+    } else if (paymentTitle.startsWith('Administrativo') ) {
       let paymentType = this.contributions.find((contribution: { description: string; }) => contribution.description === paymentTitle);
       this.referenceId = paymentType.id;
-      return 'CONTRIBUTION';
+      return 'ADMINISTRATIVE';
+    }  else if (paymentTitle.startsWith('Compartir') ) {
+      let paymentType = this.contributions.find((contribution: { description: string; }) => contribution.description === paymentTitle);
+      this.referenceId = paymentType.id;
+      return 'SHARED_CONTRIBUTION';
+    } else if (paymentTitle.startsWith('Interés de préstamo')) {
+      return 'LOAN_INTEREST_PAYMENT';
+    } else if (paymentTitle.startsWith('Abono a préstamo')) {
+      return 'LOAN_PAYMENT';
     }
     // Add more types as needed
     return 'OTHER'; // Default type for unknown payment types
@@ -307,11 +319,59 @@ export default class PaymentComponent {
             : null,
           amount: payment.hourlyRate,
         };
-  
+        
+      case 'PARTNER_SAVING':
+        return {
+          paymentType: 'PARTNER_SAVING',
+          referenceId: null,
+          userId: payment.paymentTitle.startsWith('Caja de Ahorro -')
+            ? parseInt(payment.paymentTitle.split('-')[2])
+            : null,
+          amount: payment.hourlyRate,
+        };
+      
+      case 'CHILDRENS_SAVING':
+        return {
+          paymentType: 'PARTNER_SAVING',
+          referenceId: null,
+          userId: payment.paymentTitle.startsWith('Caja de Ahorro -')
+            ? parseInt(payment.paymentTitle.split('-')[2])
+            : null,
+          amount: payment.hourlyRate,
+        };
+
       case 'CONTRIBUTION':
         return {
           paymentType: 'CONTRIBUTION',
           referenceId: this.referenceId,
+          amount: payment.hourlyRate,
+        };
+
+      case 'ADMINISTRATIVE':
+        return {
+          paymentType: 'ADMINISTRATIVE',
+          referenceId: this.referenceId,
+          amount: payment.hourlyRate,
+        };
+      
+      case 'SHARED_CONTRIBUTION':
+        return {
+          paymentType: 'SHARED_CONTRIBUTION',
+          referenceId: this.referenceId,
+          amount: payment.hourlyRate,
+        };
+      
+      case 'LOAN_INTEREST_PAYMENT':
+        return {
+          paymentType: 'LOAN_INTEREST_PAYMENT',
+          referenceId: null,
+          amount: payment.hourlyRate,
+        };
+      
+      case 'LOAN_PAYMENT':
+        return {
+          paymentType: 'LOAN_PAYMENT',
+          referenceId: null,
           amount: payment.hourlyRate,
         };
   
