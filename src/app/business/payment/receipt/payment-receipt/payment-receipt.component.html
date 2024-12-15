@@ -1,43 +1,38 @@
 <div id="printSection" class="p-8 bg-white">
-    <div class="flex justify-between">
-        <h2 class="text-2xl font-bold mb-8 text-center w-full">Recibo de Pago</h2>
-        <p class="text-sm text-gray-500">Fecha: {{ currentDate | date: 'dd/MM/yyyy' }}</p>
-    </div>
+  <div class="text-center">
+    <h2 class="text-lg font-bold">Recibo de Pago</h2>
+    <p class="text-sm">{{ currentDate | date: 'dd/MM/yy'}}</p>
+  </div>
 
-    <!-- Información del socio -->
-    <div class="mb-8">
-        <p><strong>Socio:</strong> {{ associateData?.firstName }} {{ associateData?.lastName }}</p>
-        <p><strong>Email:</strong> {{ associateData?.email }}</p>
-        <p><strong>Teléfono:</strong> {{ associateData?.mobileNumber }}</p>
-    </div>
+  <div class="mt-4">
+    <p class="text-sm"><strong>Nombre:</strong> {{ associateData?.firstName }} {{ associateData?.lastName }}</p>
+    <p class="text-sm"><strong>Teléfono:</strong> {{ associateData?.mobileNumber }}</p>
+    <p class="text-sm"><strong>Email:</strong> {{ associateData?.email }}</p>
+    <hr class="my-2">
+  </div>
 
-    <!-- Línea separadora -->
-    <hr class="my-6 border-t-2 border-gray-300">
+  <table class="w-full text-xs border-t border-gray-400">
+    <thead>
+      <tr>
+        <th class="text-left">Tipo de Pago</th>
+        <th class="text-right">Monto</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let payment of defaultPayments">
+        <td class="text-left">{{ payment.paymentTitle }}</td>
+        <td class="text-right">{{ payment.hourlyRate | currency }}</td>
+      </tr>
+    </tbody>
+  </table>
 
-    <!-- Detalles de pagos -->
-    <h3 class="mt-8 mb-4 font-semibold">Detalles de Pagos</h3>
-    <table class="w-full text-left border-collapse">
-      <thead>
-        <tr class="bg-gray-100 border-b">
-          <th class="py-4 px-4">Tipo de Pago</th>
-          <th class="py-4 px-4">Monto</th>
-          <th class="py-4 px-4">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let payment of defaultPayments" class="border-b">
-          <td class="py-4 px-4">{{ payment.paymentTitle }}</td>
-          <td class="py-4 px-4">{{ payment.hourlyRate | currency }}</td>
-          <td class="py-4 px-4">{{ (payment.hourlyRate * payment.defaultPaymentsCount) | currency }}</td>
-        </tr>
-      </tbody>
-    </table>
+  <hr class="my-2">
+  <div class="flex justify-between text-sm font-bold">
+    <span>Total:</span>
+    <span>{{ total | currency }}</span>
+  </div>
 
-    <!-- Línea separadora -->
-    <hr class="my-6 border-t-2 border-gray-300">
-
-    <!-- Total pagado alineado a la derecha -->
-    <div class="flex justify-end mt-8">
-        <p class="text-lg font-semibold"><strong>Total Pagado:</strong> {{ total | currency }}</p>
-    </div>
+  <div class="mt-4 text-center">
+    <p class="text-xs">Gracias por su pago</p>
+  </div>
 </div>

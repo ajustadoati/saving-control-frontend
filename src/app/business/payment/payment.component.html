@@ -95,7 +95,7 @@
 
   <!-- Modal para ver los detalles del recibo de pago -->
   <div *ngIf="showReceiptModal" class="fixed inset-0 flex items-center justify-center z-50">
-    <div class="bg-white w-1/2 rounded-lg shadow-lg p-8">
+    <div class="bg-white w-[80mm] rounded-lg shadow-lg p-4 print:shadow-none print:rounded-none">
     
       <!-- Usamos el componente PaymentReceiptComponent en lugar del HTML directamente -->
       <app-payment-receipt 
@@ -113,3 +113,6 @@
       </div>
     </div>
   </div>
+
+  
+  
