@@ -128,6 +128,7 @@ export default class PaymentComponent {
               })
               this.updateTotal();
             } else {
+              this.meetingTotal = 0;
               this.defaultPayments.pop();
               this.loadProducts();
               //this.paymentTypes.push('Ahorro');
