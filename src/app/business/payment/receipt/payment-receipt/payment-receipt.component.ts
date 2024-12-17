@@ -20,19 +20,32 @@ export class PaymentReceiptComponent {
 
   // Método para generar el PDF
   generatePDF(): void {
-    const DATA: any = document.getElementById('printSection'); // Captura la sección a convertir en PDF
-    html2canvas(DATA).then(canvas => {
-      const fileWidth = 208;
-      const fileHeight = (canvas.height * fileWidth) / canvas.width;
-
-      const fileURI = canvas.toDataURL('image/png'); // Convierte la sección a imagen PNG
-      const PDF = new jsPDF('p', 'mm', 'a4');
-      const position = 0;
-
-      PDF.addImage(fileURI, 'PNG', 0, position, fileWidth, fileHeight);
-      PDF.save('recibo-pago.pdf');  // Guarda el archivo PDF
+    const DATA: HTMLElement = document.getElementById('printSection')!;
+  
+    // Configuramos una escala para mejorar la resolución y ajustamos la impresión
+    const scale = window.devicePixelRatio || 2;
+  
+    html2canvas(DATA, {
+      scale: scale, // Aumenta la calidad
+      useCORS: true, // Asegura la carga correcta de recursos externos
+      scrollY: -window.scrollY, // Evita scroll al capturar
+    }).then((canvas) => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdfWidth = 80; // Ancho del recibo en mm
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+  
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: [pdfWidth, pdfHeight], // Dinámico en base al contenido
+      });
+  
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save('recibo-pago.pdf');
     });
   }
+  
+  
 
 }
 

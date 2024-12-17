@@ -1,38 +1,38 @@
-<div id="printSection" class="p-8 bg-white">
-  <div class="text-center">
-    <h2 class="text-lg font-bold">Recibo de Pago</h2>
-    <p class="text-sm">{{ currentDate | date: 'dd/MM/yy'}}</p>
+<div id="printSection" class="receipt-container">
+  <div class="text-center mb-2">
+    <h2 class="font-bold text-lg">Recibo de Pago</h2>
+    <p>{{ currentDate | date: 'dd/MM/yy' }}</p>
   </div>
 
-  <div class="mt-4">
-    <p class="text-sm"><strong>Nombre:</strong> {{ associateData?.firstName }} {{ associateData?.lastName }}</p>
-    <p class="text-sm"><strong>Teléfono:</strong> {{ associateData?.mobileNumber }}</p>
-    <p class="text-sm"><strong>Email:</strong> {{ associateData?.email }}</p>
-    <hr class="my-2">
+  <div style="margin: 0 5px;"> <!-- Añadimos margen horizontal -->
+    <p class="mb-1"><strong>Nombre:</strong> {{ associateData?.firstName }} {{ associateData?.lastName }}</p>
+    <p class="mb-1"><strong>Teléfono:</strong> {{ associateData?.mobileNumber }}</p>
+    <p class="mb-1"><strong>Email:</strong> <span style="text-decoration: none;">{{ associateData?.email }}</span></p>
   </div>
+  <hr class="my-1" style="margin: 5px 0;" /> <!-- Espaciado pequeño para la línea -->
 
-  <table class="w-full text-xs border-t border-gray-400">
+  <table>
     <thead>
       <tr>
-        <th class="text-left">Tipo de Pago</th>
+        <th>Tipo de Pago</th>
         <th class="text-right">Monto</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let payment of defaultPayments">
-        <td class="text-left">{{ payment.paymentTitle }}</td>
+        <td>{{ payment.paymentTitle }}</td>
         <td class="text-right">{{ payment.hourlyRate | currency }}</td>
       </tr>
     </tbody>
+    <tfoot>
+      <tr>
+        <td><strong>Total:</strong></td>
+        <td class="text-right font-bold"><strong>{{ total | currency }}</strong></td>
+      </tr>
+    </tfoot>
   </table>
 
-  <hr class="my-2">
-  <div class="flex justify-between text-sm font-bold">
-    <span>Total:</span>
-    <span>{{ total | currency }}</span>
-  </div>
-
-  <div class="mt-4 text-center">
-    <p class="text-xs">Gracias por su pago</p>
+  <div class="text-center mt-4">
+    <p style="margin: 5px 0;">Gracias por su pago</p>
   </div>
 </div>
