@@ -52,4 +52,10 @@
     margin: 2px 0; /* Controlar el espaciado entre líneas */
     text-align: center;
   }
+
+  table {
+    margin: 0 auto; /* Centra la tabla horizontalmente */
+    width: auto; /* Ajusta la tabla al contenido */
+  }
+  
 }

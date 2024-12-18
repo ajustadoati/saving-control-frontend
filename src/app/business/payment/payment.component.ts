@@ -91,14 +91,14 @@ export default class PaymentComponent {
     if (this.paymentReceiptComponent) {
       this.paymentReceiptComponent.generatePDF(); // Llama al método del componente hijo
       this.closeModal(); // Cierra el modal después de generar el PDF
-      this.associateId = ''; // Restablece el campo de búsqueda
-    this.associateFound = false;
-    this.paymentsActivated = false;
-    this.defaultPayments = [{ paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10 }];
-    this.totalSavings = 0;
-    this.paymentTypes = [];
-    this.isPrintEnabled = false; 
-      
+     this.associateId = ''; // Restablece el campo de búsqueda
+      this.associateFound = false;
+      this.paymentsActivated = false;
+      this.defaultPayments = [{ paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10 }];
+      this.totalSavings = 0;
+      this.paymentTypes = [];
+      this.isPrintEnabled = false; 
+        
     } else {
       console.error('Error: No se encontró el componente PaymentReceiptComponent');
     }
@@ -306,7 +306,7 @@ export default class PaymentComponent {
       return 'LOAN_PAYMENT';
     }
     // Add more types as needed
-    return 'OTHER'; // Default type for unknown payment types
+    return 'OTHER_PAYMENTS'; // Default type for unknown payment types
   }
 
   mapPaymentToPayload(type: string, payment: any): any {
@@ -333,7 +333,7 @@ export default class PaymentComponent {
       
       case 'CHILDRENS_SAVING':
         return {
-          paymentType: 'PARTNER_SAVING',
+          paymentType: 'CHILDRENS_SAVING',
           referenceId: null,
           userId: payment.paymentTitle.startsWith('Caja de Ahorro -')
             ? parseInt(payment.paymentTitle.split('-')[2])

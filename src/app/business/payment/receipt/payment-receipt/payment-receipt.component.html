@@ -9,28 +9,25 @@
     <p class="mb-1"><strong>Teléfono:</strong> {{ associateData?.mobileNumber }}</p>
     <p class="mb-1"><strong>Email:</strong> <span style="text-decoration: none;">{{ associateData?.email }}</span></p>
   </div>
-  <hr class="my-1" style="margin: 5px 0;" /> <!-- Espaciado pequeño para la línea -->
+  
 
-  <table>
-    <thead>
-      <tr>
-        <th>Tipo de Pago</th>
-        <th class="text-right">Monto</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let payment of defaultPayments">
-        <td>{{ payment.paymentTitle }}</td>
-        <td class="text-right">{{ payment.hourlyRate | currency }}</td>
-      </tr>
-    </tbody>
-    <tfoot>
-      <tr>
-        <td><strong>Total:</strong></td>
-        <td class="text-right font-bold"><strong>{{ total | currency }}</strong></td>
-      </tr>
-    </tfoot>
-  </table>
+  <div class="flex justify-center mt-4">
+    <table class="text-xs border-t border-gray-400 w-auto">
+      <thead>
+        <tr>
+          <th class="text-left px-4 py-1">Tipo de Pago</th>
+          <th class="text-right px-4 py-1">Monto</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let payment of defaultPayments">
+          <td class="text-left px-4 py-1">{{ payment.paymentTitle }}</td>
+          <td class="text-right px-4 py-1">{{ payment.hourlyRate | currency }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
 
   <div class="text-center  mt-4">
     <p>Gracias por su pago</p>
