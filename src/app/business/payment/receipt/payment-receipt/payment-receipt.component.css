@@ -1,47 +1,55 @@
 @media print {
-    @page {
-      size: 80mm auto;
-      margin: 0;
-    }
-  
-    body {
-      font-family: 'Arial, sans-serif';
-      font-size: 10px;
-      margin: 0;
-      line-height: 1.2;
-    }
-  
-    .receipt-container {
-      width: 80mm;
-      padding: 0 5px; /* Añadir margen horizontal */
-      margin: 0 auto; /* Centrar en la impresión */
-    }
-  
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-  
-    th, td {
-      padding: 2px 0;
-      border: none;
-      text-align: left;
-    }
-  
-    tfoot {
-      border-top: 1px solid black;
-    }
-  
-    tfoot td {
-      font-weight: bold;
-    }
-  
-    hr {
-      margin: 5px 0;
-    }
-  
-    p {
-      margin: 2px 0; /* Ajustar el espaciado entre líneas */
-    }
+  @page {
+    size: auto; /* Ajuste automático al tamaño del contenido */
+    margin: 0; /* Sin márgenes predeterminados */
   }
-  
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial, sans-serif';
+    font-size: 10px;
+    line-height: 1.2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .receipt-container {
+    width: 80mm; /* Ancho estándar de recibo de papel */
+    max-width: 100%; /* Evita que sobrepase el tamaño */
+    margin: auto; /* Centrado automático */
+    padding: 10px;
+    box-sizing: border-box;
+    border: 1px solid #ddd; /* Opcional: borde para visualizar */
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    padding: 2px 0;
+    text-align: left;
+  }
+
+  tfoot {
+    border-top: 1px solid black;
+  }
+
+  tfoot td {
+    font-weight: bold;
+  }
+
+  hr {
+    margin: 5px 0;
+    border: none;
+    border-top: 1px solid #ccc;
+  }
+
+  p {
+    margin: 2px 0; /* Controlar el espaciado entre líneas */
+    text-align: center;
+  }
+}
