@@ -8,45 +8,37 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './payment-receipt.component.html',
-  styleUrl: './payment-receipt.component.css'
+  styleUrl: './payment-receipt.component.css',
 })
 export class PaymentReceiptComponent {
-  @Input() associateData: any;  // Datos del socio
+  @Input() associateData: any; // Datos del socio
   @Input() defaultPayments: any[] = []; // Lista de pagos
   @Input() totalAmount!: number;
   @Input() total!: number;
   @Input() currentDate!: Date;
 
-
-  // Método para generar el PDF
   generatePDF(): void {
     const DATA: HTMLElement = document.getElementById('printSection')!;
-  
-    // Configuramos una escala para mejorar la resolución y ajustamos la impresión
-    const scale = window.devicePixelRatio || 2;
-  
+
+    const scale = 3; // Mejora la calidad
     html2canvas(DATA, {
-      scale: scale, // Aumenta la calidad
-      useCORS: true, // Asegura la carga correcta de recursos externos
-      scrollY: -window.scrollY, // Evita scroll al capturar
+      scale: scale,
+      useCORS: true,
+      scrollY: -window.scrollY, // Ajuste para evitar desplazamientos
     }).then((canvas) => {
       const imgData = canvas.toDataURL('image/png');
       const pdfWidth = 80; // Ancho del recibo en mm
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-  
+
       const pdf = new jsPDF({
         orientation: 'p',
         unit: 'mm',
-        format: [pdfWidth, pdfHeight], // Dinámico en base al contenido
+        format: [pdfWidth, pdfHeight], // Dinámico según el contenido
       });
-  
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+
+      // Añadir imagen con márgenes de 5 mm
+      pdf.addImage(imgData, 'PNG', 5, 5, pdfWidth - 10, pdfHeight - 10);
       pdf.save('recibo-pago.pdf');
     });
   }
-  
-  
-
 }
-
-

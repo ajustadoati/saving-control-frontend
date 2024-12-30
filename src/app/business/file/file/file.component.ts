@@ -4,6 +4,7 @@ import { FileService } from '../../core/services/file.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
+
 @Component({
   selector: 'app-file',
   standalone: true,
@@ -64,6 +65,8 @@ export default class FileComponent {
       this.message = 'Archivo descargado con éxito.';
       a.click();
       a.remove();
+    }, error => {
+      this.message = 'Archivo ya fue descargado anteriormente.';
     });
   }
 
