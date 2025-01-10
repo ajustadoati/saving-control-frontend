@@ -1,28 +1,28 @@
 <div id="printSection" class="receipt-container">
-  <div class="text-center mb-2">
-    <h2 class="font-bold text-lg">Recibo de Pago</h2>
-    <p>{{ currentDate | date: 'dd/MM/yy' }}</p>
+  <div class="text-center mb-1">
+    <h2 class="font-bold text-xs">Recibo de Pago</h2>
+    <p class="text-xs">{{ currentDate | date: 'dd/MM/yy' }}</p>
   </div>
 
-  <div style="margin: 0 5px;"> <!-- Añadimos margen horizontal -->
-    <p class="mb-1"><strong>Nombre:</strong> {{ associateData?.firstName }} {{ associateData?.lastName }}</p>
-    <p class="mb-1"><strong>Teléfono:</strong> {{ associateData?.mobileNumber }}</p>
-    <p class="mb-1"><strong>Email:</strong> <span style="text-decoration: none;">{{ associateData?.email }}</span></p>
+  <div style="margin: 0 2px;"> <!-- Añadimos margen horizontal -->
+    <p class="text-xs px-1"><strong>Nombre:</strong> {{ associateData?.firstName }} {{ associateData?.lastName }}</p>
+    <p class="text-xs px-1"><strong>Teléfono:</strong> {{ associateData?.mobileNumber }}</p>
+    <p class="text-xs px-1"><strong>Email:</strong> <span style="text-decoration: none;">{{ associateData?.email }}</span></p>
   </div>
   
 
   <div class="flex justify-center mt-4">
-    <table class="text-xs border-t border-gray-400 w-auto">
+    <table class="text-xs border-t border-gray-400">
       <thead>
         <tr>
-          <th class="text-left px-4 py-1">Tipo de Pago</th>
-          <th class="text-right px-4 py-1">Monto</th>
+          <th class="text-left px-1">Tipo de Pago</th>
+          <th class="text-right px-1 py-1">Monto</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let payment of defaultPayments">
-          <td class="text-left px-4 py-1">{{ payment.paymentTitle }}</td>
-          <td class="text-right px-4 py-1">{{ payment.hourlyRate | currency }}</td>
+          <td class="text-left px-1">{{ payment.paymentTitle }}</td>
+          <td class="text-right px-1 py-1">{{ payment.hourlyRate | currency }}</td>
         </tr>
       </tbody>
       <tfoot>
@@ -35,8 +35,8 @@
   </div>
   
 
-  <div class="mt-4 text-center">
+  <div class="mt-1 text-center">
     <p class="text-xs">Gracias por su pago</p>
-    <hr class="my-2 border-t border-gray-400">
+    <hr class="my-1 border-t border-gray-400">
   </div>
 </div>
