@@ -5,13 +5,12 @@
   </div>
 
   <div style="margin: 0 2px;"> <!-- Añadimos margen horizontal -->
-    <p class="text-xs px-1"><strong>Nombre:</strong> {{ associateData?.firstName }} {{ associateData?.lastName }}</p>
-    <p class="text-xs px-1"><strong>Teléfono:</strong> {{ associateData?.mobileNumber }}</p>
-    <p class="text-xs px-1"><strong>Email:</strong> <span style="text-decoration: none;">{{ associateData?.email }}</span></p>
+    <p class="text-xs px-1"> {{ associateData?.firstName }} {{ associateData?.lastName }}</p>
+    <p class="text-xs px-1">{{ associateData?.numberId }}</p>
   </div>
   
 
-  <div class="flex justify-center mt-4">
+  <div class="flex justify-left mt-4">
     <table class="text-xs border-t border-gray-400">
       <thead>
         <tr>
@@ -21,8 +20,8 @@
       </thead>
       <tbody>
         <tr *ngFor="let payment of defaultPayments">
-          <td class="text-left px-1">{{ payment.paymentTitle }}</td>
-          <td class="text-right px-1 py-1">{{ payment.hourlyRate | currency }}</td>
+          <td class="text-left px-1" style="line-height: 0.75;">{{ payment.paymentTitle }}</td>
+          <td class="text-right px-1 py-1" style="line-height: 0.75;">{{ payment.hourlyRate | currency }}</td>
         </tr>
       </tbody>
       <tfoot>
@@ -37,6 +36,6 @@
 
   <div class="mt-1 text-center">
     <p class="text-xs">Gracias por su pago</p>
-    <hr class="my-1 border-t border-gray-400">
+    <hr class="my-1 border-t border-gray-300">
   </div>
 </div>
