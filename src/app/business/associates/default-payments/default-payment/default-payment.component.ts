@@ -32,6 +32,7 @@ export class DefaultPaymentComponent implements OnInit {
   isLoanPaymentSelected = false;
   isAdministrativeSelected = false;
   isLoanInterestSelected = false;
+  isSavingSelected = false;
   contributions: any;
 
   constructor(
@@ -87,22 +88,17 @@ export class DefaultPaymentComponent implements OnInit {
     this.isLoanInterestSelected = selectedValue === 'Interés de préstamo';
     this.isLoanPaymentSelected = selectedValue === 'Abono a préstamo';
     this.isSupplySelected = selectedValue === 'Suministro';
+    this.isSavingSelected = selectedValue === 'Caja de Ahorro';
+
     if (selectedValue === 'Compartir' || selectedValue === 'Administrativo') {
       this.selectedPaymentName = this.contributions.find(
         (contribution: { description: string; }) => contribution.description === selectedValue
       );
       console.log("Selected payment name", this.selectedPaymentName);
-    } else if(this.isMemberSelected){
+    } else {
+      console.log("Selected payment name", selectedValue);
       this.selectedPaymentName = selectedValue;
-    } else if(this.isLoanInterestSelected){
-      this.selectedPaymentName = selectedValue;
-    } else if (this.isSupplySelected){
-      this.selectedPaymentName = selectedValue;
-    }else if (this.isLoanInterestSelected){
-      this.selectedPaymentName = selectedValue;
-    } else if (this.isLoanPaymentSelected){
-      this.selectedPaymentName = selectedValue;
-    }
+    } 
 
     
 
@@ -113,38 +109,41 @@ export class DefaultPaymentComponent implements OnInit {
       if (this.paymentForm.valid) {
         const paymentData = this.paymentForm.value;
       
-      // Revisar si "Ahorro Miembro" ha sido seleccionado y formatear el nombre del pago en consecuencia
-      if (this.isMemberSelected) {
-        /*const selectedAssociationId = paymentData.selectedAssociation;
-      
-        const selectedMember = this.associateData.associates.find(
-          (member: { id: any }) => member.id === +selectedAssociationId
-        );
-
-        if (selectedMember) {
-          //paymentData.defaultPaymentName = `Caja de Ahorro - ${this.selectedPaymentName} - ${selectedMember.id}`;
-          paymentData.defaultPaymentName = `Caja de Ahorro - ${this.selectedPaymentName}`;
-        }*/
-        paymentData.defaultPaymentName = this.selectedPaymentName;
-      } else if ( this.isSharingSelected) {
-        console.log ("Selected sharing", this.selectedPaymentName);
- 
-          paymentData.defaultPaymentName = this.selectedPaymentName.description;
-          //paymentData.amount = this.selectedPaymentName.amount;
+        // Revisar si "Ahorro Miembro" ha sido seleccionado y formatear el nombre del pago en consecuencia
+        if (this.isMemberSelected) {
+          /*const selectedAssociationId = paymentData.selectedAssociation;
         
-      } else {
-        paymentData.defaultPaymentName = this.selectedPaymentName;
-      }
+          const selectedMember = this.associateData.associates.find(
+            (member: { id: any }) => member.id === +selectedAssociationId
+          );
 
-      const payload = {defaultPaymentName: paymentData.defaultPaymentName, amount: paymentData.amount};
-      this.defaultPaymentService.registerPayment(this.associateData.id, payload).subscribe({
-        next: () => {
-          console.log('Pago registrado exitosamente');
-          this.paymentForm.reset({ amount: 0 });
-          this.paymentAdded.emit();
-        },
-        error: (err) => console.error('Error al registrar el pago:', err)
-      });
+          if (selectedMember) {
+            //paymentData.defaultPaymentName = `Caja de Ahorro - ${this.selectedPaymentName} - ${selectedMember.id}`;
+            paymentData.defaultPaymentName = `Caja de Ahorro - ${this.selectedPaymentName}`;
+          }*/
+          paymentData.defaultPaymentName = this.selectedPaymentName;
+        } else if ( this.isSharingSelected) {
+          console.log ("Selected sharing", this.selectedPaymentName);
+  
+            paymentData.defaultPaymentName = this.selectedPaymentName.description;
+            //paymentData.amount = this.selectedPaymentName.amount;
+          
+        } else {
+          if (paymentData.defaultPaymentName !== 'Caja de Ahorro') {
+            paymentData.defaultPaymentName = this.selectedPaymentName;
+          }
+          
+        }
+
+        const payload = {defaultPaymentName: paymentData.defaultPaymentName, amount: paymentData.amount};
+        this.defaultPaymentService.registerPayment(this.associateData.id, payload).subscribe({
+          next: () => {
+            console.log('Pago registrado exitosamente');
+            this.paymentForm.reset({ amount: 0 });
+            this.paymentAdded.emit();
+          },
+          error: (err) => console.error('Error al registrar el pago:', err)
+        });
     }
   }
 
