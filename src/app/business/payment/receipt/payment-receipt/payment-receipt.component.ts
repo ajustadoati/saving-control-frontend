@@ -38,7 +38,11 @@ export class PaymentReceiptComponent {
 
       // Añadir imagen con márgenes de 5 mm
       pdf.addImage(imgData, 'PNG', 5, 5, pdfWidth - 10, pdfHeight - 10);
-      pdf.save('recibo-socio-'+this.associateData.numberId+'.pdf');
+      let date = new Date();
+      const day = date.getDate().toString().padStart(2, '0'); // Formato de dos dígitos
+      const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Formato de dos dígitos
+      const year = date.getFullYear();
+      pdf.save('Recibo-'+this.associateData.numberId+`-${day}-${month}-${year}`+'.pdf');
     });
   }
 }
