@@ -28,6 +28,10 @@ export class DefaultPaymentComponent implements OnInit {
   @Input() associateData!: any; 
   isMemberSelected = false;
   isSharingSelected = false;
+  isSupplySelected = false;
+  isLoanPaymentSelected = false;
+  isAdministrativeSelected = false;
+  isLoanInterestSelected = false;
   contributions: any;
 
   constructor(
@@ -80,14 +84,26 @@ export class DefaultPaymentComponent implements OnInit {
     const selectedValue = (event.target as HTMLSelectElement).value;
     this.isMemberSelected = selectedValue === 'Esposa(o)' || selectedValue === 'Hijos';
     this.isSharingSelected = selectedValue === 'Compartir' || selectedValue === 'Administrativo';
+    this.isLoanInterestSelected = selectedValue === 'Interés de préstamo';
+    this.isLoanPaymentSelected = selectedValue === 'Abono a préstamo';
+    this.isSupplySelected = selectedValue === 'Suministro';
     if (selectedValue === 'Compartir' || selectedValue === 'Administrativo') {
       this.selectedPaymentName = this.contributions.find(
         (contribution: { description: string; }) => contribution.description === selectedValue
       );
       console.log("Selected payment name", this.selectedPaymentName);
     } else if(this.isMemberSelected){
-      this.selectedPaymentName = selectedValue
+      this.selectedPaymentName = selectedValue;
+    } else if(this.isLoanInterestSelected){
+      this.selectedPaymentName = selectedValue;
+    } else if (this.isSupplySelected){
+      this.selectedPaymentName = selectedValue;
+    }else if (this.isLoanInterestSelected){
+      this.selectedPaymentName = selectedValue;
+    } else if (this.isLoanPaymentSelected){
+      this.selectedPaymentName = selectedValue;
     }
+
     
 
   }
@@ -99,23 +115,25 @@ export class DefaultPaymentComponent implements OnInit {
       
       // Revisar si "Ahorro Miembro" ha sido seleccionado y formatear el nombre del pago en consecuencia
       if (this.isMemberSelected) {
-        const selectedAssociationId = paymentData.selectedAssociation;
+        /*const selectedAssociationId = paymentData.selectedAssociation;
       
         const selectedMember = this.associateData.associates.find(
           (member: { id: any }) => member.id === +selectedAssociationId
         );
 
         if (selectedMember) {
-          paymentData.defaultPaymentName = `Caja de Ahorro - ${this.selectedPaymentName} - ${selectedMember.id}`;
-        }
-      }
-
-      if ( this.isSharingSelected) {
+          //paymentData.defaultPaymentName = `Caja de Ahorro - ${this.selectedPaymentName} - ${selectedMember.id}`;
+          paymentData.defaultPaymentName = `Caja de Ahorro - ${this.selectedPaymentName}`;
+        }*/
+        paymentData.defaultPaymentName = this.selectedPaymentName;
+      } else if ( this.isSharingSelected) {
         console.log ("Selected sharing", this.selectedPaymentName);
  
           paymentData.defaultPaymentName = this.selectedPaymentName.description;
-          paymentData.amount = this.selectedPaymentName.amount;
+          //paymentData.amount = this.selectedPaymentName.amount;
         
+      } else {
+        paymentData.defaultPaymentName = this.selectedPaymentName;
       }
 
       const payload = {defaultPaymentName: paymentData.defaultPaymentName, amount: paymentData.amount};

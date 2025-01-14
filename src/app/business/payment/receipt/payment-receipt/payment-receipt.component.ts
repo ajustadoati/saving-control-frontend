@@ -38,7 +38,7 @@ export class PaymentReceiptComponent {
 
       // Añadir imagen con márgenes de 5 mm
       pdf.addImage(imgData, 'PNG', 5, 5, pdfWidth - 10, pdfHeight - 10);
-      pdf.save('recibo-pago.pdf');
+      pdf.save('recibo-socio-'+this.associateData.numberId+'.pdf');
     });
   }
 }

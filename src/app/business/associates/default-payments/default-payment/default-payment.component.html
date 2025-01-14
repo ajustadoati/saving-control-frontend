@@ -10,13 +10,13 @@
         </select>
       </div>
       
-      <div class="mb-4" *ngIf="isMemberSelected">
+      <!--<div class="mb-4" *ngIf="isMemberSelected">
         <label for="associate" class="block text-sm font-medium text-gray-700">Asociados</label>
         <select formControlName="selectedAssociation" id="associate" class="w-full mt-1 p-2 border rounded">
           <option [value]="associateData.id">Socio Principal</option>
           <option *ngFor="let member of associateData.associates" [value]="member.id">{{ member.firstName }} - {{ member.relationship }}</option>
         </select>
-      </div>
+      </div>-->
   
       <div class="mb-4">
         <label class="block font-medium text-gray-700">Monto</label>
