@@ -1,20 +1,25 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ReportService } from '../../core/services/report.service';
 import { ReporteDiarioResponse } from '../../interfaces/reporteDiarioResponse';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ReceiptComponent } from "../receipt/receipt.component";
 
 @Component({
   selector: 'app-report',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReceiptComponent],
   templateUrl: './report.component.html',
   styleUrl: './report.component.css'
 })
 export default class ReportComponent implements OnInit {
 
-  reporte: ReporteDiarioResponse | any;
-  fecha: string = '2025-01-16'; // Puedes ajustar la fecha según tus necesidades
+  reporte: any;
+  fecha: string = '2025-01-17'; // Puedes ajustar la fecha según tus necesidades
+  showReceiptModal = false;
+  @ViewChild(ReceiptComponent, { static: false })
+  receiptComponent!: ReceiptComponent; 
+  currentDate: Date = new Date();
 
   constructor(private reportService: ReportService) { }
 
@@ -31,6 +36,25 @@ export default class ReportComponent implements OnInit {
 
   getKeys(obj: any): string[] {
     return Object.keys(obj);
+  }
+
+  closeModal(): void {
+    this.showReceiptModal = false;
+  }
+
+  // Genera el PDF
+  generatePDF(): void {
+    if (this.receiptComponent) {
+      this.receiptComponent.generatePDF(); // Llama al método del componente hijo
+      this.closeModal(); // Cierra el modal después de generar el PDF
+        
+    } else {
+      console.error('Error: No se encontró el componente PaymentReceiptComponent');
+    }
+  }
+
+  openReceiptModal(): void {
+    this.showReceiptModal = true;
   }
 
 }

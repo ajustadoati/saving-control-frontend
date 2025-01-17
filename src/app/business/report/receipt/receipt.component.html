@@ -1,0 +1,39 @@
+<div id="printSection" class="receipt-container">
+    <div class="text-center mb-1">
+      <h2 class="font-bold text-xs">Resumen de Pagos</h2>
+      <p class="text-xs">{{ currentDate | date: 'dd/MM/yy' }}</p>
+    </div>
+  
+    <div style="margin: 0 2px;"> <!-- Añadimos margen horizontal -->
+     </div>
+    
+  
+    <div class="flex justify-left mt-4">
+      <table class="text-xs border-t border-gray-400">
+        <thead>
+          <tr>
+            <th class="text-left px-1">Tipo de Pago</th>
+            <th class="text-right px-1 py-1">Monto</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let tipoPago of getKeys(reporte.totalPorTipoPago)">
+            <td class="text-left px-1" style="line-height: 0.75;">{{ tipoPago}}</td>
+            <td class="text-right px-1 py-1" style="line-height: 0.75;">{{ reporte.totalPorTipoPago[tipoPago] }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td><strong>Total:</strong></td>
+            <td class="text-right font-bold"><strong>{{ reporte.montoTotal | currency }}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+    
+  
+    <div class="mt-1 text-center">
+      <hr class="my-1 border-t border-gray-300">
+    </div>
+  </div>
+  

@@ -314,7 +314,7 @@ export default class PaymentComponent {
     } else if (paymentTitle.startsWith('Abono a préstamo')) {
       return 'LOAN_PAYMENT';
     }else if (paymentTitle.startsWith('Suministro')) {
-      return 'OTHER_PAYMENTS';
+      return 'SUPPLIES';
     }
     // Add more types as needed
     return 'OTHER_PAYMENTS'; // Default type for unknown payment types
