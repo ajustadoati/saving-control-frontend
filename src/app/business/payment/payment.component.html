@@ -109,7 +109,7 @@
       <!-- Botones del modal -->
       <div class="mt-6 flex justify-end space-x-4 ">
         <button class="py-2 px-4 bg-gray-500 text-white rounded-lg mr-4" (click)="closeModal()">Cerrar</button>
-        <button class="py-2 px-4 bg-green-500 text-white rounded-lg" (click)="generatePDF()">Imprimir Recibo</button>
+        <button *ngIf="showButtomPrint" class="py-2 px-4 bg-green-500 text-white rounded-lg" (click)="generatePDF()">Imprimir Recibo</button>
       </div>
     </div>
   </div>

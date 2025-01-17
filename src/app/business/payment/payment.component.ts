@@ -23,6 +23,7 @@ import { Product } from '../interfaces/product';
   styleUrl: './payment.component.css'
 })
 export default class PaymentComponent {
+  showButtomPrint: boolean = false;
   
 
   constructor(private userService: UserService, private savingService: SavingService, 
@@ -91,17 +92,21 @@ export default class PaymentComponent {
     if (this.paymentReceiptComponent) {
       this.paymentReceiptComponent.generatePDF(); // Llama al método del componente hijo
       this.closeModal(); // Cierra el modal después de generar el PDF
-     this.associateId = ''; // Restablece el campo de búsqueda
+      this.resetData(); // Restablece los datos
+        
+    } else {
+      console.error('Error: No se encontró el componente PaymentReceiptComponent');
+    }
+  }
+
+  resetData(): void {
+    this.associateId = ''; // Restablece el campo de búsqueda
       this.associateFound = false;
       this.paymentsActivated = false;
       this.defaultPayments = [{ paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10 }];
       this.totalSavings = 0;
       this.paymentTypes = [];
       this.isPrintEnabled = false; 
-        
-    } else {
-      console.error('Error: No se encontró el componente PaymentReceiptComponent');
-    }
   }
 
   paymentTypes: string[] = [];
@@ -266,6 +271,9 @@ export default class PaymentComponent {
               title: '¡Pago registrado!',
               text: 'El pago ha sido registrado con éxito.',
             });
+            this.showButtomPrint = true;
+            //this.generatePDF();
+            //this.resetData();
           },
           error: (error) => {
             console.error('Error al obtener los ahorros:', error);
