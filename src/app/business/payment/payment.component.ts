@@ -286,13 +286,14 @@ export default class PaymentComponent {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'Hubo un error al registrar los pagos. Por favor, inténtalo de nuevo.',
+          text: 'Posiblemente el usuario ya tiene pagos registrados para la fecha, inténtalo de nuevo.',
         });
       },
     });
   }
 
   getPaymentType(paymentTitle: string): string {
+    console.log("Payment title", paymentTitle);
 
     if (paymentTitle.startsWith('Caja de Ahorro')) {
       return 'SAVING';
