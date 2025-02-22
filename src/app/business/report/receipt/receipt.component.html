@@ -24,6 +24,14 @@
         </tbody>
         <tfoot>
           <tr>
+            <td><strong>Total ingresos:</strong></td>
+            <td class="text-right font-bold"><strong>{{ reporte.totalPagos | currency }}</strong></td>
+          </tr>
+          <tr>
+            <td><strong>Préstamos:</strong></td>
+            <td class="text-right font-bold"><strong>{{ reporte.totalPrestamos | currency }}</strong></td>
+          </tr>
+          <tr>
             <td><strong>Total:</strong></td>
             <td class="text-right font-bold"><strong>{{ reporte.montoTotal | currency }}</strong></td>
           </tr>

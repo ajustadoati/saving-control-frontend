@@ -1,0 +1,40 @@
+<!-- Botón para agregar la caja de ahorro si no existe -->
+<div *ngIf="!userSavingsBox">
+    <button (click)="openModal()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+      Agregar Caja de Ahorro
+    </button>
+  </div>
+  
+  <!-- Modal para agregar la caja de ahorro -->
+  <div *ngIf="showModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div class="bg-white p-6 rounded shadow-lg w-96">
+      <h3 class="text-lg font-bold mb-4">Agregar Caja de Ahorro</h3>
+      <form [formGroup]="boxForm" (ngSubmit)="onSubmit()">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700">Cantidad de Cajas</label>
+          <input
+            type="number"
+            formControlName="boxCount"
+            class="mt-1 block w-full border rounded p-2"
+          />
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700">Valor por Caja</label>
+          <input
+            type="number"
+            formControlName="boxValue"
+            class="mt-1 block w-full border rounded p-2"
+          />
+        </div>
+        <div class="flex justify-end space-x-4">
+          <button type="button" (click)="closeModal()" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+            Cancelar
+          </button>
+          <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600" [disabled]="boxForm.invalid">
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  

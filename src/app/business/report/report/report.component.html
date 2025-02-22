@@ -9,28 +9,42 @@
     <h3 class="text-xl font-semibold mb-2 text-center">Reporte de Pagos - {{ reporte.fecha }}</h3>
     <div *ngIf="reporte.mensaje" class="text-red-500 text-center">{{ reporte.mensaje }}</div>
     <div *ngIf="!reporte.mensaje">
-      <h4 class="text-lg font-medium mb-2">Pagos por Usuario</h4>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-        <div *ngFor="let cedula of getKeys(reporte.pagos)" class="bg-white p-2 rounded-lg shadow-md text-sm">
-          <h5 class="text-md font-medium">Cédula: {{ cedula }}</h5>
-          <div *ngFor="let tipoPago of getKeys(reporte.pagos[cedula])" class="flex justify-between">
-            <span class="font-semibold">{{ tipoPago }}:</span>
-            <span>{{ reporte.pagos[cedula][tipoPago] }}</span>
-          </div>
+        <h4 class="text-lg font-medium mb-2">Pagos por Usuario</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <div *ngFor="let cedula of getKeys(reporte.pagos)" class="bg-white p-2 rounded-lg shadow-md text-sm">
+                <h5 class="text-md font-medium">Cédula: {{ cedula }}</h5>
+                <div *ngFor="let tipoPago of getKeys(reporte.pagos[cedula])" class="flex justify-between">
+                    <span class="font-semibold">{{ tipoPago }}:</span>
+                    <span>{{ reporte.pagos[cedula][tipoPago] }}</span>
+                </div>
+            </div>
         </div>
-      </div>
-      <div class="mt-6 text-center">
-        <h4 class="text-lg font-medium mb-2">Total por Tipo de Pago</h4>
-        <div class="inline-block text-left">
-          <div *ngFor="let tipoPago of getKeys(reporte.totalPorTipoPago)" class="flex justify-between">
-            <span class="font-semibold">{{ tipoPago }}:</span>
-            <span class="ml-4">{{ reporte.totalPorTipoPago[tipoPago] }}</span>
+        <div class="mt-6 text-center">
+            <h4 class="text-lg font-medium mb-2">Total por Tipo de Pago</h4>
+            <div class="inline-block text-left">
+                <div *ngFor="let tipoPago of getKeys(reporte.totalPorTipoPago)" class="flex justify-between">
+                    <span class="font-semibold">{{ tipoPago }}:</span>
+                    <span class="ml-4">{{ reporte.totalPorTipoPago[tipoPago] }}</span>
+                </div>
+            </div>
+            <div class="mt-4">
+              <h4 class="text-lg font-medium">Total de Ingresos: 
+                  <span class="text-red-600">{{ reporte.totalPagos }}</span>
+              </h4>
           </div>
+            <!-- Mostrar el total de préstamos -->
+            <div class="mt-4">
+                <h4 class="text-lg font-medium">Préstamos: 
+                    <span class="text-red-600">{{ reporte.totalPrestamos }}</span>
+                </h4>
+            </div>
+            <!-- Mostrar el monto total (pagos - préstamos) -->
+            <h4 class="text-lg font-medium mt-4">Total: 
+                <span class="text-green-600">{{ reporte.montoTotal }}</span>
+            </h4>
         </div>
-        <h4 class="text-lg font-medium mt-4">Monto Total: <span class="text-green-600">{{ reporte.montoTotal }}</span></h4>
-      </div>
     </div>
-  </div>
+</div>
     <div class="mt-8 mb-16">
       <button (click)="openReceiptModal()"  class="py-2 px-4 bg-red-500 text-white rounded-lg">Imprimir Resumen</button>
     </div>
