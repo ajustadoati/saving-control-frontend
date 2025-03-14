@@ -1,14 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UserService } from '../../core/services/user.service';
 import { SuppliesService } from '../../core/services/supplies.service';
 import Swal from 'sweetalert2';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { SuppliesPaymentComponent } from '../../supplies-payment/supplies-payment/supplies-payment.component';
+
 
 @Component({
   selector: 'app-supplies',
   standalone: true,
-  imports: [FormsModule, CommonModule, ReactiveFormsModule],
+  imports: [FormsModule, CommonModule, ReactiveFormsModule, SuppliesPaymentComponent],
   templateUrl: './supplies.component.html',
   styleUrl: './supplies.component.css'
 })
@@ -35,6 +37,8 @@ export default class SuppliesComponent {
       supplyDate: ['', [Validators.required]]
     });
   }
+
+  @ViewChild('paymentModal') paymentModal!: SuppliesPaymentComponent;
 
   // Simular búsqueda de socio
   searchAssociate() {
@@ -106,4 +110,12 @@ export default class SuppliesComponent {
       alert('Por favor, complete todos los campos.');
     }
   }
+
+  viewDetails(supply: any) {
+    this.paymentModal.supply = supply; // Pasa los datos del suministro al modal.
+    this.paymentModal.openModal(); // Abre el modal llamando al método del componente hijo.
+  }
+
+
+
 }

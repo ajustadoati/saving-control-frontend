@@ -31,7 +31,7 @@
               <thead>
                   <tr class="bg-gray-100">
                       <th class="px-2 py-2 text-left text-gray-600">Nombre</th>
-                      <th class="px-2 py-2 text-left text-gray-600">Cantidad</th>
+                      <th class="px-2 py-2 text-left text-gray-600">Monto</th>
                       <th class="px-2 py-2 text-left text-gray-600">Fecha</th>
                   </tr>
               </thead>
@@ -40,9 +40,15 @@
                       <td class="px-2 py-1 text-gray-700">{{ supply.supplyName }}</td>
                       <td class="px-2 py-1 text-gray-700">{{ supply.supplyAmount }}</td>
                       <td class="px-2 py-1 text-gray-700">{{ supply.supplyDate | date: 'dd/MM/yy' }}</td>
+                      <button (click)="viewDetails(supply)" class="text-red-500 hover:text-red-700 transition">
+                        Ver detalles
+                      </button>
                   </tr>
               </tbody>
+              <app-supplies-payment #paymentModal></app-supplies-payment>
+
           </table>
+
           <div class="mt-4">
               <button (click)="openModal()" class="py-1 px-3 bg-green-500 text-white rounded hover:bg-green-600 transition">
                   Crear Suministro
