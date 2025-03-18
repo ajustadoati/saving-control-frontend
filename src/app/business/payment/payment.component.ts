@@ -149,7 +149,7 @@ export default class PaymentComponent {
         this.contributionService.getContributions().subscribe({
           next: (data: any) => {
             this.contributions = data
-          },
+          },  
         error: (error) => {
           console.error('Error al obtener las contribuciones:', error); 
         }});
@@ -315,6 +315,8 @@ export default class PaymentComponent {
       return 'LOAN_PAYMENT';
     }else if (paymentTitle.startsWith('Suministro')) {
       return 'SUPPLIES';
+    }if (paymentTitle.startsWith('Cauchos')) {
+      return 'WHEELS';
     }
     // Add more types as needed
     return 'OTHER_PAYMENTS'; // Default type for unknown payment types
@@ -386,6 +388,13 @@ export default class PaymentComponent {
           referenceId: null,
           amount: payment.hourlyRate,
         };
+
+        case 'WHEELS':
+          return {
+            paymentType: 'WHEELS',
+            referenceId: null,
+            amount: payment.hourlyRate,
+          };
   
       default:
         return {
