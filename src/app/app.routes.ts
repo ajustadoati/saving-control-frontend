@@ -58,6 +58,11 @@ export const routes: Routes = [
                 canActivate: [AuthGuard]
             },
             {
+                path: 'summary',
+                loadComponent: () => import('./business/associates/summary/summary.component'),
+                canActivate: [AuthGuard]
+            },
+            {
                 path: '',
                 redirectTo: 'dashboard',
                 pathMatch: 'full'
