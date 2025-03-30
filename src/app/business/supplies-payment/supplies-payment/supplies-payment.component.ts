@@ -14,8 +14,19 @@ export class SuppliesPaymentComponent {
   @Input() supply: any; // Recibe los datos del suministro desde el componente padre.
   isOpen = false; // Controla si el modal está visible.
 
+  pagos: string[] = ["suministro","prestamo"]
+
+  pago: string = this.pagos[0]
+
+  
+
   openModal() {
     this.isOpen = true;
+    if (this.supply == null)
+      this.pago = this.pagos[1]
+    else(
+      this.pago = this.pagos[0]
+    )
   }
 
   closeModal() {
