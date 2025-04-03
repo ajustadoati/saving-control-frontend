@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { UserService } from '../core/services/user.service';
 import { User } from '../interfaces/user';
 import { SavingService } from '../core/services/saving.service';
+import { BalanceService } from '../core/services/balance.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -12,15 +13,16 @@ import { SavingService } from '../core/services/saving.service';
 })
 export default class DashboardComponent implements OnInit {
 
-  constructor(private savingService: SavingService){}
+  constructor(private savingService: SavingService, private balanceService: BalanceService){}
   
 
   totalSavings: number = 0;
   totalUsers: number = 0;
+  funds: any;
 
 
   ngOnInit(): void {
-    
+    this.loadBalance();
     this.loadSavingsResume();
   }
 
@@ -35,5 +37,15 @@ export default class DashboardComponent implements OnInit {
         },
         error: (e) => console.error(e),
       });
+  }
+
+  loadBalance(){
+    this.balanceService.getBalance().subscribe({
+      next: (response: any) => {
+        console.log('Fondos obtenidos:', response); // Verificar los fondos obtenidos
+        this.funds = response;
+      },
+      error: (e) => console.error(e),
+    });
   }
 }

@@ -61,7 +61,7 @@ export default class SuppliesComponent {
   }
 
   loadSupplies() {
-    this.suppliesService.getLoans(this.associateData.id).subscribe({
+    this.suppliesService.getSupplies(this.associateData.id).subscribe({
       next: (data: any) => {
         this.supplies = data;
         console.log(this.supplies)
