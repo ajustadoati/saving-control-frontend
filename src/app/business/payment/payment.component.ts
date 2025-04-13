@@ -179,8 +179,9 @@ export default class PaymentComponent {
   loadBalance() {
     this.loanService.getLoans(this.associateData.id).subscribe({
       next: (data: Loan[]) => {
+        console.log("loans for the user:", data);
         if (data.length > 0) {
-          this.loans = data[0];
+          this.loans = data.filter(loan => loan.loanBalance > 0)[0];
         } else {
           console.log("No hay prestamos");
           this.loans = {loanId: 0, loanBalance: 0, loanAmount: 0};
@@ -194,8 +195,9 @@ export default class PaymentComponent {
     
     this.suppliesService.getSupplies(this.associateData.id).subscribe({
       next: (data: any) => {
+        console.log("supplies for the user:", data);
         if (data.length > 0) {
-          this.supplies = data[0]
+          this.supplies = data.filter((supply: { supplyBalance: number; }) => supply.supplyBalance > 0 )[0];
         } else {
           console.log("No hay suministros");
           this.supplies = {supplyId: 0, supplyBalance: 0, supplyAmount: 0};
@@ -231,8 +233,6 @@ export default class PaymentComponent {
     });
   }
 
-
-  // Función para actualizar el costo total de la reunión
   updateTotalCost() {
     this.meetingTotal = this.defaultPayments.reduce((total, attendee) => {
       const attendeeCost = attendee.hourlyRate * attendee.defaultPaymentsCount * this.duration;
@@ -242,12 +242,9 @@ export default class PaymentComponent {
   }
 
 
-  // Agregar un nuevo asistente
   addAttendee() {
     this.paymentsActivated = true;
     this.loadProducts();
-    //this.defaultPayments.push({ paymentTitle: '', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0 });
-    //
     this.updateTotalCost();
   }
 
@@ -272,7 +269,6 @@ export default class PaymentComponent {
     });
   }
 
-  // Eliminar un asistente
   removeAttendee(index: number) {
     this.defaultPayments.splice(index, 1);
     this.updateTotalCost();
@@ -320,9 +316,7 @@ export default class PaymentComponent {
             });
             this.showButtomPrint = true;
             this.loadBalance();
-            
-            //this.generatePDF();
-            //this.resetData();
+
           },
           error: (error) => {
             console.error('Error al obtener los ahorros:', error);
@@ -425,11 +419,12 @@ export default class PaymentComponent {
         };
       
       case 'LOAN_INTEREST_PAYMENT':
-       if (this.loans.length > 0) {
         console.log("Loans", this.loans);
+       if (this.loans != null) {
+        
           return {
             paymentType: 'LOAN_INTEREST_PAYMENT',
-            referenceId: this.loans[0].loanId,
+            referenceId: this.loans.loanId,
             amount: payment.hourlyRate,
           };
        } else {
@@ -442,12 +437,13 @@ export default class PaymentComponent {
       }
       
       case 'LOAN_PAYMENT':
-        if (this.loans.length > 0) {
-        return {
-          paymentType: 'LOAN_PAYMENT',
-          referenceId: this.loans[0].loanId,
-          amount: payment.hourlyRate,
-        };
+        console.log("adding loan", this.loans);
+        if (this.loans != null ) {
+          return {
+            paymentType: 'LOAN_PAYMENT',
+            referenceId: this.loans.loanId,
+            amount: payment.hourlyRate,
+          };
         } else {
           return {
             paymentType: 'LOAN_PAYMENT',
@@ -456,11 +452,12 @@ export default class PaymentComponent {
           };
         }
       case 'SUPPLIES':
-        if (this.supplies.length > 0) {
+        console.log("adding supplies", this.supplies);
+        if (this.supplies != null) {
           console.log("Supplies", this.supplies);
           return {
             paymentType: 'SUPPLIES',
-            referenceId: this.supplies[0].supplyId,
+            referenceId: this.supplies.supplyId,
             amount: payment.hourlyRate,
           };
         } else {
