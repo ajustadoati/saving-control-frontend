@@ -1,0 +1,34 @@
+<div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center" *ngIf="isOpen">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-96 transform transition-all duration-300 scale-100">
+      <h2 class="text-lg font-bold mb-4 text-gray-800">Listado de los pagos del prestamo</h2>
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="px-2 py-2 text-left text-gray-600">Tipo</th>
+            <th class="px-2 py-2 text-left text-gray-600">Monto</th>
+            <th class="px-2 py-2 text-left text-gray-600">Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let loan of loanPayment" class="border-b">
+            <td class="px-2 py-1 text-gray-700">{{ loan.paymentTypeName}}</td>
+            <td class="px-2 py-1 text-gray-700">{{ loan.amount }}</td>
+            <td class="px-2 py-1 text-gray-700">{{ loan.paymentDate | date: 'dd/MM/yyyy' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="mt-4 flex justify-end">
+        <button (click)="closeModal()" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors duration-200">   
+          Cerrar
+        </button>  
+      </div>  
+    </div>
+  </div>
+
+
+  
+  
+      <!-- <p>{{loan?.loanId}}</p>
+      <p><strong>Fecha:</strong> {{ loan?.startDate }}</p>
+      <p><strong>Monto:</strong> {{ loan?.loanBalance }}</p>
+      <p><strong>Balance:</strong> {{ loan?.loanAmount | date: 'dd/MM/yy' }}</p> -->
