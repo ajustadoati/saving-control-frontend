@@ -4,11 +4,12 @@ import { ReporteDiarioResponse } from '../../interfaces/reporteDiarioResponse';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ReceiptComponent } from "../receipt/receipt.component";
+import { InterestReportComponent } from "../interest-report/interest-report.component";
 
 @Component({
   selector: 'app-report',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReceiptComponent],
+  imports: [CommonModule, FormsModule, ReceiptComponent, InterestReportComponent],
   templateUrl: './report.component.html',
   styleUrl: './report.component.css'
 })
@@ -17,6 +18,7 @@ export default class ReportComponent implements OnInit {
   reporte: any;
   fecha: string = '2025-01-17'; // Puedes ajustar la fecha según tus necesidades
   showReceiptModal = false;
+  showInterestReportModal = false;
   @ViewChild(ReceiptComponent, { static: false })
   receiptComponent!: ReceiptComponent; 
   currentDate: Date = new Date();
@@ -40,6 +42,7 @@ export default class ReportComponent implements OnInit {
 
   closeModal(): void {
     this.showReceiptModal = false;
+    this.showInterestReportModal = false;
   }
 
   // Genera el PDF
@@ -57,4 +60,8 @@ export default class ReportComponent implements OnInit {
     this.showReceiptModal = true;
   }
 
+  openInterestReportModal() {
+    this.showInterestReportModal = true;
+  }
+  
 }
