@@ -95,15 +95,15 @@
                 <td class="px-2 py-1 text-gray-700">{{ loan.loanBalance| currency }}</td>
                 <td class="px-2 py-1 text-gray-700">{{ loan.loanAmount| currency }}</td>
                 <td class="px-2 py-1 text-right">
-                  <button
-                    (click)="viewDetails(null)"
-                    class="text-red-500 hover:text-red-700 transition"
-                  >
+                  <button (click)="viewDetailsLoan([loan,associateData.id])" class="text-red-500 hover:text-red-700 transition">
                     Ver detalles
                   </button>
                 </td>
               </tr>
             </tbody>
+
+            <app-loan-payment #loanModal></app-loan-payment>
+
           </table>
           <div class="mt-4">
             <!-- <button
@@ -131,7 +131,7 @@
                     <td class="px-2 py-1 text-gray-700">{{ supply.supplyName }}</td>
                     <td class="px-2 py-1 text-gray-700">{{ supply.supplyAmount }}</td>
                     <td class="px-2 py-1 text-gray-700">{{ supply.supplyDate | date: 'dd/MM/yy' }}</td>
-                    <button (click)="viewDetails(supply)" class="text-red-500 hover:text-red-700 transition">
+                    <button (click)="viewDetails([supply,associateData.id])" class="text-red-500 hover:text-red-700 transition">
                       Ver detalles
                     </button>
                 </tr>

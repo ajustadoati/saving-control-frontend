@@ -14,6 +14,10 @@ import { PaymentDetail } from '../interfaces/paymentDetail';
 import { ContributionService } from '../core/services/contribution.service';
 import { ProductService } from '../core/services/product.service';
 import { Product } from '../interfaces/product';
+import { LoanService } from '../core/services/loan.service';
+import { SuppliesService } from '../core/services/supplies.service';
+import { Loan } from '../interfaces/loan';
+import { UserBalanceService } from '../core/services/user-balance.service';
 
 @Component({
   selector: 'app-payment',
@@ -28,23 +32,23 @@ export default class PaymentComponent {
 
   constructor(private userService: UserService, private savingService: SavingService, 
     private defaultPaymentService: DefaultPaymentService, private paymentService: PaymentService,
-    private contributionService: ContributionService, private productService: ProductService) {
+    private contributionService: ContributionService, private productService: ProductService, private loanService: LoanService, 
+    private suppliesService:SuppliesService, private userBalance: UserBalanceService) {
   
    }
 
   @ViewChild(PaymentReceiptComponent, { static: false })
   paymentReceiptComponent!: PaymentReceiptComponent; 
 
-
   currentDate: Date = new Date();
-  
   associateFound: boolean = false;
-
   paymentsActivated: boolean = false;
-
   referenceId: any;
-
   contributions: any;
+  loans: any;
+  supplies: any;
+  summary: any;
+  isSaving: boolean = false;
 
   payment: Payment = {
     userId: 0,
@@ -107,6 +111,8 @@ export default class PaymentComponent {
       this.totalSavings = 0;
       this.paymentTypes = [];
       this.isPrintEnabled = false; 
+      this.isSaving = false;
+ 
   }
 
   paymentTypes: string[] = [];
@@ -120,7 +126,7 @@ export default class PaymentComponent {
         this.associateFound = true;
         this.paymentsActivated = true; // Activa la sección de pagos
         this.totalSavings = data.totalSavings;
-
+        this.isSaving = false;
         this.defaultPaymentService.getDefaultPaymentsByUserId(this.associateData.id).subscribe({
           next: (response: any) => {
             console.log('defaultpayments:', response);
@@ -153,6 +159,8 @@ export default class PaymentComponent {
         error: (error) => {
           console.error('Error al obtener las contribuciones:', error); 
         }});
+        this.loadBalance();
+        
       },
       error: (error) => {
         console.error('Socio no encontrado:', error);
@@ -165,6 +173,47 @@ export default class PaymentComponent {
         this.paymentsActivated = false;
         this.totalSavings = 0; // Si no se encuentra el socio, no hay saldo
       },
+    });
+  }
+
+  loadBalance() {
+    this.loanService.getLoans(this.associateData.id).subscribe({
+      next: (data: Loan[]) => {
+        console.log("loans for the user:", data);
+        if (data.length > 0) {
+          this.loans = data.filter(loan => loan.loanBalance > 0)[0];
+        } else {
+          console.log("No hay prestamos");
+          this.loans = {loanId: 0, loanBalance: 0, loanAmount: 0};
+
+        }
+  
+      },error: (error) => { 
+        console.error('Error al obtener los préstamos:', error); 
+      }
+      });
+    
+    this.suppliesService.getSupplies(this.associateData.id).subscribe({
+      next: (data: any) => {
+        console.log("supplies for the user:", data);
+        if (data.length > 0) {
+          this.supplies = data.filter((supply: { supplyBalance: number; }) => supply.supplyBalance > 0 )[0];
+        } else {
+          console.log("No hay suministros");
+          this.supplies = {supplyId: 0, supplyBalance: 0, supplyAmount: 0};
+        }
+      },  
+      error: (error) => {
+        console.error('Error al obtener los suministros:', error); 
+      }
+    });
+    this.userBalance.getSummary(this.associateData.id).subscribe({  
+      next: (data: any) => {
+        this.summary = data
+      },  
+      error: (error) => {
+        console.error('Error al obtener el resumen:', error); 
+      }
     });
   }
 
@@ -184,10 +233,7 @@ export default class PaymentComponent {
     });
   }
 
-
-  // Función para actualizar el costo total de la reunión
   updateTotalCost() {
-    console.log("attendes: ", this.defaultPayments)
     this.meetingTotal = this.defaultPayments.reduce((total, attendee) => {
       const attendeeCost = attendee.hourlyRate * attendee.defaultPaymentsCount * this.duration;
       attendee.totalCost = attendeeCost;
@@ -196,13 +242,9 @@ export default class PaymentComponent {
   }
 
 
-
-  // Agregar un nuevo asistente
   addAttendee() {
     this.paymentsActivated = true;
     this.loadProducts();
-    //this.defaultPayments.push({ paymentTitle: '', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0 });
-    //
     this.updateTotalCost();
   }
 
@@ -227,13 +269,14 @@ export default class PaymentComponent {
     });
   }
 
-  // Eliminar un asistente
   removeAttendee(index: number) {
     this.defaultPayments.splice(index, 1);
     this.updateTotalCost();
   }
 
   registerPayments(): void {
+    if (this.isSaving) return;
+    this.isSaving = true;
     // Group defaultPayments by type
     const groupedPayments = this.defaultPayments.reduce((acc, payment) => {
       const type = this.getPaymentType(payment.paymentTitle); // Determine payment type dynamically
@@ -272,8 +315,8 @@ export default class PaymentComponent {
               text: 'El pago ha sido registrado con éxito.',
             });
             this.showButtomPrint = true;
-            //this.generatePDF();
-            //this.resetData();
+            this.loadBalance();
+
           },
           error: (error) => {
             console.error('Error al obtener los ahorros:', error);
@@ -376,25 +419,60 @@ export default class PaymentComponent {
         };
       
       case 'LOAN_INTEREST_PAYMENT':
+        console.log("Loans", this.loans);
+       if (this.loans != null) {
+        
+          return {
+            paymentType: 'LOAN_INTEREST_PAYMENT',
+            referenceId: this.loans.loanId,
+            amount: payment.hourlyRate,
+          };
+       } else {
+        console.log("No Loans", this.loans);
         return {
           paymentType: 'LOAN_INTEREST_PAYMENT',
           referenceId: null,
           amount: payment.hourlyRate,
         };
+      }
       
       case 'LOAN_PAYMENT':
-        return {
-          paymentType: 'LOAN_PAYMENT',
-          referenceId: null,
-          amount: payment.hourlyRate,
-        };
-
-        case 'WHEELS':
+        console.log("adding loan", this.loans);
+        if (this.loans != null ) {
           return {
-            paymentType: 'WHEELS',
+            paymentType: 'LOAN_PAYMENT',
+            referenceId: this.loans.loanId,
+            amount: payment.hourlyRate,
+          };
+        } else {
+          return {
+            paymentType: 'LOAN_PAYMENT',
             referenceId: null,
             amount: payment.hourlyRate,
           };
+        }
+      case 'SUPPLIES':
+        console.log("adding supplies", this.supplies);
+        if (this.supplies != null) {
+          console.log("Supplies", this.supplies);
+          return {
+            paymentType: 'SUPPLIES',
+            referenceId: this.supplies.supplyId,
+            amount: payment.hourlyRate,
+          };
+        } else {
+          return {
+            paymentType: 'SUPPLIES',
+            referenceId: null,
+            amount: payment.hourlyRate,
+          };
+        }
+      case 'WHEELS':
+        return {
+          paymentType: 'WHEELS',
+          referenceId: null,
+          amount: payment.hourlyRate,
+        };
   
       default:
         return {

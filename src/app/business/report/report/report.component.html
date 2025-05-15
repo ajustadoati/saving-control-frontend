@@ -47,6 +47,7 @@
 </div>
     <div class="mt-8 mb-16">
       <button (click)="openReceiptModal()"  class="py-2 px-4 bg-red-500 text-white rounded-lg">Imprimir Resumen</button>
+      <button (click)="openInterestReportModal()"  class="py-2 px-4 bg-green-500 text-white rounded-lg">Ver Reporte de Intereses</button>
     </div>
   </div>
 
@@ -63,6 +64,21 @@
       <div class="mt-6 flex justify-end space-x-4 ">
         <button class="py-2 px-4 bg-gray-500 text-white rounded-lg mr-4" (click)="closeModal()">Cerrar</button>
         <button class="py-2 px-4 bg-green-500 text-white rounded-lg" (click)="generatePDF()">Imprimir Recibo</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showInterestReportModal" class="fixed inset-0 flex items-center justify-center z-50">
+    <div class="bg-white w-[90%] max-w-6xl rounded-lg shadow-lg p-4 print:shadow-none print:rounded-none">
+    
+      <!-- Usamos el componente PaymentReceiptComponent en lugar del HTML directamente -->
+      <app-interest-report
+        [interestReport]="reporte.interestReport">
+      </app-interest-report>
+  
+      <!-- Botones del modal -->
+      <div class="mt-6 flex justify-end space-x-4 ">
+        <button class="py-2 px-4 bg-gray-500 text-white rounded-lg mr-4" (click)="closeModal()">Cerrar</button>
       </div>
     </div>
   </div>

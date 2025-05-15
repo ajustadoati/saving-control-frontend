@@ -14,7 +14,7 @@ export class SuppliesService {
   constructor(private http: HttpClient) {}
 
 
-  getLoans(userId: number): Observable<Supplies[]> {
+  getSupplies(userId: number): Observable<Supplies[]> {
     return this.http.get<Supplies[]>(`${this.apiUrl}/user/${userId}`);
   }
 

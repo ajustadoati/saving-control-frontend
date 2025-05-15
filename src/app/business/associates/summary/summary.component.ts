@@ -14,13 +14,14 @@ import { UserSavingBoxComponent } from '../user-saving-box/user-saving-box.compo
 import { SuppliesService } from '../../core/services/supplies.service';
 import { SuppliesPaymentComponent } from '../../supplies-payment/supplies-payment/supplies-payment.component';
 import { LoanService } from '../../core/services/loan.service';
+import { LoanPaymentComponent } from '../../loan-payment/loan-payment/loan-payment.component';
 
 
 
 @Component({
   selector: 'app-summary',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule,UserSavingBoxComponent,SuppliesPaymentComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule,UserSavingBoxComponent,SuppliesPaymentComponent,LoanPaymentComponent],
   templateUrl: './summary.component.html',
   styleUrl: './summary.component.css'
 })
@@ -29,6 +30,7 @@ export default class SummaryComponent {
   associateMembers: any;
   supplies: any[] = [];
   loans: any[] = [];
+  userId : number | undefined;
 
   constructor(private userService: UserService, private savingService: SavingService, 
     private associateService: AssociateService,private userSavingBoxService: UserSavingBoxService,
@@ -36,6 +38,8 @@ export default class SummaryComponent {
   {}
 
   @ViewChild('paymentModal') paymentModal!: SuppliesPaymentComponent;
+  @ViewChild('loanModal') loanModal!: LoanPaymentComponent;
+
   
   removeAssociateMember(userId: number, associateId: number) {
     this.associateService.removeAssociate(userId, associateId).subscribe({
@@ -118,7 +122,7 @@ export default class SummaryComponent {
   }
 
   loadSupplies() {
-    this.suppliesService.getLoans(this.associateData.id).subscribe({
+    this.suppliesService.getSupplies(this.associateData.id).subscribe({
       next: (data: any) => {
         this.supplies = data;
         console.log(this.supplies)
@@ -132,6 +136,12 @@ export default class SummaryComponent {
   viewDetails(supply: any) {
     this.paymentModal.supply = supply; // Pasa los datos del suministro al modal.
     this.paymentModal.openModal(); // Abre el modal llamando al método del componente hijo.
+    this.userId = this.associateData.id
+  }
+
+  viewDetailsLoan(loan: any){
+    this.loanModal.loan = loan;
+    this.loanModal.openModal();
   }
 
   loadLoans() {

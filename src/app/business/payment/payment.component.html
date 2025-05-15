@@ -27,7 +27,13 @@
           <span class="font-bold">Teléfono:</span> {{ associateData?.mobileNumber }}
         </div>
         <div class="mb-2">
-          <span class="font-bold">Balance Actual:</span> {{ totalSavings| currency }}
+          <span class="font-bold">Caja de Ahorro:</span> {{ summary?.currentBalance| currency }}
+        </div>
+        <div class="mb-2">
+          <span class="font-bold">Suministros:</span> {{ supplies?.supplyBalance | currency }}
+        </div>
+        <div class="mb-2">
+          <span class="font-bold">Préstamo:</span> {{ loans?.loanBalance | currency }}
         </div>
         <div *ngIf="isPrintEnabled" class="mt-8">
           <button (click)="openReceiptModal()"  class="py-2 px-4 bg-red-500 text-white rounded-lg">Ver Recibo</button>
@@ -87,7 +93,7 @@
     </div>
 
     <div *ngIf="paymentsActivated" class="mt-8 mb-16">
-        <button (click)="registerPayments()" class="py-2 px-4 bg-green-500 text-white rounded-lg mr-4">Guardar pagos</button>
+        <button (click)="registerPayments()"  [disabled]="isSaving" class="py-2 px-4 bg-green-500 text-white rounded-lg mr-4">Guardar pagos</button>
         <button (click)="openReceiptModal()"  class="py-2 px-4 bg-red-500 text-white rounded-lg">Ver Recibo</button>
       </div>
   </div>
