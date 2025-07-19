@@ -356,6 +356,10 @@ export default class PaymentComponent {
       return 'LOAN_INTEREST_PAYMENT';
     } else if (paymentTitle.startsWith('Abono a préstamo')) {
       return 'LOAN_PAYMENT';
+    }else if (paymentTitle.startsWith('Interés préstamo externo')) {
+      return 'LOAN_INTEREST_PAYMENT_EXTERNAL';
+    } else if (paymentTitle.startsWith('Abono préstamo externo')) {
+      return 'LOAN_PAYMENT_EXTERNAL';
     }else if (paymentTitle.startsWith('Suministro')) {
       return 'SUPPLIES';
     }if (paymentTitle.startsWith('Cauchos')) {
@@ -420,37 +424,70 @@ export default class PaymentComponent {
       
       case 'LOAN_INTEREST_PAYMENT':
         console.log("Loans", this.loans);
-       if (this.loans != null) {
-        
+        if (this.loans != null) {
+          
+            return {
+              paymentType: 'LOAN_INTEREST_PAYMENT',
+              referenceId: this.loans.loanId,
+              amount: payment.hourlyRate,
+            };
+        } else {
+          console.log("No Loans", this.loans);
           return {
             paymentType: 'LOAN_INTEREST_PAYMENT',
-            referenceId: this.loans.loanId,
-            amount: payment.hourlyRate,
-          };
-       } else {
-        console.log("No Loans", this.loans);
-        return {
-          paymentType: 'LOAN_INTEREST_PAYMENT',
-          referenceId: null,
-          amount: payment.hourlyRate,
-        };
-      }
-      
-      case 'LOAN_PAYMENT':
-        console.log("adding loan", this.loans);
-        if (this.loans != null ) {
-          return {
-            paymentType: 'LOAN_PAYMENT',
-            referenceId: this.loans.loanId,
-            amount: payment.hourlyRate,
-          };
-        } else {
-          return {
-            paymentType: 'LOAN_PAYMENT',
             referenceId: null,
             amount: payment.hourlyRate,
           };
         }
+      
+      case 'LOAN_PAYMENT_EXTERNAL':
+        console.log("adding loan", this.loans);
+        if (this.loans != null ) {
+          return {
+            paymentType: 'LOAN_PAYMENT_EXTERNAL',
+            referenceId: null,
+            amount: payment.hourlyRate,
+          };
+        } else {
+          return {
+            paymentType: 'LOAN_PAYMENT_EXTERNAL',
+            referenceId: null,
+            amount: payment.hourlyRate,
+          };
+        }
+      
+      case 'LOAN_INTEREST_PAYMENT_EXTERNAL':
+        console.log("Loans", this.loans);
+        if (this.loans != null) {
+          
+            return {
+              paymentType: 'LOAN_INTEREST_PAYMENT_EXTERNAL',
+              referenceId: this.loans.loanId,
+              amount: payment.hourlyRate,
+            };
+        } else {
+          console.log("No Loans", this.loans);
+          return {
+            paymentType: 'LOAN_INTEREST_PAYMENT_EXTERNAL',
+            referenceId: null,
+            amount: payment.hourlyRate,
+          };
+        }
+
+      case 'LOAN_INTEREST_PAYMENT_EXTERNAL':
+        return {
+          paymentType: 'LOAN_INTEREST_PAYMENT_EXTERNAL',
+          referenceId: null,
+          amount: payment.hourlyRate,
+        };
+      
+      case 'LOAN_PAYMENT_EXTERNAL':
+        return {
+          paymentType: 'LOAN_PAYMENT_EXTERNAL',
+          referenceId: null,
+          amount: payment.hourlyRate,
+        };
+        
       case 'SUPPLIES':
         console.log("adding supplies", this.supplies);
         if (this.supplies != null) {
