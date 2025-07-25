@@ -356,9 +356,9 @@ export default class PaymentComponent {
       return 'LOAN_INTEREST_PAYMENT';
     } else if (paymentTitle.startsWith('Abono a préstamo')) {
       return 'LOAN_PAYMENT';
-    }else if (paymentTitle.startsWith('Interés préstamo externo')) {
+    }else if (paymentTitle.startsWith('Interés préstamos 2')) {
       return 'LOAN_INTEREST_PAYMENT_EXTERNAL';
-    } else if (paymentTitle.startsWith('Abono préstamo externo')) {
+    } else if (paymentTitle.startsWith('Abono préstamos 2')) {
       return 'LOAN_PAYMENT_EXTERNAL';
     }else if (paymentTitle.startsWith('Suministro')) {
       return 'SUPPLIES';
@@ -439,13 +439,28 @@ export default class PaymentComponent {
             amount: payment.hourlyRate,
           };
         }
+      case 'LOAN_PAYMENT':
+        console.log("adding loan", this.loans);
+        if (this.loans != null ) {
+          return {
+            paymentType: 'LOAN_PAYMENT',
+            referenceId: this.loans.loanId,
+            amount: payment.hourlyRate,
+          };
+        } else {
+          return {
+            paymentType: 'LOAN_PAYMENT',
+            referenceId: null,
+            amount: payment.hourlyRate,
+          };
+        }
       
       case 'LOAN_PAYMENT_EXTERNAL':
         console.log("adding loan", this.loans);
         if (this.loans != null ) {
           return {
             paymentType: 'LOAN_PAYMENT_EXTERNAL',
-            referenceId: null,
+            referenceId: this.loans.loanId,
             amount: payment.hourlyRate,
           };
         } else {
@@ -473,20 +488,6 @@ export default class PaymentComponent {
             amount: payment.hourlyRate,
           };
         }
-
-      case 'LOAN_INTEREST_PAYMENT_EXTERNAL':
-        return {
-          paymentType: 'LOAN_INTEREST_PAYMENT_EXTERNAL',
-          referenceId: null,
-          amount: payment.hourlyRate,
-        };
-      
-      case 'LOAN_PAYMENT_EXTERNAL':
-        return {
-          paymentType: 'LOAN_PAYMENT_EXTERNAL',
-          referenceId: null,
-          amount: payment.hourlyRate,
-        };
         
       case 'SUPPLIES':
         console.log("adding supplies", this.supplies);

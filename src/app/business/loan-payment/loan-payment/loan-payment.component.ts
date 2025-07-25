@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LoanPaymentService } from '../../core/services/loan-payment.service';
 
@@ -12,6 +12,9 @@ import { LoanPaymentService } from '../../core/services/loan-payment.service';
 })
 
 export class LoanPaymentComponent {
+    @Output() closed = new EventEmitter<void>();
+
+
    @Input() loan: any;  
     isOpen = false; 
     loanPayment: any[] = [];
@@ -30,6 +33,7 @@ export class LoanPaymentComponent {
 
   closeModal(){
     this.isOpen = false
+    this.closed.emit();
   }
 
   loadPayment(){

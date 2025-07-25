@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormBuilder, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { ContributionService } from '../../core/services/contribution.service';
@@ -7,17 +7,21 @@ import { DefaultPaymentService } from '../../core/services/default-payment.servi
 import { UserService } from '../../core/services/user.service';
 import { LoanService } from '../../core/services/loan.service';
 import { LoanTypeService } from '../../core/services/loan-type.service';
+import { LoanPaymentComponent } from "../../loan-payment/loan-payment/loan-payment.component";
 
 @Component({
   selector: 'app-loan',
   standalone: true,
-  imports: [ReactiveFormsModule, FormsModule, CommonModule],
+  imports: [ReactiveFormsModule, FormsModule, CommonModule, LoanPaymentComponent],
   templateUrl: './loan.component.html',
   styleUrl: './loan.component.css'
 })
 export default class LoanComponent implements OnInit{
-  viewDetail(arg0: any,arg1: any) {
-  throw new Error('Method not implemented.');
+
+   @ViewChild('loanModal') loanModal!: LoanPaymentComponent;
+  viewDetailsLoan(loan: any){
+    this.loanModal.loan = loan;
+    this.loanModal.openModal();
   }
 
   ngOnInit() {
