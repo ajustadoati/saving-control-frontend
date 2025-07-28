@@ -17,6 +17,10 @@ export class LoanService {
     return this.http.get<Loan[]>(`${this.apiUrl}/user/${userId}`);
   }
 
+  getLoansAssets(): Observable<Loan[]> {
+    return this.http.get<Loan[]>(`${this.apiUrl}`);
+  }
+  
   saveLoan(loan: Loan): Observable<any> {
     console.log("Add loan", loan);
     return this.http.post<any>(`${this.apiUrl}`, loan).pipe(
