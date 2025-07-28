@@ -1,0 +1,32 @@
+<div class="container mx-auto p-6 bg-gray-100 min-h-screen">
+  <h1 class="text-3xl font-bold mb-4">Préstamos activos</h1>
+
+  <div class="table-auto w-full bg-white rounded-lg shadow-md">
+    <table class="loan-table w-full table-auto border-collapse">
+      <thead class="bg-gray-200">
+        <tr>
+          <!-- <th class="px-4 py-2 text-left">#</th> -->
+          <th class="px-4 py-2 text-left">ID</th>
+          <th class="px-4 py-2 text-left">Tipo</th>
+          <th class="px-4 py-2 text-left">Monto</th>
+          <th class="px-4 py-2 text-left">Interés</th>
+          <th class="px-4 py-2 text-left">Saldo</th>
+          <th class="px-4 py-2 text-left">Inicio</th>
+          <th class="px-4 py-2 text-left">Fin</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let loan of loans" class="border-t hover:bg-gray-50">
+          <!-- <td class="px-4 py-2">{{ loan.numberId }}</td> -->
+          <td class="px-4 py-2"> {{loan.loanId}}</td>
+          <td class="px-4 py-2">{{ loan.loanTypeName }}</td>
+          <td class="px-4 py-2">${{ loan.loanAmount | number:'1.2-2' }}</td>
+          <td class="px-4 py-2">{{ loan.interestRate }}%</td>
+          <td class="px-4 py-2">${{ loan.loanBalance | number:'1.2-2' }}</td>
+          <td class="px-4 py-2">{{ loan.startDate | date:'mediumDate' }}</td>
+          <td class="px-4 py-2">{{ loan.endDate | date:'mediumDate' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -35,10 +35,6 @@ export default class LoanComponent implements OnInit{
       }
     });
 
-    this.loanService.getLoansAssets().subscribe({
-      next: (data) => this.allLoans = data,
-      error: (err) => console.error('Error cargando préstamos:', err)
-    });
   }
 
   loanForm: FormGroup;
@@ -51,8 +47,6 @@ export default class LoanComponent implements OnInit{
   loanTypes: any[] = [];
   loans: any[] = [];
 
-  allLoans: any[] = [];
-  isNewLoanModalOpen: boolean = false;
 
   associateData: any = {
     id: '14447876',
@@ -126,14 +120,6 @@ export default class LoanComponent implements OnInit{
   // Cerrar el modal
   closeModal() {
     this.isModalOpen = false;
-  }
-
-  openloansAssets() {
-    this.isNewLoanModalOpen = true;
-  }
-
-  closeloansAssets() {
-    this.isNewLoanModalOpen = false;
   }
 
   // Crear préstamo

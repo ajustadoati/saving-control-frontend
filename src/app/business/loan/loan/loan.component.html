@@ -14,10 +14,6 @@
       </div>
     </div>
 
-    <button (click)="openloansAssets()" class="py-2 px-4 bg-blue-500 text-white rounded hover:bg-indigo-700">
-      Prestamo 1
-    </button>
-  
     <!-- Resumen del socio -->
     <div *ngIf="associateFound"  class="mt-8 flex space-x-8">
       <div class="p-6 bg-white shadow rounded-lg border border-gray-200 flex-1">
@@ -134,47 +130,5 @@
         </form>
       </div>
     </div>
-
-    <!-- Modal préstamo activos -->
-  <div *ngIf="isNewLoanModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div class="bg-white p-6 rounded shadow-lg w-96">
-      <h2 class="text-lg font-bold mb-4">Prestamos activos</h2>
-      <div class="loan-modal-container">
-        <div *ngFor="let loan of allLoans" class="loan-modal">
-          <!-- <h2>Préstamo Activo #{{ loan.numberId }}</h2> -->
-          <ul class="loan-details">
-            <li><strong>ID del préstamo:</strong> {{ loan.loanId }}</li>
-            <li><strong>Tipo de préstamo:</strong> {{ loan.loanTypeName }}</li>
-            <li>
-              <strong>Monto:</strong> ${{ loan.loanAmount | number : "1.2-2" }}
-            </li>
-            <li><strong>Tasa de interés:</strong> {{ loan.interestRate }}%</li>
-            <li>
-              <strong>Saldo actual:</strong> ${{
-                loan.loanBalance | number : "1.2-2"
-              }}
-            </li>
-            <li>
-              <strong>Fecha de inicio:</strong>
-              {{ loan.startDate | date : "longDate" }}
-            </li>
-            <li>
-              <strong>Fecha de fin:</strong>
-              {{ loan.endDate | date : "longDate" }}
-            </li>
-          </ul>
-        </div>
-      </div>
-      <div class="mt-4 flex justify-end space-x-2">
-        <button
-          (click)="closeloansAssets()"
-          class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-        >
-          Cerrar
-        </button>
-      </div>
-    </div>
-  </div>
-  
   </div>
   
