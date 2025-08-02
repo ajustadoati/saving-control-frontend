@@ -181,7 +181,7 @@ export default class PaymentComponent {
       next: (data: Loan[]) => {
         console.log("loans for the user:", data);
         if (data.length > 0) {
-          this.loans = data.filter(loan => loan.loanBalance > 0)[0];
+          this.loans = data;
         } else {
           console.log("No hay prestamos");
           this.loans = {loanId: 0, loanBalance: 0, loanAmount: 0};
@@ -429,10 +429,13 @@ export default class PaymentComponent {
       case 'LOAN_INTEREST_PAYMENT':
         console.log("Loans", this.loans);
         if (this.loans != null) {
-          
+            const loan = Array.isArray(this.loans)
+            ? this.loans.find((l: Loan) => l.loanTypeName === 'Préstamos1')
+            : null;
+            console.log("loan"+loan);
             return {
               paymentType: 'LOAN_INTEREST_PAYMENT',
-              referenceId: this.loans.loanId,
+              referenceId: loan.loanId,
               amount: payment.hourlyRate,
             };
         } else {
@@ -443,13 +446,33 @@ export default class PaymentComponent {
             amount: payment.hourlyRate,
           };
         }
+      case 'LOAN_PAYMENT':
+        console.log("adding loan", this.loans);
+        if (this.loans != null ) {
+          const loan = Array.isArray(this.loans)
+          ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Préstamos1')
+          : null;
+          return {
+            paymentType: 'LOAN_PAYMENT',
+            referenceId: loan.loanId,
+            amount: payment.hourlyRate,
+          };
+        } else {
+          return {
+            paymentType: 'LOAN_PAYMENT',
+            referenceId: null,
+            amount: payment.hourlyRate,
+          };
+        }
       case 'LOAN_EXTERNAL_INTEREST':
         console.log("Loans", this.loans);
         if (this.loans != null) {
-          
+            const loan = Array.isArray(this.loans)
+            ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Externos')
+            : null;
             return {
               paymentType: 'LOAN_EXTERNAL_INTEREST',
-              referenceId: this.loans.loanId,
+              referenceId: loan.loanId,
               amount: payment.hourlyRate,
             };
         } else {
@@ -460,27 +483,16 @@ export default class PaymentComponent {
             amount: payment.hourlyRate,
           };
         }
-      case 'LOAN_PAYMENT':
-        console.log("adding loan", this.loans);
-        if (this.loans != null ) {
-          return {
-            paymentType: 'LOAN_PAYMENT',
-            referenceId: this.loans.loanId,
-            amount: payment.hourlyRate,
-          };
-        } else {
-          return {
-            paymentType: 'LOAN_PAYMENT',
-            referenceId: null,
-            amount: payment.hourlyRate,
-          };
-        }
+      
       case 'LOAN_EXTERNAL':
         console.log("adding loan", this.loans);
         if (this.loans != null ) {
+          const loan = Array.isArray(this.loans)
+          ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Externos')
+          : null;
           return {
             paymentType: 'LOAN_EXTERNAL',
-            referenceId: this.loans.loanId,
+            referenceId: loan.loanId,
             amount: payment.hourlyRate,
           };
         } else {
@@ -493,9 +505,12 @@ export default class PaymentComponent {
       case 'LOAN_PAYMENT_EXTERNAL':
         console.log("adding loan", this.loans);
         if (this.loans != null ) {
+          const loan = Array.isArray(this.loans)
+          ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Préstamos2')
+          : null;
           return {
             paymentType: 'LOAN_PAYMENT_EXTERNAL',
-            referenceId: this.loans.loanId,
+            referenceId: loan.loanId,
             amount: payment.hourlyRate,
           };
         } else {
@@ -509,10 +524,12 @@ export default class PaymentComponent {
       case 'LOAN_INTEREST_PAYMENT_EXTERNAL':
         console.log("Loans", this.loans);
         if (this.loans != null) {
-          
+            const loan = Array.isArray(this.loans)
+            ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Préstamos2')
+            : null;
             return {
               paymentType: 'LOAN_INTEREST_PAYMENT_EXTERNAL',
-              referenceId: this.loans.loanId,
+              referenceId: loan.loanId,
               amount: payment.hourlyRate,
             };
         } else {

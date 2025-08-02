@@ -6,6 +6,6 @@ export interface Loan {
   loanBalance: number;
   startDate: string;
   endDate: string;
-  loanTypeId: number;
+  loanTypeName: string;
 }
 
