@@ -21,4 +21,10 @@ export class PaymentService {
       })
     );
   }
+  
+  removePaymentByDateAndCedula(cedula: number, date: string): Observable<any> {
+    const payload = { cedula, date };
+    console.log('Datos recibidos para eliminar:', payload);
+    return this.http.delete<any>(`${this.apiUrl}`, { body: payload });
+  }
 }
