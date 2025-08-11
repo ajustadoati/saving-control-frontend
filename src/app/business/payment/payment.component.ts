@@ -364,6 +364,10 @@ export default class PaymentComponent {
       return 'LOAN_EXTERNAL';
     } else if (paymentTitle.startsWith('Interés préstamo externo')) {
       return 'LOAN_EXTERNAL_INTEREST';
+    }else if (paymentTitle.startsWith('Abono préstamo compartir')) {
+      return 'LOAN_SHARING';
+    } else if (paymentTitle.startsWith('Interés préstamo compartir')) {
+      return 'LOAN_SHARING_INTEREST';
     } else if (paymentTitle.startsWith('Suministro')) {
       return 'SUPPLIES';
     }if (paymentTitle.startsWith('Cauchos')) {
@@ -498,6 +502,45 @@ export default class PaymentComponent {
         } else {
           return {
             paymentType: 'LOAN_EXTERNAL',
+            referenceId: null,
+            amount: payment.hourlyRate,
+          };
+        }
+      //Loan sharing
+      case 'LOAN_SHARING_INTEREST':
+        console.log("Loans", this.loans);
+        if (this.loans != null) {
+            const loan = Array.isArray(this.loans)
+            ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Compartir')
+            : null;
+            return {
+              paymentType: 'LOAN_SHARING_INTEREST',
+              referenceId: loan.loanId,
+              amount: payment.hourlyRate,
+            };
+        } else {
+          console.log("No Loans", this.loans);
+          return {
+            paymentType: 'LOAN_SHARING_INTEREST',
+            referenceId: null,
+            amount: payment.hourlyRate,
+          };
+        }
+      
+      case 'LOAN_SHARING':
+        console.log("adding loan", this.loans);
+        if (this.loans != null ) {
+          const loan = Array.isArray(this.loans)
+          ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Compartir')
+          : null;
+          return {
+            paymentType: 'LOAN_SHARING',
+            referenceId: loan.loanId,
+            amount: payment.hourlyRate,
+          };
+        } else {
+          return {
+            paymentType: 'LOAN_SHARING',
             referenceId: null,
             amount: payment.hourlyRate,
           };
