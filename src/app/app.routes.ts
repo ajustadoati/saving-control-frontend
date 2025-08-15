@@ -73,6 +73,11 @@ export const routes: Routes = [
                 canActivate: [AuthGuard]
             },
             {
+                path: 'withdraw-balance',
+                loadComponent: () => import('./business/withdraw-balance/withdraw-balance.component'),
+                canActivate: [AuthGuard]
+            },
+            {
                 path: '',
                 redirectTo: 'dashboard',
                 pathMatch: 'full'

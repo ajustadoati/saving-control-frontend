@@ -1,0 +1,125 @@
+<div class="w-full h-screen bg-gray-100 p-8">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-3xl font-bold text-gray-800">Resumen de Socio</h1>
+      <div class="flex items-center">
+        <input
+          type="text"
+          [(ngModel)]="associateId"
+          class="p-2 rounded border mr-4"
+          placeholder="ID del Socio"
+        />
+        <button
+          (click)="searchAssociate()"
+          class="py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+          Buscar
+        </button>
+      </div>
+    </div>
+  
+    <div *ngIf="associateFound" class="mt-8 flex space-x-8">
+      <!-- Información del Socio -->
+      <div class="p-6 bg-white shadow rounded-lg border border-gray-200 flex-1">
+        <div class="mb-2">
+          <span class="font-bold text-gray-700">Nombre:</span> {{ associateData?.firstName }} {{ associateData?.lastName }}
+        </div>
+        <div class="mb-2">
+          <span class="font-bold text-gray-700">Email:</span> {{ associateData?.email }}
+        </div>
+        <div class="mb-2">
+          <span class="font-bold text-gray-700">Teléfono:</span> {{ associateData?.mobileNumber }}
+        </div>
+      </div>
+
+      <div class="p-6 bg-white shadow rounded-lg border border-gray-200 flex-1">
+        <h2 class="text-lg font-bold text-gray-800">Caja de Ahorro</h2>
+        <div *ngIf="userSavingsBox; else noBox">
+          <div class="mb-2">
+            <span class="font-bold text-gray-700">Cantidad de cajas:</span> {{ userSavingsBox.boxCount }}
+          </div>
+          <div class="mb-2">
+            <span class="font-bold text-gray-700">Valor por caja:</span> {{ userSavingsBox.boxValue | currency }}
+          </div>
+          <div class="mb-2">
+            <span class="font-bold text-gray-700">Total a pagar:</span> {{ (userSavingsBox.boxCount * userSavingsBox.boxValue) | currency }}
+          </div>
+        </div>
+        <ng-template #noBox>
+          <p class="text-gray-600">No se ha configurado la caja de ahorro.</p>
+          <app-user-saving-box
+            [userId]="associateData.id"
+            (boxAdded)="userSavingsBox = $event">
+          </app-user-saving-box>
+        </ng-template>
+      </div>
+
+      <!-- Saldo General -->
+      <div class="relative bg-white rounded-lg shadow-md border border-gray-300 p-6 w-1/3 flex flex-col justify-between ">
+        <div class="absolute -top-8 left-6 bg-orange-500 rounded-full p-3 text-white shadow-lg">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="w-6 h-6"
+          >
+            <path
+              d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75zM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 01-1.875-1.875V8.625zM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 013 19.875v-6.75z"
+            ></path>
+          </svg>
+        </div>
+        <div class="text-right">
+          <p class="text-sm text-gray-600">Saldo General</p>
+          <h4 class="text-2xl font-bold text-gray-800">{{ totalSavings | currency }}</h4>
+        </div>
+
+      <button type="submit" (click)="openModal()"
+       class="bg-gradient-to-r from-red-500 to-red-600 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 ease-in-out w-full">
+        💸 Retirar saldo
+      </button>
+      </div>
+    </div>
+    
+  <div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md relative">
+      <h2 class="text-xl font-bold mb-6 text-center text-gray-800">
+        💰 Crear Préstamo
+      </h2>
+
+      <form [formGroup]="withdrawForm" class="space-y-4">
+        <div>
+          <label for="Balance" class="block font-medium text-gray-700"> 
+            Monto a retirar
+          </label>
+          <input
+            type="number"
+            id="Balance"
+            formControlName="Balance"
+            class="border border-gray-300 p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
+            [attr.max]="totalSavings"
+            />
+          <div *ngIf="withdrawForm.get('Balance')?.errors?.['max'] && withdrawForm.get('Balance')?.touched"
+            class="text-red-500 text-sm mt-1">
+            El monto no puede exceder el saldo general.
+          </div>
+          <div *ngIf="withdrawForm.get('Balance')?.errors?.['required'] && withdrawForm.get('Balance')?.touched"
+            class="text-red-500 text-sm mt-1">
+            Este campo es obligatorio.
+          </div>
+        </div>
+
+        <div class="flex gap-4 pt-2">
+          <button type="button" (click)="closeModal()"
+            class="bg-red-600 text-white font-medium px-4 py-2 rounded-md shadow-md hover:bg-red-700 transition-all duration-300 ease-in-out w-full text-sm">
+            Cerrar
+          </button>
+
+          <!-- Botón Confirmar retiro -->
+          <button type="submit" [disabled]="withdrawForm.invalid" 
+          class="bg-gradient-to-r from-red-500 to-red-600 text-white font-medium px-4 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 ease-in-out w-full text-sm">
+            💸 Confirmar retiro
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
