@@ -68,8 +68,9 @@
           </svg>
         </div>
         <div class="text-right">
-          <p class="text-sm text-gray-600">Saldo General</p>
-          <h4 class="text-2xl font-bold text-gray-800">{{ totalSavings | currency }}</h4>
+          <p class="text-sm text-gray-600">Balance Disponible</p>
+          <h4 class="text-2xl font-bold text-gray-800">{{ currentBalance | currency }}</h4>
+          <p class="text-xs text-gray-500 mt-1">Para retiros de fondos</p>
         </div>
 
       <button type="submit" (click)="openModal()"
@@ -82,8 +83,13 @@
   <div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
     <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md relative">
       <h2 class="text-xl font-bold mb-6 text-center text-gray-800">
-        💰 Crear Préstamo
+        💸 Retirar Fondos
       </h2>
+
+      <div class="mb-4 p-3 bg-gray-100 rounded-lg">
+        <p class="text-sm text-gray-600 mb-1">Balance disponible para retiro:</p>
+        <p class="text-lg font-bold text-green-600">{{ currentBalance | currency }}</p>
+      </div>
 
       <form [formGroup]="withdrawForm" class="space-y-4">
         <div>
@@ -95,11 +101,11 @@
             id="Balance"
             formControlName="Balance"
             class="border border-gray-300 p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-orange-500"
-            [attr.max]="totalSavings"
+            [attr.max]="currentBalance"
             />
           <div *ngIf="withdrawForm.get('Balance')?.errors?.['max'] && withdrawForm.get('Balance')?.touched"
             class="text-red-500 text-sm mt-1">
-            El monto no puede exceder el saldo general.
+            El monto no puede exceder el balance disponible ({{ currentBalance | currency }}).
           </div>
           <div *ngIf="withdrawForm.get('Balance')?.errors?.['required'] && withdrawForm.get('Balance')?.touched"
             class="text-red-500 text-sm mt-1">
@@ -114,9 +120,10 @@
           </button>
 
           <!-- Botón Confirmar retiro -->
-          <button type="submit" [disabled]="withdrawForm.invalid" 
-          class="bg-gradient-to-r from-red-500 to-red-600 text-white font-medium px-4 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 ease-in-out w-full text-sm">
-            💸 Confirmar retiro
+          <button type="button" (click)="processWithdrawal()" [disabled]="withdrawForm.invalid || isProcessingWithdrawal" 
+          class="bg-gradient-to-r from-red-500 to-red-600 text-white font-medium px-4 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 ease-in-out w-full text-sm disabled:opacity-50 disabled:cursor-not-allowed">
+            <span *ngIf="!isProcessingWithdrawal">💸 Confirmar retiro</span>
+            <span *ngIf="isProcessingWithdrawal">⏳ Procesando...</span>
           </button>
         </div>
       </form>
