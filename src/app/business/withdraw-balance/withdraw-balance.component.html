@@ -30,27 +30,23 @@
           <span class="font-bold text-gray-700">Teléfono:</span> {{ associateData?.mobileNumber }}
         </div>
       </div>
-
-      <div class="p-6 bg-white shadow rounded-lg border border-gray-200 flex-1">
-        <h2 class="text-lg font-bold text-gray-800">Caja de Ahorro</h2>
-        <div *ngIf="userSavingsBox; else noBox">
-          <div class="mb-2">
-            <span class="font-bold text-gray-700">Cantidad de cajas:</span> {{ userSavingsBox.boxCount }}
-          </div>
-          <div class="mb-2">
-            <span class="font-bold text-gray-700">Valor por caja:</span> {{ userSavingsBox.boxValue | currency }}
-          </div>
-          <div class="mb-2">
-            <span class="font-bold text-gray-700">Total a pagar:</span> {{ (userSavingsBox.boxCount * userSavingsBox.boxValue) | currency }}
-          </div>
+      <div class="relative bg-white rounded-lg shadow-md border border-gray-300 p-6 w-1/3 flex flex-col justify-between ">
+        <div class="absolute -top-8 left-6 bg-orange-500 rounded-full p-3 text-white shadow-lg">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            class="w-6 h-6"
+          >
+            <path
+              d="M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75zM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 01-1.875-1.875V8.625zM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 013 19.875v-6.75z"
+            ></path>
+          </svg>
         </div>
-        <ng-template #noBox>
-          <p class="text-gray-600">No se ha configurado la caja de ahorro.</p>
-          <app-user-saving-box
-            [userId]="associateData.id"
-            (boxAdded)="userSavingsBox = $event">
-          </app-user-saving-box>
-        </ng-template>
+        <div class="text-right">
+          <p class="text-sm text-gray-600">Intereses Obtenidos</p>
+          <h4 class="text-2xl font-bold text-gray-800">{{ currentInterestBalance | currency }}</h4>
+        </div>
       </div>
 
       <!-- Saldo General -->

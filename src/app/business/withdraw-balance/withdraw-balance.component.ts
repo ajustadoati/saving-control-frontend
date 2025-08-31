@@ -6,13 +6,12 @@ import { ReactiveFormsModule, FormsModule, FormGroup, FormBuilder, Validators } 
 import { UserSavingBoxService } from '../core/services/user-saving-box.service';
 import { UserBalanceService } from '../core/services/user-balance.service';
 import { UserSavingsBox } from '../interfaces/userSavingBox';
-import { UserSavingBoxComponent } from '../associates/user-saving-box/user-saving-box.component';
 import { WithdrawalRequest } from '../interfaces/withdrawal-request';
 
 @Component({
   selector: 'app-withdraw-balance',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule,UserSavingBoxComponent,],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './withdraw-balance.component.html',
   styleUrl: './withdraw-balance.component.css'
 })
@@ -25,6 +24,7 @@ export default class WithdrawBalanceComponent {
   associateData: any = {};
   userSavingsBox: UserSavingsBox | null = null;
   currentBalance: number = 0;
+  currentInterestBalance: number = 0;
   isProcessingWithdrawal: boolean = false;
 
   constructor(private fb: FormBuilder, private userService: UserService, 
@@ -89,6 +89,7 @@ export default class WithdrawBalanceComponent {
       this.userBalanceService.getSummary(this.associateData.id).subscribe({
         next: (summary) => {
           this.currentBalance = summary.currentBalance;
+          this.currentInterestBalance = summary.interestEarned;
           console.log('Balance actual del usuario:', this.currentBalance);
           this.updateValidators();
         },

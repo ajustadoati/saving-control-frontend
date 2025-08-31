@@ -15,6 +15,7 @@ import { SuppliesService } from '../../core/services/supplies.service';
 import { SuppliesPaymentComponent } from '../../supplies-payment/supplies-payment/supplies-payment.component';
 import { LoanService } from '../../core/services/loan.service';
 import { LoanPaymentComponent } from '../../loan-payment/loan-payment/loan-payment.component';
+import { UserBalanceService } from '../../core/services/user-balance.service';
 
 
 
@@ -31,10 +32,13 @@ export default class SummaryComponent {
   supplies: any[] = [];
   loans: any[] = [];
   userId : number | undefined;
+  currentBalance: number = 0;
+  currentInterestBalance: number = 0;
 
   constructor(private userService: UserService, private savingService: SavingService, 
     private associateService: AssociateService,private userSavingBoxService: UserSavingBoxService,
-    private suppliesService: SuppliesService,private loanService: LoanService)
+    private suppliesService: SuppliesService,private loanService: LoanService,
+    private userBalanceService: UserBalanceService )
   {}
 
   @ViewChild('paymentModal') paymentModal!: SuppliesPaymentComponent;
@@ -62,6 +66,7 @@ export default class SummaryComponent {
   throw new Error('Method not implemented.');
   }
 
+
   associateFound: boolean = false;
   associateId: any;
   totalSavings!: number;
@@ -82,10 +87,10 @@ export default class SummaryComponent {
         console.log('Datos del socio:', this.associateData); // Verificar los datos del socio
         this.associateFound = true;
         this.totalSavings = data.totalSavings;
-        this.getUserSavingsBox();
         this.savingService.getResume()
         this.loadSupplies();
         this.loadLoans();
+        this.getUserBalance();
       },
       error: (error) => {
         console.error('Socio no encontrado:', error);
@@ -99,6 +104,25 @@ export default class SummaryComponent {
       },
     });
   }
+
+  getUserBalance() {
+    if (this.associateData && this.associateData.id) {
+      this.userBalanceService.getSummary(this.associateData.id).subscribe({
+        next: (summary) => {
+          this.currentBalance = summary.currentBalance;
+          this.currentInterestBalance = summary.interestEarned;
+          console.log('Balance actual del usuario:', this.currentBalance);
+    
+        },
+        error: (error) => {
+          console.error('Error al obtener el balance del usuario:', error);
+          this.currentBalance = 0;
+  
+        }
+      });
+    }
+  }
+
 
   getUserSavingsBox() {
     this.userSavingBoxService.getSavingBox(this.associateData.id).subscribe({
