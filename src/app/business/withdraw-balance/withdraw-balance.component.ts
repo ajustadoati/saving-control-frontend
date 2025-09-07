@@ -26,13 +26,15 @@ export default class WithdrawBalanceComponent {
   currentBalance: number = 0;
   currentInterestBalance: number = 0;
   isProcessingWithdrawal: boolean = false;
+  withdrawalType: 'INTEREST' | 'TOTAL_BALANCE' = 'INTEREST';
 
   constructor(private fb: FormBuilder, private userService: UserService, 
     private userSavingBoxService: UserSavingBoxService,
     private userBalanceService: UserBalanceService){
 
     this.withdrawForm = this.fb.group({
-      Balance: ['', [Validators.required]] 
+      Balance: ['', [Validators.required]],
+      withdrawalType: ['INTEREST', [Validators.required]]
     });
   }
 
@@ -91,11 +93,19 @@ export default class WithdrawBalanceComponent {
           this.currentBalance = summary.currentBalance;
           this.currentInterestBalance = summary.interestEarned;
           console.log('Balance actual del usuario:', this.currentBalance);
+          
+          // Si no hay intereses disponibles, cambiar automáticamente a TOTAL_BALANCE
+          if (this.currentInterestBalance <= 0 && this.withdrawForm.get('withdrawalType')?.value === 'INTEREST') {
+            this.withdrawForm.patchValue({ withdrawalType: 'TOTAL_BALANCE' });
+            this.withdrawalType = 'TOTAL_BALANCE';
+          }
+          
           this.updateValidators();
         },
         error: (error) => {
           console.error('Error al obtener el balance del usuario:', error);
           this.currentBalance = 0;
+          this.currentInterestBalance = 0;
           this.updateValidators();
         }
       });
@@ -104,33 +114,62 @@ export default class WithdrawBalanceComponent {
 
   updateValidators() {
     const balanceControl = this.withdrawForm.get('Balance');
+    const maxBalance = this.getMaxWithdrawableAmount();
     if (balanceControl) {
       balanceControl.setValidators([
         Validators.required,
-        Validators.max(this.currentBalance),
+        Validators.max(maxBalance),
         Validators.min(0.01)
       ]);
       balanceControl.updateValueAndValidity();
     }
   }
 
+  getMaxWithdrawableAmount(): number {
+    const type = this.withdrawForm.get('withdrawalType')?.value;
+    return type === 'INTEREST' ? this.currentInterestBalance : this.currentBalance;
+  }
+
+  onWithdrawalTypeChange() {
+    this.withdrawalType = this.withdrawForm.get('withdrawalType')?.value;
+    this.updateValidators();
+    // Limpiar el campo de monto cuando cambie el tipo
+    this.withdrawForm.get('Balance')?.setValue('');
+  }
+
   processWithdrawal() {
     if (this.withdrawForm.valid && !this.isProcessingWithdrawal) {
       const amount = this.withdrawForm.get('Balance')?.value;
+      const withdrawalType = this.withdrawForm.get('withdrawalType')?.value;
+      const maxBalance = this.getMaxWithdrawableAmount();
       
-      if (amount > this.currentBalance) {
+      // Validar si hay fondos disponibles para el tipo seleccionado
+      if (maxBalance <= 0) {
+        const balanceType = withdrawalType === 'INTEREST' ? 'intereses disponibles' : 'balance';
+        Swal.fire({
+          icon: 'warning',
+          title: 'Sin fondos disponibles',
+          text: `No hay ${balanceType} para retirar.`
+        });
+        return;
+      }
+      
+      if (amount > maxBalance) {
+        const balanceType = withdrawalType === 'INTEREST' ? 'intereses disponibles' : 'balance total';
         Swal.fire({
           icon: 'error',
           title: 'Fondos insuficientes',
-          text: `El monto solicitado (${amount}) excede el balance disponible (${this.currentBalance}).`
+          text: `El monto solicitado (${amount}) excede los ${balanceType} (${maxBalance}).`
         });
         return;
       }
 
+      const typeDescription = withdrawalType === 'INTEREST' ? 'intereses ganados' : 'saldo total';
       const withdrawalRequest: WithdrawalRequest = {
         userId: this.associateData.id,
         amount: amount,
-        description: `Retiro de fondos - Usuario: ${this.associateData.firstName} ${this.associateData.lastName}`
+        description: `Retiro de ${typeDescription} - Usuario: ${this.associateData.firstName} ${this.associateData.lastName}`,
+        withdrawalType: withdrawalType
       };
 
       this.isProcessingWithdrawal = true;
@@ -153,8 +192,8 @@ export default class WithdrawBalanceComponent {
             confirmButtonText: 'Entendido'
           });
 
-          // Actualizar el balance actual
-          this.currentBalance = response.newBalance;
+          // Actualizar el balance actual y obtener el balance actualizado desde el backend
+          this.getUserBalance();
           this.updateValidators();
           
           // Cerrar modal y resetear formulario
