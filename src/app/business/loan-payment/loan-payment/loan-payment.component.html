@@ -1,6 +1,7 @@
 <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center" *ngIf="isOpen">
     <div class="bg-white p-6 rounded-lg shadow-xl w-96 transform transition-all duration-300 scale-100">
-      <h2 class="text-lg font-bold mb-4 text-gray-800">Listado de los pagos del prestamo</h2>
+      <h2 class="text-lg font-bold mb-2 text-gray-800">Listado de los pagos del prestamo</h2>
+      <p class="text-sm text-gray-600 mb-4"><strong>Tipo de préstamo:</strong> {{ loanData?.loanTypeName }}</p>
       <table class="w-full text-sm">
         <thead>
           <tr class="bg-gray-100">

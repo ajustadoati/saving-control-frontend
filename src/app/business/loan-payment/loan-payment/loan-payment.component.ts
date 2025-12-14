@@ -15,18 +15,20 @@ export class LoanPaymentComponent {
     @Output() closed = new EventEmitter<void>();
 
 
-   @Input() loan: any;  
-    isOpen = false; 
+   @Input() loan: any;
+    isOpen = false;
     loanPayment: any[] = [];
     loanId: any;
+    loanData: any;
     constructor(private loanPaymentService: LoanPaymentService){}
 
   openModal(){
     this.loanPayment = []; // Limpiar los datos previos
-    this.loanId = this.loan[0]?.loanId; 
-    this.isOpen = true; 
+    this.loanData = this.loan[0]; // Guardar la información completa del préstamo
+    this.loanId = this.loan[0]?.loanId;
+    this.isOpen = true;
     this.loadPayment(); // Cargar los pagos del préstamo actual
-    console.log('Loan ID:', this.loanId); // Para verificar que el valor se asignó correctamente    
+    console.log('Loan ID:', this.loanId); // Para verificar que el valor se asignó correctamente
     console.log(this.loan)
   }
 

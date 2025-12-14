@@ -31,6 +31,7 @@
               <thead>
                 <tr class="bg-gray-100">
                   <th class="px-2 py-2 text-left text-gray-600">Fecha</th>
+                  <th class="px-2 py-2 text-left text-gray-600">Tipo</th>
                   <th class="px-2 py-2 text-left text-gray-600">Monto</th>
                   <th class="px-2 py-2 text-left text-gray-600">Balance</th>
                   <th class="px-2 py-2 text-left text-gray-600">Motivo</th>
@@ -40,6 +41,7 @@
               <tbody>
                 <tr *ngFor="let loan of loans; let i = index" class="border-b">
                   <td class="px-2 py-1 text-gray-700">{{ loan.startDate | date: 'dd/MM/yy'}}</td>
+                  <td class="px-2 py-1 text-gray-700">{{ loan.loanTypeName }}</td>
                   <td class="px-2 py-1 text-gray-700">{{ loan.loanBalance| currency }}</td>
                   <td class="px-2 py-1 text-gray-700">{{ loan.loanAmount| currency }}</td>
                   <td class="px-2 py-1 text-gray-700">{{ loan.reason }}</td>
