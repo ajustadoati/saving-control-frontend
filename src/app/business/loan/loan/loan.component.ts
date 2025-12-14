@@ -65,6 +65,7 @@ export default class LoanComponent implements OnInit{
       interestRate: ['', [Validators.required, Validators.min(0)]],
       loanTypeId: ['', Validators.required],
       loanBalance: [''],
+      reason:[''],
       startDate: ['', Validators.required],
       endDate: ['', Validators.required],
     });

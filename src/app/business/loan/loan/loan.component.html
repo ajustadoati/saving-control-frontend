@@ -33,6 +33,7 @@
                   <th class="px-2 py-2 text-left text-gray-600">Fecha</th>
                   <th class="px-2 py-2 text-left text-gray-600">Monto</th>
                   <th class="px-2 py-2 text-left text-gray-600">Balance</th>
+                  <th class="px-2 py-2 text-left text-gray-600">Motivo</th>
                   <th class="px-2 py-2">Detalles</th>
                 </tr>
               </thead>
@@ -41,6 +42,7 @@
                   <td class="px-2 py-1 text-gray-700">{{ loan.startDate | date: 'dd/MM/yy'}}</td>
                   <td class="px-2 py-1 text-gray-700">{{ loan.loanBalance| currency }}</td>
                   <td class="px-2 py-1 text-gray-700">{{ loan.loanAmount| currency }}</td>
+                  <td class="px-2 py-1 text-gray-700">{{ loan.reason }}</td>
                   <td class="px-2 py-1 text-right">
                     <button
                       (click)="viewDetailsLoan([loan,associateData.id])"
@@ -94,6 +96,15 @@
               type="number"
               id="interestRate"
               formControlName="interestRate"
+              class="border p-2 w-full rounded"
+            />
+          </div>
+          <div>
+            <label for="reason" class="block font-medium">Motivo del Préstamo</label>
+            <input
+              type="string"
+              id="reason"
+              formControlName="reason"
               class="border p-2 w-full rounded"
             />
           </div>

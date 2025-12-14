@@ -1,18 +1,21 @@
 import { Component } from '@angular/core';
 import { LoanService } from '../core/services/loan.service';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { BalanceService } from '../core/services/balance.service';
 import { SharingFundsService } from '../core/services/sharing-funds.service';
 
 @Component({
   selector: 'app-summary-loans',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './summary-loans.component.html',
   styleUrl: './summary-loans.component.css',
 })
 export default class SummaryLoansComponent {
   loans: any[] = [];
+  filteredLoans: any[] = [];
+  searchCedula: string = '';
   isModalOpen: boolean = false;
 
   constructor(private loanService: LoanService, private balanceService: BalanceService, private sharingFundsService: SharingFundsService) {}
@@ -29,10 +32,23 @@ export default class SummaryLoansComponent {
 
   getActiveLoans() {
     this.loanService.getLoansAssets().subscribe({
-      next: (data) => (this.loans = data),
+      next: (data) => {
+        this.loans = data;
+        this.filteredLoans = data;
+      },
       error: (error) =>
         console.error('Error al cargar préstamos activos:', error),
     });
+  }
+
+  filterLoans() {
+    if (!this.searchCedula.trim()) {
+      this.filteredLoans = this.loans;
+    } else {
+      this.filteredLoans = this.loans.filter(loan =>
+        loan.numberId.toString().includes(this.searchCedula.trim())
+      );
+    }
   }
 
   loadBalance(){
