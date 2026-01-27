@@ -4,6 +4,7 @@
         <tr>
           <th class="border px-2 py-1 text-left whitespace-nowrap">Nombre</th>
           <th class="border px-2 py-1 text-right whitespace-nowrap">Balance</th>
+          <th class="border px-2 py-1 text-right whitespace-nowrap">Tasa</th>
           <th class="border px-2 py-1 text-right whitespace-nowrap">Distribuido</th>
         </tr>
       </thead>
@@ -13,14 +14,32 @@
             {{ item.name }}
           </td>
           <td class="border px-2 py-1 text-right">{{ item.totalBalance }}</td>
+          <td class="border px-2 py-1 text-right">{{ item.interest }}</td>
           <td class="border px-2 py-1 text-right">{{ item.distributedAmount }}</td>
         </tr>
   
         <!-- Fila de Totales -->
         <tr class="bg-gray-100 font-semibold">
-          <td class="border px-2 py-1 text-right" colspan="2">Total Distribuido:</td>
-          <td class="border px-2 py-1 text-right">{{ totalDistribuido | number:'1.2-2' }}</td>
-        </tr>
+  <!-- Nombre -->
+  <td class="border px-2 py-1 text-right">
+    Totales:
+  </td>
+
+  <!-- Total Balance -->
+  <td class="border px-2 py-1 text-right">
+    {{ totalBalance | number:'1.2-2' }}
+  </td>
+
+  <!-- Tasa (no se suma) -->
+  <td class="border px-2 py-1 text-right text-gray-500">
+    —
+  </td>
+
+  <!-- Total Distribuido -->
+  <td class="border px-2 py-1 text-right">
+    {{ totalDistribuido | number:'1.2-2' }}
+  </td>
+</tr>
       </tbody>
     </table>
   </div>

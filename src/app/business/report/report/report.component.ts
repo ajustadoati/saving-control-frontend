@@ -16,7 +16,7 @@ import { InterestReportComponent } from "../interest-report/interest-report.comp
 export default class ReportComponent implements OnInit {
 
   reporte: any;
-  fecha: string = '2025-01-17'; // Puedes ajustar la fecha según tus necesidades
+  fecha: string = '2026-01-14'; // Puedes ajustar la fecha según tus necesidades
   showReceiptModal = false;
   showInterestReportModal = false;
   @ViewChild(ReceiptComponent, { static: false })

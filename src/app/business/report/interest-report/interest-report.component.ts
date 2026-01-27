@@ -18,12 +18,15 @@ export class InterestReportComponent implements OnInit {
   @Input() reportDate: any;
   @Input() total: any;
   totalDistribuido: number = 0;
+  totalBalance: number = 0;
 
   ngOnInit(): void {
     console.log(this.interestReport);
     if (this.interestReport && Array.isArray(this.interestReport)) {
       this.totalDistribuido = this.interestReport
         .reduce((sum, item) => sum + Number(item.distributedAmount || 0), 0);
+      this.totalBalance = this.interestReport
+        .reduce((sum, item) => sum + Number(item.totalBalance || 0), 0);
     }
   }
 
@@ -39,6 +42,7 @@ export class InterestReportComponent implements OnInit {
       userId: item.userId,
       name: item.name,
       totalBalance: item.totalBalance,
+      interest: item.interest,
       distributedAmount: item.distributedAmount
     }))
   };
