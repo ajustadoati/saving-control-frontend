@@ -3,6 +3,7 @@ import { environment } from '../../../../environments/environments';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ReporteDiarioResponse } from '../../interfaces/reporteDiarioResponse';
+import { WeeklySummaryResponse } from '../../interfaces/weeklySummaryResponse';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +16,14 @@ export class ReportService {
 
   getReporteDiario(fecha: string): Observable<ReporteDiarioResponse> {
     return this.http.get<ReporteDiarioResponse>(`${this.apiUrl}/${fecha}`);
+  }
+
+  getLatestWednesdaySummary(): Observable<WeeklySummaryResponse> {
+    return this.http.get<WeeklySummaryResponse>(`${this.apiUrl}/latest-wednesday`);
+  }
+
+  getWeeklySummaryByDate(fecha: string): Observable<WeeklySummaryResponse> {
+    return this.http.get<WeeklySummaryResponse>(`${this.apiUrl}/summary/${fecha}`);
   }
   
 }

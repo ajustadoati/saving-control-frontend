@@ -1,4 +1,4 @@
-<div class="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
+  <div class="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
     <div class="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 shadow-md">
       <div class="bg-clip-border mx-4 rounded-xl overflow-hidden bg-gradient-to-tr from-blue-600 to-blue-400 text-white shadow-blue-500/40 shadow-lg absolute -mt-4 grid h-16 w-16 place-items-center">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="w-6 h-6 text-white">
@@ -65,6 +65,82 @@
       <div class="border-t border-blue-gray-50 p-4">
         <p class="block antialiased font-sans text-base leading-relaxed font-normal text-blue-gray-600">
         </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-10">
+    <div class="mb-2 flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-blue-gray-900">Caja (último miércoles)</h3>
+    </div>
+    <p class="mb-4 text-sm text-blue-gray-600">{{ weeklySummary?.message || '' }}</p>
+
+    <div class="mb-4 flex flex-wrap items-center gap-3">
+      <label class="text-sm text-blue-gray-600" for="cajaFecha">Seleccionar miércoles</label>
+      <input
+        id="cajaFecha"
+        type="date"
+        class="rounded-md border border-blue-gray-200 px-3 py-2 text-sm text-blue-gray-700"
+        [(ngModel)]="selectedDate"
+      />
+      <button
+        class="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+        (click)="loadWeeklySummaryByDate()"
+      >
+        Buscar
+      </button>
+    </div>
+
+    <div class="rounded-xl bg-white shadow-md">
+      <div class="flex items-center justify-between border-b border-blue-gray-50 px-4 py-3">
+        <span class="text-sm font-semibold text-blue-gray-700">CAJA {{ weeklySummaryDate }}</span>
+        <span class="text-xs text-blue-gray-500">Resumen semanal</span>
+      </div>
+
+      <div class="grid gap-3 px-4 py-4 md:grid-cols-2 xl:grid-cols-6">
+        <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
+          <div class="text-xs text-blue-gray-500">AHORRO</div>
+          <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.ahorro || 0 }}</div>
+        </div>
+        <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
+          <div class="text-xs text-blue-gray-500">INTERESES 1</div>
+          <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.intereses1 || 0 }}</div>
+        </div>
+        <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
+          <div class="text-xs text-blue-gray-500">CAPITAL 1</div>
+          <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.capital1 || 0 }}</div>
+        </div>
+        <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
+          <div class="text-xs text-blue-gray-500">CAPITAL 2</div>
+          <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.capital2 || 0 }}</div>
+        </div>
+        <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
+          <div class="text-xs text-blue-gray-500">CAPITAL EXT</div>
+          <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.capitalExt || 0 }}</div>
+        </div>
+        <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
+          <div class="text-xs text-blue-gray-500">INGRESOS</div>
+          <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.ingresos || 0 }}</div>
+        </div>
+      </div>
+
+      <div class="grid gap-3 border-t border-blue-gray-50 px-4 py-4 md:grid-cols-2 xl:grid-cols-5">
+        <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
+          <div class="text-xs text-blue-gray-500">EGRESOS</div>
+          <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.egresos || 0 }}</div>
+        </div>
+        <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
+          <div class="text-xs text-blue-gray-500">TOTAL DÍA</div>
+          <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.totalDia || 0 }}</div>
+        </div>
+        <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
+          <div class="text-xs text-blue-gray-500">SALDO ANTERIOR</div>
+          <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.saldoAnterior || 0 }}</div>
+        </div>
+        <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
+          <div class="text-xs text-blue-gray-500">SALDO FINAL</div>
+          <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.saldoFinal || 0 }}</div>
+        </div>
       </div>
     </div>
   </div>

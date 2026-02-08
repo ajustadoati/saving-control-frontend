@@ -19,13 +19,18 @@ export class InterestReportComponent implements OnInit {
   @Input() total: any;
   totalDistribuido: number = 0;
   totalBalance: number = 0;
+  filteredInterestReport: any[] = [];
 
   ngOnInit(): void {
     console.log(this.interestReport);
     if (this.interestReport && Array.isArray(this.interestReport)) {
-      this.totalDistribuido = this.interestReport
+      // Filtrar los items donde totalBalance no es 0
+      this.filteredInterestReport = this.interestReport
+        .filter(item => Number(item.totalBalance || 0) !== 0);
+      console.log("total",this.filteredInterestReport.length);
+      this.totalDistribuido = this.filteredInterestReport
         .reduce((sum, item) => sum + Number(item.distributedAmount || 0), 0);
-      this.totalBalance = this.interestReport
+      this.totalBalance = this.filteredInterestReport
         .reduce((sum, item) => sum + Number(item.totalBalance || 0), 0);
     }
   }
