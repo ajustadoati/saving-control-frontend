@@ -60,6 +60,18 @@ export class UserService {
     );
   }
 
+  searchAssociatesByName(query: string): Observable<any[]> {
+    if (!query || !query.trim()) {
+      return of([]);
+    }
+    return this.http.get<any>(`${this.apiUrl}/search?query=${encodeURIComponent(query)}`).pipe(
+      map((response) => {
+        const users = response._embedded ? response._embedded.collection : [];
+        return users;
+      })
+    );
+  }
+
   getAssociateById(id: number): Observable<any> {
     // Primero busca en la caché
     const associate = this.cachedUsers.find(user => user.id === id);

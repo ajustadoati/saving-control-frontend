@@ -66,6 +66,10 @@ export default class PaymentComponent {
     { paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10 }
   ];
 
+  associateQuery: string = '';
+  associateResults: any[] = [];
+  showAssociateResults: boolean = false;
+
   associateData: any = {
     id: '14447876',
     name: 'Richard Rojas',
@@ -105,6 +109,9 @@ export default class PaymentComponent {
 
   resetData(): void {
     this.associateId = ''; // Restablece el campo de búsqueda
+    this.associateQuery = '';
+    this.associateResults = [];
+    this.showAssociateResults = false;
       this.associateFound = false;
       this.paymentsActivated = false;
       this.defaultPayments = [{ paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10 }];
@@ -118,62 +125,106 @@ export default class PaymentComponent {
   paymentTypes: string[] = [];
 
   searchAssociate() {
-    // Primero buscar el socio por el número de identificación
-    this.userService.getAssociateByNumberId(this.associateId).subscribe({
-      next: (data) => {
-        this.associateData = data; // Almacena los datos del socio
-        console.log('Datos del socio:', this.associateData); // Verificar los datos del socio
-        this.associateFound = true;
-        this.paymentsActivated = true; // Activa la sección de pagos
-        this.totalSavings = data.totalSavings;
-        this.isSaving = false;
-        this.defaultPaymentService.getDefaultPaymentsByUserId(this.associateData.id).subscribe({
-          next: (response: any) => {
-            console.log('defaultpayments:', response);
-            if (response.defaultPayments.length > 0){
-              this.defaultPayments.pop();
-              response.defaultPayments.forEach((defaultPayment: {id: number, paymentName: string, amount: number}) => {
-   
-                this.defaultPayments.push({paymentTitle: defaultPayment.paymentName, hourlyRate: defaultPayment.amount, defaultPaymentsCount: 1, totalCost: defaultPayment.amount});
-                this.paymentTypes.push(defaultPayment.paymentName);
-              })
-              this.updateTotal();
-            } else {
-              this.meetingTotal = 0;
-              this.defaultPayments.pop();
-              this.loadProducts();
-              //this.paymentTypes.push('Ahorro');
-              //this.defaultPayments.push({paymentTitle: 'Ahorro', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0})
-         
-            }
-          }, 
-          error: (error) => {
-            console.error('Error al obtener los pagos por defecto:', error);
-          }
-        });
+    const query = (this.associateQuery || '').trim();
+    if (!query) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Búsqueda vacía',
+        text: 'Ingresa nombre o cédula para buscar.'
+      });
+      return;
+    }
 
-        this.contributionService.getContributions().subscribe({
-          next: (data: any) => {
-            this.contributions = data
-          },  
+    if (this.isNumericQuery(query)) {
+      this.userService.getAssociateByNumberId(query).subscribe({
+        next: (data) => {
+          this.handleAssociateFound(data);
+        },
         error: (error) => {
-          console.error('Error al obtener las contribuciones:', error); 
-        }});
-        this.loadBalance();
-        
+          console.error('Socio no encontrado:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Usuario no encontrado',
+            text: 'Por favor, verifica la cédula e intenta de nuevo.'
+          });
+          this.associateFound = false;
+          this.paymentsActivated = false;
+          this.totalSavings = 0; // Si no se encuentra el socio, no hay saldo
+        },
+      });
+      return;
+    }
+
+    this.userService.searchAssociatesByName(query).subscribe({
+      next: (users: any[]) => {
+        this.associateResults = users;
+        this.showAssociateResults = true;
+        if (users.length === 1) {
+          this.selectAssociate(users[0]);
+        }
+        if (users.length === 0) {
+          Swal.fire({
+            icon: 'info',
+            title: 'Sin resultados',
+            text: 'No se encontraron socios con ese nombre.'
+          });
+        }
       },
       error: (error) => {
-        console.error('Socio no encontrado:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Usuario no encontrado',
-          text: 'Por favor, verifica la cédula e intenta de nuevo.'
-        });
-        this.associateFound = false;
-        this.paymentsActivated = false;
-        this.totalSavings = 0; // Si no se encuentra el socio, no hay saldo
-      },
+        console.error('Error al buscar socios por nombre:', error);
+      }
     });
+  }
+
+  selectAssociate(user: any) {
+    this.showAssociateResults = false;
+    this.associateResults = [];
+    this.associateId = user.numberId || user.id || '';
+    this.handleAssociateFound(user);
+  }
+
+  private isNumericQuery(value: string): boolean {
+    return /^[0-9]+$/.test(value);
+  }
+
+  private handleAssociateFound(data: any) {
+    this.paymentTypes = [];
+    this.defaultPayments = [{ paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10 }];
+    this.associateData = data; // Almacena los datos del socio
+    console.log('Datos del socio:', this.associateData); // Verificar los datos del socio
+    this.associateFound = true;
+    this.paymentsActivated = true; // Activa la sección de pagos
+    this.totalSavings = data.totalSavings;
+    this.isSaving = false;
+    this.defaultPaymentService.getDefaultPaymentsByUserId(this.associateData.id).subscribe({
+      next: (response: any) => {
+        console.log('defaultpayments:', response);
+        if (response.defaultPayments.length > 0){
+          this.defaultPayments.pop();
+          response.defaultPayments.forEach((defaultPayment: {id: number, paymentName: string, amount: number}) => {
+            this.defaultPayments.push({paymentTitle: defaultPayment.paymentName, hourlyRate: defaultPayment.amount, defaultPaymentsCount: 1, totalCost: defaultPayment.amount});
+            this.paymentTypes.push(defaultPayment.paymentName);
+          })
+          this.updateTotal();
+        } else {
+          this.meetingTotal = 0;
+          this.defaultPayments.pop();
+          this.loadProducts();
+        }
+      }, 
+      error: (error) => {
+        console.error('Error al obtener los pagos por defecto:', error);
+      }
+    });
+
+    this.contributionService.getContributions().subscribe({
+      next: (data: any) => {
+        this.contributions = data
+      },  
+    error: (error) => {
+      console.error('Error al obtener las contribuciones:', error); 
+    }});
+    this.loadBalance();
   }
 
   loadBalance() {
