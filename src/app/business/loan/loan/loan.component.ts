@@ -43,6 +43,9 @@ export default class LoanComponent implements OnInit{
   payments: { date: string; principal: number; interest: number; balance: number }[] = [];
   isModalOpen: boolean = false;
   associateId: any;
+  associateQuery: string = '';
+  associateResults: any[] = [];
+  showAssociateResults: boolean = false;
   associateFound: boolean = false;
   loanTypes: any[] = [];
   loans: any[] = [];
@@ -73,33 +76,78 @@ export default class LoanComponent implements OnInit{
 
   // Simular búsqueda de socio
   searchAssociate() {
-    // Primero buscar el socio por el número de identificación
-    this.userService.getAssociateByNumberId(this.associateId).subscribe({
-      next: (data) => {
-        this.associateData = data; // Almacena los datos del socio
-        console.log('Datos del socio:', this.associateData); // Verificar los datos del socio
-        this.associateFound = true;
-        this.loanService.getLoans(this.associateData.id).subscribe({
-          next: (data: any) => {
-            this.loans = data
-          },
-          error: (error) => {
-            console.error('Error al obtener préstamos:', error); 
-          }
-        });
+    const query = (this.associateQuery || '').trim();
+    if (!query) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Búsqueda vacía',
+        text: 'Ingresa nombre o cédula para buscar.'
+      });
+      return;
+    }
 
+    if (this.isNumericQuery(query)) {
+      this.userService.getAssociateByNumberId(query).subscribe({
+        next: (data) => {
+          this.handleAssociateFound(data);
+        },
+        error: (error) => {
+          console.error('Socio no encontrado:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Usuario no encontrado',
+            text: 'Por favor, verifica la cédula e intenta de nuevo.'
+          });
+          this.associateFound = false;
+        },
+      });
+      return;
+    }
+
+    this.userService.searchAssociatesByName(query).subscribe({
+      next: (users: any[]) => {
+        this.associateResults = users;
+        this.showAssociateResults = true;
+        if (users.length === 1) {
+          this.selectAssociate(users[0]);
+        }
+        if (users.length === 0) {
+          Swal.fire({
+            icon: 'info',
+            title: 'Sin resultados',
+            text: 'No se encontraron socios con ese nombre.'
+          });
+        }
       },
       error: (error) => {
-        console.error('Socio no encontrado:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Usuario no encontrado',
-          text: 'Por favor, verifica la cédula e intenta de nuevo.'
-        });
-        this.associateFound = false;
-  
-      },
+        console.error('Error al buscar socios por nombre:', error);
+      }
     });
+  }
+
+  selectAssociate(user: any) {
+    this.showAssociateResults = false;
+    this.associateResults = [];
+    this.associateId = user.numberId || user.id || '';
+    this.handleAssociateFound(user);
+  }
+
+  private handleAssociateFound(data: any) {
+    this.associateData = data; // Almacena los datos del socio
+    console.log('Datos del socio:', this.associateData); // Verificar los datos del socio
+    this.associateFound = true;
+    this.loanService.getLoans(this.associateData.id).subscribe({
+      next: (data: any) => {
+        this.loans = data
+      },
+      error: (error) => {
+        console.error('Error al obtener préstamos:', error); 
+      }
+    });
+  }
+
+  private isNumericQuery(value: string): boolean {
+    return /^[0-9]+$/.test(value);
   }
 
   loadLoans() {

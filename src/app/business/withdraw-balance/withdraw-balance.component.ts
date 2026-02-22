@@ -21,6 +21,9 @@ export default class WithdrawBalanceComponent {
   withdrawForm: FormGroup;
   associateFound: boolean = false;
   associateId: any;
+  associateQuery: string = '';
+  associateResults: any[] = [];
+  showAssociateResults: boolean = false;
   associateData: any = {};
   userSavingsBox: UserSavingsBox | null = null;
   currentBalance: number = 0;
@@ -39,26 +42,73 @@ export default class WithdrawBalanceComponent {
   }
 
   searchAssociate() {
-    // Primero buscar el socio por el número de identificación
-    this.userService.getAssociateByNumberId(this.associateId).subscribe({
-      next: (data) => {
-        this.associateData = data; // Almacena los datos del socio
-        console.log('Datos del socio:', this.associateData);
-        this.associateFound = true;
-        this.getUserSavingsBox();
-        this.getUserBalance(); // Obtener el balance real del usuario
+    const query = (this.associateQuery || '').trim();
+    if (!query) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Búsqueda vacía',
+        text: 'Ingresa nombre o cédula para buscar.'
+      });
+      return;
+    }
+
+    if (this.isNumericQuery(query)) {
+      this.userService.getAssociateByNumberId(query).subscribe({
+        next: (data) => {
+          this.handleAssociateFound(data);
+        },
+        error: (error) => {
+          console.error('Socio no encontrado:', error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Usuario no encontrado',
+            text: 'Por favor, verifica la cédula e intenta de nuevo.'
+          });
+          this.associateFound = false;
+          this.currentBalance = 0;
+        },
+      });
+      return;
+    }
+
+    this.userService.searchAssociatesByName(query).subscribe({
+      next: (users: any[]) => {
+        this.associateResults = users;
+        this.showAssociateResults = true;
+        if (users.length === 1) {
+          this.selectAssociate(users[0]);
+        }
+        if (users.length === 0) {
+          Swal.fire({
+            icon: 'info',
+            title: 'Sin resultados',
+            text: 'No se encontraron socios con ese nombre.'
+          });
+        }
       },
       error: (error) => {
-        console.error('Socio no encontrado:', error);
-        Swal.fire({
-          icon: 'error',
-          title: 'Usuario no encontrado',
-          text: 'Por favor, verifica la cédula e intenta de nuevo.'
-        });
-        this.associateFound = false;
-        this.currentBalance = 0;
-      },
+        console.error('Error al buscar socios por nombre:', error);
+      }
     });
+  }
+
+  selectAssociate(user: any) {
+    this.showAssociateResults = false;
+    this.associateResults = [];
+    this.associateId = user.numberId || user.id || '';
+    this.handleAssociateFound(user);
+  }
+
+  private handleAssociateFound(data: any) {
+    this.associateData = data; // Almacena los datos del socio
+    console.log('Datos del socio:', this.associateData);
+    this.associateFound = true;
+    this.getUserSavingsBox();
+    this.getUserBalance(); // Obtener el balance real del usuario
+  }
+
+  private isNumericQuery(value: string): boolean {
+    return /^[0-9]+$/.test(value);
   }
 
   getUserSavingsBox() {
