@@ -8,6 +8,16 @@
     <p class="text-xs px-1"> {{ associateData?.firstName }} {{ associateData?.lastName }}</p>
     <p class="text-xs px-1">{{ associateData?.numberId }}</p>
    </div>
+
+  <div style="margin: 4px 2px;">
+    <p class="text-xs px-1">Saldo préstamos: {{ loanBalanceTotal | currency }}</p>
+    <p *ngIf="loanSummaries.length === 0" class="text-xs px-1 text-gray-500">Sin préstamos</p>
+    <p *ngIf="loanSummaries.length > 1" class="text-xs px-1">
+      <span *ngFor="let item of loanSummaries; let isLast = last">
+        {{ item.label }} {{ item.balance | currency }}<span *ngIf="!isLast"> · </span>
+      </span>
+    </p>
+  </div>
   
 
   <div class="flex justify-left mt-4">

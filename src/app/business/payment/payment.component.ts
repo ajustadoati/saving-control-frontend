@@ -49,6 +49,9 @@ export default class PaymentComponent {
   supplies: any;
   summary: any;
   isSaving: boolean = false;
+  loanBalanceTotal: number = 0;
+  loanSummaries: { label: string; balance: number }[] = [];
+  hasLoans: boolean = false;
 
   payment: Payment = {
     userId: 0,
@@ -233,9 +236,15 @@ export default class PaymentComponent {
         console.log("loans for the user:", data);
         if (data.length > 0) {
           this.loans = data;
+          this.loanBalanceTotal = this.calculateLoanBalanceTotal(data);
+          this.loanSummaries = this.buildLoanSummaries(data);
+          this.hasLoans = this.loanBalanceTotal > 0;
         } else {
           console.log("No hay prestamos");
           this.loans = {loanId: 0, loanBalance: 0, loanAmount: 0};
+          this.loanBalanceTotal = 0;
+          this.loanSummaries = [];
+          this.hasLoans = false;
 
         }
   
@@ -266,6 +275,45 @@ export default class PaymentComponent {
         console.error('Error al obtener el resumen:', error); 
       }
     });
+  }
+
+  private refreshLoanBalances(onDone?: () => void) {
+    this.loanService.getLoans(this.associateData.id).subscribe({
+      next: (data: Loan[]) => {
+        this.loans = data;
+        this.loanBalanceTotal = this.calculateLoanBalanceTotal(data);
+        this.loanSummaries = this.buildLoanSummaries(data);
+        this.hasLoans = this.loanBalanceTotal > 0;
+        if (onDone) onDone();
+      },
+      error: (error) => {
+        console.error('Error al obtener los préstamos:', error);
+        if (onDone) onDone();
+      }
+    });
+  }
+
+  private calculateLoanBalanceTotal(loans: Loan[]): number {
+    return loans.reduce((total, loan) => total + (loan.loanBalance || 0), 0);
+  }
+
+  private buildLoanSummaries(loans: Loan[]): { label: string; balance: number }[] {
+    const summaries: Record<string, number> = {};
+    loans.forEach((loan) => {
+      const label = this.normalizeLoanLabel(loan.loanTypeName || '');
+      if (!label) return;
+      summaries[label] = (summaries[label] || 0) + (loan.loanBalance || 0);
+    });
+    return Object.entries(summaries).map(([label, balance]) => ({ label, balance }));
+  }
+
+  private normalizeLoanLabel(loanTypeName: string): string {
+    const name = loanTypeName.trim().toLowerCase();
+    if (name === 'préstamos1' || name === 'prestamos1') return 'P1';
+    if (name === 'préstamos2' || name === 'prestamos2') return 'P2';
+    if (name === 'externos') return 'EXT';
+    if (name === 'compartir') return 'COMP';
+    return '';
   }
 
   // Estado de   la aplicación
@@ -359,14 +407,16 @@ export default class PaymentComponent {
         this.userService.getAssociateById(this.associateData.id).subscribe({
           next: (response: any) => {
             this.totalSavings = response.totalSavings;
-            this.isPrintEnabled = true;
-            Swal.fire({
-              icon: 'success',
-              title: '¡Pago registrado!',
-              text: 'El pago ha sido registrado con éxito.',
+            this.refreshLoanBalances(() => {
+              this.isPrintEnabled = true;
+              this.showButtomPrint = true;
+              this.loadBalance();
+              Swal.fire({
+                icon: 'success',
+                title: '¡Pago registrado!',
+                text: 'El pago ha sido registrado con éxito.',
+              });
             });
-            this.showButtomPrint = true;
-            this.loadBalance();
 
           },
           error: (error) => {

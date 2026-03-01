@@ -16,6 +16,8 @@ export class PaymentReceiptComponent {
   @Input() totalAmount!: number;
   @Input() total!: number;
   @Input() currentDate!: Date;
+  @Input() loanBalanceTotal: number = 0;
+  @Input() loanSummaries: { label: string; balance: number }[] = [];
 
   generatePDF(): void {
     const DATA: HTMLElement = document.getElementById('printSection')!;
