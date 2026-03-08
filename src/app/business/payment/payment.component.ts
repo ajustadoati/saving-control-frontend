@@ -66,7 +66,7 @@ export default class PaymentComponent {
   paymentDate: string = new Date().toISOString().split('T')[0]; // Fecha actual en formato YYYY-MM-DD
 
   defaultPayments = [
-    { paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10 }
+    { paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10, reason: '' }
   ];
 
   associateQuery: string = '';
@@ -117,7 +117,7 @@ export default class PaymentComponent {
     this.showAssociateResults = false;
       this.associateFound = false;
       this.paymentsActivated = false;
-      this.defaultPayments = [{ paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10 }];
+      this.defaultPayments = [{ paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10, reason: '' }];
       this.totalSavings = 0;
       this.paymentTypes = [];
       this.isPrintEnabled = false; 
@@ -192,7 +192,7 @@ export default class PaymentComponent {
 
   private handleAssociateFound(data: any) {
     this.paymentTypes = [];
-    this.defaultPayments = [{ paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10 }];
+    this.defaultPayments = [{ paymentTitle: 'Ahorro', hourlyRate: 10, defaultPaymentsCount: 1, totalCost: 10, reason: '' }];
     this.associateData = data; // Almacena los datos del socio
     console.log('Datos del socio:', this.associateData); // Verificar los datos del socio
     this.associateFound = true;
@@ -205,7 +205,7 @@ export default class PaymentComponent {
         if (response.defaultPayments.length > 0){
           this.defaultPayments.pop();
           response.defaultPayments.forEach((defaultPayment: {id: number, paymentName: string, amount: number}) => {
-            this.defaultPayments.push({paymentTitle: defaultPayment.paymentName, hourlyRate: defaultPayment.amount, defaultPaymentsCount: 1, totalCost: defaultPayment.amount});
+            this.defaultPayments.push({paymentTitle: defaultPayment.paymentName, hourlyRate: defaultPayment.amount, defaultPaymentsCount: 1, totalCost: defaultPayment.amount, reason: ''});
             this.paymentTypes.push(defaultPayment.paymentName);
           })
           this.updateTotal();
@@ -360,10 +360,11 @@ export default class PaymentComponent {
           hourlyRate: 0,
           defaultPaymentsCount: 1,
           totalCost: 0,
+          reason: '',
         });
       },
       error: (error) => {
-        this.defaultPayments.push({ paymentTitle: '', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0 });
+        this.defaultPayments.push({ paymentTitle: '', hourlyRate: 0, defaultPaymentsCount: 1, totalCost: 0, reason: '' });
       },
     });
   }
@@ -375,6 +376,7 @@ export default class PaymentComponent {
 
   registerPayments(): void {
     if (this.isSaving) return;
+    if (!this.validateOtherReasons()) return;
     this.isSaving = true;
     // Group defaultPayments by type
     const groupedPayments = this.defaultPayments.reduce((acc, payment) => {
@@ -713,8 +715,29 @@ export default class PaymentComponent {
           paymentType: type,
           referenceId: null,
           amount: payment.hourlyRate,
+          reason: this.isOtherPayment(payment.paymentTitle) ? payment.reason || null : null,
         };
     }
+  }
+
+  isOtherPayment(paymentTitle: string): boolean {
+    if (!paymentTitle) return false;
+    return paymentTitle.trim().toLowerCase().startsWith('otros');
+  }
+
+  private validateOtherReasons(): boolean {
+    const missingReason = this.defaultPayments.some(payment =>
+      this.isOtherPayment(payment.paymentTitle) && (!payment.reason || !payment.reason.trim())
+    );
+    if (missingReason) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Motivo requerido',
+        text: 'Debes indicar el motivo cuando el tipo de pago es Otros.'
+      });
+      return false;
+    }
+    return true;
   }
   
 }

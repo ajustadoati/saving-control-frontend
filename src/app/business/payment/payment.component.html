@@ -83,6 +83,14 @@
               <select [(ngModel)]="payment.paymentTitle" (change)="updateTotal()" class="p-2 rounded border bg-white">
                 <option *ngFor="let type of paymentTypes" [value]="type">{{ type }}</option>
               </select>
+              <div *ngIf="isOtherPayment(payment.paymentTitle)" class="mt-2">
+                <input
+                  type="text"
+                  [(ngModel)]="payment.reason"
+                  placeholder="Motivo"
+                  class="w-full p-2 rounded border text-sm"
+                />
+              </div>
              
             </td>
             <td class="border border-gray-300 px-4 py-2">
