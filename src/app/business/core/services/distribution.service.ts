@@ -21,4 +21,8 @@ constructor(private http: HttpClient) {}
   }) {
     return this.http.post(this.apiUrl, data);
   }
+
+  runDistribution(date: string) {
+    return this.http.post(`${this.apiUrl}/run?date=${encodeURIComponent(date)}`, {});
+  }
 }

@@ -294,7 +294,14 @@ export default class PaymentComponent {
   }
 
   private calculateLoanBalanceTotal(loans: Loan[]): number {
-    return loans.reduce((total, loan) => total + (loan.loanBalance || 0), 0);
+    const perTypeSum: Record<string, number> = {};
+    loans.forEach((loan) => {
+      const key = this.normalizeLoanLabel(loan.loanTypeName || '');
+      if (!key) return;
+      const balance = loan.loanBalance || 0;
+      perTypeSum[key] = (perTypeSum[key] || 0) + balance;
+    });
+    return Object.values(perTypeSum).reduce((sum, value) => sum + value, 0);
   }
 
   private buildLoanSummaries(loans: Loan[]): { label: string; balance: number }[] {
@@ -534,158 +541,25 @@ export default class PaymentComponent {
         };
       
       case 'LOAN_INTEREST_PAYMENT':
-        console.log("Loans", this.loans);
-        if (this.loans != null) {
-            const loan = Array.isArray(this.loans)
-            ? this.loans.find((l: Loan) => l.loanTypeName === 'Préstamos1')
-            : null;
-            console.log("loan"+loan);
-            return {
-              paymentType: 'LOAN_INTEREST_PAYMENT',
-              referenceId: loan.loanId,
-              amount: payment.hourlyRate,
-            };
-        } else {
-          console.log("No Loans", this.loans);
-          return {
-            paymentType: 'LOAN_INTEREST_PAYMENT',
-            referenceId: null,
-            amount: payment.hourlyRate,
-          };
-        }
+        return this.buildLoanPaymentPayload('LOAN_INTEREST_PAYMENT', payment.hourlyRate);
       case 'LOAN_PAYMENT':
-        console.log("adding loan", this.loans);
-        if (this.loans != null ) {
-          const loan = Array.isArray(this.loans)
-          ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Préstamos1')
-          : null;
-          return {
-            paymentType: 'LOAN_PAYMENT',
-            referenceId: loan.loanId,
-            amount: payment.hourlyRate,
-          };
-        } else {
-          return {
-            paymentType: 'LOAN_PAYMENT',
-            referenceId: null,
-            amount: payment.hourlyRate,
-          };
-        }
+        return this.buildLoanPaymentPayload('LOAN_PAYMENT', payment.hourlyRate);
       case 'LOAN_EXTERNAL_INTEREST':
-        console.log("Loans", this.loans);
-        if (this.loans != null) {
-            const loan = Array.isArray(this.loans)
-            ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Externos')
-            : null;
-            return {
-              paymentType: 'LOAN_EXTERNAL_INTEREST',
-              referenceId: loan.loanId,
-              amount: payment.hourlyRate,
-            };
-        } else {
-          console.log("No Loans", this.loans);
-          return {
-            paymentType: 'LOAN_EXTERNAL_INTEREST',
-            referenceId: null,
-            amount: payment.hourlyRate,
-          };
-        }
+        return this.buildLoanPaymentPayload('LOAN_EXTERNAL_INTEREST', payment.hourlyRate);
       
       case 'LOAN_EXTERNAL':
-        console.log("adding loan", this.loans);
-        if (this.loans != null ) {
-          const loan = Array.isArray(this.loans)
-          ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Externos')
-          : null;
-          return {
-            paymentType: 'LOAN_EXTERNAL',
-            referenceId: loan.loanId,
-            amount: payment.hourlyRate,
-          };
-        } else {
-          return {
-            paymentType: 'LOAN_EXTERNAL',
-            referenceId: null,
-            amount: payment.hourlyRate,
-          };
-        }
+        return this.buildLoanPaymentPayload('LOAN_EXTERNAL', payment.hourlyRate);
       //Loan sharing
       case 'LOAN_SHARING_INTEREST':
-        console.log("Loans", this.loans);
-        if (this.loans != null) {
-            const loan = Array.isArray(this.loans)
-            ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Compartir')
-            : null;
-            return {
-              paymentType: 'LOAN_SHARING_INTEREST',
-              referenceId: loan.loanId,
-              amount: payment.hourlyRate,
-            };
-        } else {
-          console.log("No Loans", this.loans);
-          return {
-            paymentType: 'LOAN_SHARING_INTEREST',
-            referenceId: null,
-            amount: payment.hourlyRate,
-          };
-        }
+        return this.buildLoanPaymentPayload('LOAN_SHARING_INTEREST', payment.hourlyRate);
       
       case 'LOAN_SHARING':
-        console.log("adding loan", this.loans);
-        if (this.loans != null ) {
-          const loan = Array.isArray(this.loans)
-          ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Compartir')
-          : null;
-          return {
-            paymentType: 'LOAN_SHARING',
-            referenceId: loan.loanId,
-            amount: payment.hourlyRate,
-          };
-        } else {
-          return {
-            paymentType: 'LOAN_SHARING',
-            referenceId: null,
-            amount: payment.hourlyRate,
-          };
-        }
+        return this.buildLoanPaymentPayload('LOAN_SHARING', payment.hourlyRate);
       case 'LOAN_PAYMENT_EXTERNAL':
-        console.log("adding loan", this.loans);
-        if (this.loans != null ) {
-          const loan = Array.isArray(this.loans)
-          ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Préstamos2')
-          : null;
-          return {
-            paymentType: 'LOAN_PAYMENT_EXTERNAL',
-            referenceId: loan.loanId,
-            amount: payment.hourlyRate,
-          };
-        } else {
-          return {
-            paymentType: 'LOAN_PAYMENT_EXTERNAL',
-            referenceId: null,
-            amount: payment.hourlyRate,
-          };
-        }
+        return this.buildLoanPaymentPayload('LOAN_PAYMENT_EXTERNAL', payment.hourlyRate);
       
       case 'LOAN_INTEREST_PAYMENT_EXTERNAL':
-        console.log("Loans", this.loans);
-        if (this.loans != null) {
-            const loan = Array.isArray(this.loans)
-            ? this.loans.find((l: Loan) => l.loanTypeName?.trim() === 'Préstamos2')
-            : null;
-            return {
-              paymentType: 'LOAN_INTEREST_PAYMENT_EXTERNAL',
-              referenceId: loan.loanId,
-              amount: payment.hourlyRate,
-            };
-        } else {
-          console.log("No Loans", this.loans);
-          return {
-            paymentType: 'LOAN_INTEREST_PAYMENT_EXTERNAL',
-            referenceId: null,
-            amount: payment.hourlyRate,
-          };
-        }
+        return this.buildLoanPaymentPayload('LOAN_INTEREST_PAYMENT_EXTERNAL', payment.hourlyRate);
         
       case 'SUPPLIES':
         console.log("adding supplies", this.supplies);
@@ -718,6 +592,14 @@ export default class PaymentComponent {
           reason: this.isOtherPayment(payment.paymentTitle) ? payment.reason || null : null,
         };
     }
+  }
+
+  private buildLoanPaymentPayload(paymentType: string, amount: number) {
+    return {
+      paymentType,
+      referenceId: null,
+      amount,
+    };
   }
 
   isOtherPayment(paymentTitle: string): boolean {

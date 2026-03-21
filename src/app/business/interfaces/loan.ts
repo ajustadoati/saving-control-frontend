@@ -1,5 +1,6 @@
 
 export interface Loan {
+  loanId?: number;
   userId:number;
   loanAmount: number;
   interestRate: number;
@@ -8,4 +9,3 @@ export interface Loan {
   endDate: string;
   loanTypeName: string;
 }
-
