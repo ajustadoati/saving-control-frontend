@@ -44,12 +44,20 @@
     </table>
   </div>
 <div class="mt-4 flex items-center justify-between">
-  <p class="text-sm text-gray-500">Ejecuta la distribución para el miércoles del reporte.</p>
-  <button
-    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-    (click)="saveDistributions()"
-  >
-    Distribuir intereses
-  </button>
+  <p class="text-sm text-gray-500">Estado de la distribución para el miércoles del reporte.</p>
+  <div class="flex items-center gap-3">
+    <span
+      class="text-sm font-semibold"
+      [ngClass]="distributionStatus === 'DISTRIBUTED' ? 'text-green-600' : 'text-red-600'"
+    >
+      {{ distributionStatus === 'DISTRIBUTED' ? 'Ya distribuido' : 'No distribuido' }}
+    </span>
+    <button
+      class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      (click)="saveDistributions()"
+    >
+      Distribuir intereses
+    </button>
+  </div>
 </div>
   

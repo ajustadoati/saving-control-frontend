@@ -16,7 +16,7 @@ import { InterestReportComponent } from "../interest-report/interest-report.comp
 export default class ReportComponent implements OnInit {
 
   reporte: any;
-  fecha: string = '2026-01-14'; // Puedes ajustar la fecha según tus necesidades
+  fecha: string = ''; // Se carga con el último miércoles con pagos
   showReceiptModal = false;
   showInterestReportModal = false;
   @ViewChild(ReceiptComponent, { static: false })
@@ -26,7 +26,23 @@ export default class ReportComponent implements OnInit {
   constructor(private reportService: ReportService) { }
 
   ngOnInit(): void {
-    this.obtenerReporte();
+    this.loadLatestWednesday();
+  }
+
+  private loadLatestWednesday(): void {
+    this.reportService.getLatestWednesdaySummary().subscribe({
+      next: (response: any) => {
+        if (response?.date) {
+          this.fecha = response.date;
+        }
+        if (this.fecha) {
+          this.obtenerReporte();
+        }
+      },
+      error: (error) => {
+        console.error('Error al obtener la última fecha de miércoles', error);
+      }
+    });
   }
 
   obtenerReporte(): void {

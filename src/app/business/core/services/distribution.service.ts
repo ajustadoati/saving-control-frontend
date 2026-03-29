@@ -25,4 +25,8 @@ constructor(private http: HttpClient) {}
   runDistribution(date: string) {
     return this.http.post(`${this.apiUrl}/run?date=${encodeURIComponent(date)}`, {});
   }
+
+  getDistributionsByDate(date: string) {
+    return this.http.get<any[]>(`${this.apiUrl}?date=${encodeURIComponent(date)}`);
+  }
 }

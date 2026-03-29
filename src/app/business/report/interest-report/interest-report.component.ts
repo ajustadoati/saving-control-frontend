@@ -20,14 +20,20 @@ export class InterestReportComponent implements OnInit, OnChanges {
   totalDistribuido: number = 0;
   totalBalance: number = 0;
   filteredInterestReport: any[] = [];
+  distributionStatus: 'DISTRIBUTED' | 'NOT_DISTRIBUTED' = 'NOT_DISTRIBUTED';
 
   ngOnInit(): void {
     this.applyReportData(this.interestReport);
+    this.checkDistributionStatus();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['interestReport']) {
       this.applyReportData(this.interestReport);
+      this.checkDistributionStatus();
+    }
+    if (changes['reportDate']) {
+      this.checkDistributionStatus();
     }
   }
 
@@ -43,6 +49,7 @@ export class InterestReportComponent implements OnInit, OnChanges {
         if (Array.isArray(response)) {
           this.interestReport = response;
           this.applyReportData(this.interestReport);
+          this.distributionStatus = response.length > 0 ? 'DISTRIBUTED' : 'NOT_DISTRIBUTED';
         }
         Swal.fire({
           icon: 'success',
@@ -57,6 +64,24 @@ export class InterestReportComponent implements OnInit, OnChanges {
           title: 'Error',
           text: 'Posiblemente el interés ya fue distribuido para esa fecha.',
         });
+      }
+    });
+  }
+
+  private checkDistributionStatus() {
+    if (!this.reportDate) {
+      this.distributionStatus = 'NOT_DISTRIBUTED';
+      return;
+    }
+    this.distributionService.getDistributionsByDate(this.reportDate).subscribe({
+      next: (response: any[]) => {
+        this.distributionStatus = Array.isArray(response) && response.length > 0
+          ? 'DISTRIBUTED'
+          : 'NOT_DISTRIBUTED';
+      },
+      error: (error) => {
+        console.error('Error al validar distribución:', error);
+        this.distributionStatus = 'NOT_DISTRIBUTED';
       }
     });
   }

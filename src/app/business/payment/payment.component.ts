@@ -51,6 +51,8 @@ export default class PaymentComponent {
   isSaving: boolean = false;
   loanBalanceTotal: number = 0;
   loanSummaries: { label: string; balance: number }[] = [];
+  loanBalanceTotalReceipt: number = 0;
+  loanSummariesReceipt: { label: string; balance: number }[] = [];
   hasLoans: boolean = false;
 
   payment: Payment = {
@@ -238,12 +240,16 @@ export default class PaymentComponent {
           this.loans = data;
           this.loanBalanceTotal = this.calculateLoanBalanceTotal(data);
           this.loanSummaries = this.buildLoanSummaries(data);
+          this.loanBalanceTotalReceipt = this.calculateLoanBalanceTotalByType(data, true);
+          this.loanSummariesReceipt = this.buildLoanSummaries(data, true);
           this.hasLoans = this.loanBalanceTotal > 0;
         } else {
           console.log("No hay prestamos");
           this.loans = {loanId: 0, loanBalance: 0, loanAmount: 0};
           this.loanBalanceTotal = 0;
           this.loanSummaries = [];
+          this.loanBalanceTotalReceipt = 0;
+          this.loanSummariesReceipt = [];
           this.hasLoans = false;
 
         }
@@ -294,21 +300,27 @@ export default class PaymentComponent {
   }
 
   private calculateLoanBalanceTotal(loans: Loan[]): number {
+    return this.calculateLoanBalanceTotalByType(loans, false);
+  }
+
+  private calculateLoanBalanceTotalByType(loans: Loan[], receiptOnly: boolean): number {
     const perTypeSum: Record<string, number> = {};
     loans.forEach((loan) => {
       const key = this.normalizeLoanLabel(loan.loanTypeName || '');
       if (!key) return;
+      if (receiptOnly && (key === 'EXT' || key === 'COMP')) return;
       const balance = loan.loanBalance || 0;
       perTypeSum[key] = (perTypeSum[key] || 0) + balance;
     });
     return Object.values(perTypeSum).reduce((sum, value) => sum + value, 0);
   }
 
-  private buildLoanSummaries(loans: Loan[]): { label: string; balance: number }[] {
+  private buildLoanSummaries(loans: Loan[], receiptOnly: boolean = false): { label: string; balance: number }[] {
     const summaries: Record<string, number> = {};
     loans.forEach((loan) => {
       const label = this.normalizeLoanLabel(loan.loanTypeName || '');
       if (!label) return;
+      if (receiptOnly && (label === 'EXT' || label === 'COMP')) return;
       summaries[label] = (summaries[label] || 0) + (loan.loanBalance || 0);
     });
     return Object.entries(summaries).map(([label, balance]) => ({ label, balance }));
