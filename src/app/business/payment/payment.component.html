@@ -39,6 +39,9 @@
           <span class="font-bold">Caja de Ahorro:</span> {{ summary?.currentBalance| currency }}
         </div>
         <div class="mb-2">
+          <span class="font-bold">Intereses obtenidos:</span> {{ summary?.interestEarned | currency }}
+        </div>
+        <div class="mb-2">
           <span class="font-bold">Suministros:</span> {{ supplies?.supplyBalance | currency }}
         </div>
         <div class="mb-2">
