@@ -1,3 +1,7 @@
+<div *ngIf="hasPreviousPendingBlock()" class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+  Debes distribuir primero los intereses del miércoles {{ previousPendingDate }} antes de continuar con esta fecha.
+</div>
+
 <div class="overflow-x-auto max-h-[60vh]">
     <table class="min-w-full table-auto border border-gray-300 text-sm">
       <thead class="bg-gray-100 sticky top-0 z-10">
@@ -53,11 +57,23 @@
       {{ distributionStatus === 'DISTRIBUTED' ? 'Ya distribuido' : 'No distribuido' }}
     </span>
     <button
-      class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+      *ngIf="!isDistributionActionDisabled(); else disabledDistributionButton"
+      type="button"
+      class="rounded bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
       (click)="saveDistributions()"
     >
       Distribuir intereses
     </button>
+    <ng-template #disabledDistributionButton>
+      <button
+        type="button"
+        class="rounded bg-gray-300 px-4 py-2 text-gray-600 opacity-80 cursor-not-allowed"
+        disabled
+        aria-disabled="true"
+      >
+        Distribuir intereses
+      </button>
+    </ng-template>
   </div>
 </div>
   

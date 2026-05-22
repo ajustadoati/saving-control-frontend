@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { DistributionService } from '../../core/services/distribution.service';
+import { DistributionInterestStatus } from '../../interfaces/distribution-interest-status';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -21,19 +22,20 @@ export class InterestReportComponent implements OnInit, OnChanges {
   totalBalance: number = 0;
   filteredInterestReport: any[] = [];
   distributionStatus: 'DISTRIBUTED' | 'NOT_DISTRIBUTED' = 'NOT_DISTRIBUTED';
+  previousPendingDate: string | null = null;
+  isLoadingStatus: boolean = false;
 
   ngOnInit(): void {
-    this.applyReportData(this.interestReport);
-    this.checkDistributionStatus();
+    this.loadDistributionStatus();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['interestReport']) {
-      this.applyReportData(this.interestReport);
-      this.checkDistributionStatus();
-    }
     if (changes['reportDate']) {
-      this.checkDistributionStatus();
+      this.loadDistributionStatus();
+      return;
+    }
+    if (changes['interestReport'] && !this.reportDate) {
+      this.applyReportData(this.interestReport);
     }
   }
 
@@ -42,15 +44,18 @@ export class InterestReportComponent implements OnInit, OnChanges {
       console.error('Fecha requerida para distribuir');
       return;
     }
+    if (this.isDistributionActionDisabled()) {
+      return;
+    }
 
     this.distributionService.runDistribution(this.reportDate).subscribe({
       next: (response: any) => {
         console.log('Distribuciones ejecutadas:', response);
         if (Array.isArray(response)) {
-          this.interestReport = response;
-          this.applyReportData(this.interestReport);
-          this.distributionStatus = response.length > 0 ? 'DISTRIBUTED' : 'NOT_DISTRIBUTED';
+          this.applyReportData(response);
         }
+        this.distributionStatus = 'DISTRIBUTED';
+        this.previousPendingDate = null;
         Swal.fire({
           icon: 'success',
           title: '¡Distribución realizada!',
@@ -68,20 +73,37 @@ export class InterestReportComponent implements OnInit, OnChanges {
     });
   }
 
-  private checkDistributionStatus() {
+  hasPreviousPendingBlock(): boolean {
+    return !!this.previousPendingDate && this.previousPendingDate !== this.reportDate;
+  }
+
+  isDistributionActionDisabled(): boolean {
+    return this.distributionStatus === 'DISTRIBUTED'
+      || this.hasPreviousPendingBlock()
+      || this.isLoadingStatus;
+  }
+
+  private loadDistributionStatus() {
     if (!this.reportDate) {
       this.distributionStatus = 'NOT_DISTRIBUTED';
+      this.previousPendingDate = null;
+      this.applyReportData(this.interestReport);
       return;
     }
-    this.distributionService.getDistributionsByDate(this.reportDate).subscribe({
-      next: (response: any[]) => {
-        this.distributionStatus = Array.isArray(response) && response.length > 0
-          ? 'DISTRIBUTED'
-          : 'NOT_DISTRIBUTED';
+    this.isLoadingStatus = true;
+    this.distributionService.getDistributionStatus(this.reportDate).subscribe({
+      next: (response: DistributionInterestStatus) => {
+        this.distributionStatus = response.distributed ? 'DISTRIBUTED' : 'NOT_DISTRIBUTED';
+        this.previousPendingDate = response.previousPendingDate || null;
+        this.interestReport = response.distributions;
+        this.applyReportData(response.distributions);
+        this.isLoadingStatus = false;
       },
       error: (error) => {
-        console.error('Error al validar distribución:', error);
+        console.error('Error al cargar estado de distribución:', error);
         this.distributionStatus = 'NOT_DISTRIBUTED';
+        this.previousPendingDate = null;
+        this.isLoadingStatus = false;
       }
     });
   }

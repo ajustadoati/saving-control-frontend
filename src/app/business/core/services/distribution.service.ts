@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environments';
 import { HttpClient } from '@angular/common/http';
+import { DistributionInterestStatus } from '../../interfaces/distribution-interest-status';
 
 @Injectable({
   providedIn: 'root'
@@ -10,23 +11,11 @@ export class DistributionService {
     
 constructor(private http: HttpClient) {}
 
-  saveDistributions(data: {
-    date: string,
-    distributionInterestList: {
-      userId: number,
-      name: string,
-      totalBalance: number,
-      distributedAmount: number
-    }[]
-  }) {
-    return this.http.post(this.apiUrl, data);
-  }
-
   runDistribution(date: string) {
     return this.http.post(`${this.apiUrl}/run?date=${encodeURIComponent(date)}`, {});
   }
 
-  getDistributionsByDate(date: string) {
-    return this.http.get<any[]>(`${this.apiUrl}?date=${encodeURIComponent(date)}`);
+  getDistributionStatus(date: string) {
+    return this.http.get<DistributionInterestStatus>(`${this.apiUrl}/status?date=${encodeURIComponent(date)}`);
   }
 }

@@ -14,6 +14,7 @@ import { PaymentDetail } from '../interfaces/paymentDetail';
 import { ContributionService } from '../core/services/contribution.service';
 import { ProductService } from '../core/services/product.service';
 import { Product } from '../interfaces/product';
+import { SPECIAL_PAYMENT_LABELS, mergePaymentOptions } from '../core/constants/payment-catalog';
 import { LoanService } from '../core/services/loan.service';
 import { SuppliesService } from '../core/services/supplies.service';
 import { Loan } from '../interfaces/loan';
@@ -371,7 +372,7 @@ export default class PaymentComponent {
       next: (products: Product[]) => {
         console.log("Searching products", products)
         // Mapea los productos a sus nombres para mostrarlos en el select
-        this.paymentTypes = products.map((product) => product.name);
+        this.paymentTypes = mergePaymentOptions(products.map((product) => product.name));
 
         // Agrega una nueva fila con opciones dinámicas
         this.defaultPayments.push({
@@ -490,6 +491,10 @@ export default class PaymentComponent {
       return 'LOAN_SHARING';
     } else if (paymentTitle.startsWith('Interés préstamo compartir')) {
       return 'LOAN_SHARING_INTEREST';
+    } else if (paymentTitle.startsWith(SPECIAL_PAYMENT_LABELS[0])) {
+      return 'URBAN_FORECAST_FUND';
+    } else if (paymentTitle.startsWith(SPECIAL_PAYMENT_LABELS[1])) {
+      return 'INTERURBAN_FORECAST_FUND';
     } else if (paymentTitle.startsWith('Suministro')) {
       return 'SUPPLIES';
     }if (paymentTitle.startsWith('Cauchos')) {

@@ -5,6 +5,8 @@ export interface WeeklySummaryResponse {
   capital1?: number;
   capital2?: number;
   capitalExt?: number;
+  fondoPrevisionUrbano?: number;
+  fondoPrevisionInterurbano?: number;
   ingresos?: number;
   egresos?: number;
   totalDia?: number;

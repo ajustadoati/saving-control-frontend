@@ -7,6 +7,7 @@ import { ProductService } from '../../../core/services/product.service';
 import { Associate } from '../../../interfaces/associate';
 import { User } from '../../../interfaces/user';
 import { ContributionService } from '../../../core/services/contribution.service';
+import { mergePaymentOptions } from '../../../core/constants/payment-catalog';
 
 @Component({
   selector: 'app-default-payment',
@@ -58,9 +59,14 @@ export class DefaultPaymentComponent implements OnInit {
     
     this.productService.getProducts().subscribe({
       next: (data: Product[]) => {
-        this.products = data; // Asigna la lista de productos
-        this.paymentForm.patchValue({ defaultPaymentName: this.products[0].name });
-        this.isMemberSelected = this.products[0].name === 'Esposa(o)';
+        const optionNames = mergePaymentOptions(data.map((product) => product.name));
+        this.products = optionNames.map((name, index) => ({
+          productId: data[index]?.productId || 0,
+          name
+        }));
+        this.selectedPaymentName = this.products[0]?.name || '';
+        this.paymentForm.patchValue({ defaultPaymentName: this.selectedPaymentName });
+        this.isMemberSelected = this.selectedPaymentName === 'Esposa(o)';
       },
       error: (err) => {
         console.error('Error al cargar productos:', err);

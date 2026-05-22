@@ -9,7 +9,7 @@
       </div>
       <div class="p-4 text-right">
         <p class="block antialiased font-sans text-sm leading-normal font-normal text-blue-gray-600">Préstamos 1</p>
-        <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{totalSavings}}</h4>
+        <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ loanBalanceP1 | number:'1.2-2' }}</h4>
       </div>
     
       <div class="border-t border-blue-gray-50 p-4">
@@ -26,7 +26,7 @@
       </div>
       <div class="p-4 text-right">
         <p class="block antialiased font-sans text-sm leading-normal font-normal text-blue-gray-600">Préstamos 2</p>
-        <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{totalUsers}}</h4>
+        <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ loanBalanceP2 | number:'1.2-2' }}</h4>
       </div>
       <div class="border-t border-blue-gray-50 p-4">
         <p class="block antialiased font-sans text-base leading-relaxed font-normal text-blue-gray-600">
@@ -43,7 +43,7 @@
       </div>
       <div class="p-4 text-right">
         <p class="block antialiased font-sans text-sm leading-normal font-normal text-blue-gray-600">Externos</p>
-        <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{totalUsers}}</h4>
+        <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ loanBalanceExternal | number:'1.2-2' }}</h4>
       </div>
       <div class="border-t border-blue-gray-50 p-4">
         <p class="block antialiased font-sans text-base leading-relaxed font-normal text-blue-gray-600">
@@ -60,7 +60,7 @@
       </div>
       <div class="p-4 text-right">
         <p class="block antialiased font-sans text-sm leading-normal font-normal text-blue-gray-600">Efectivo</p>
-        <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{funds.currentBalance}}</h4>
+        <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ funds?.currentBalance | number:'1.2-2' }}</h4>
       </div>
       <div class="border-t border-blue-gray-50 p-4">
         <p class="block antialiased font-sans text-base leading-relaxed font-normal text-blue-gray-600">
@@ -97,7 +97,55 @@
         <span class="text-xs text-blue-gray-500">Resumen semanal</span>
       </div>
 
-      <div class="grid gap-3 px-4 py-4 md:grid-cols-2 xl:grid-cols-6">
+      <div class="border-b border-blue-gray-50 px-4 py-3">
+        <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div class="space-y-1">
+            <div
+              class="text-sm font-semibold"
+              [ngClass]="distributionStatus?.distributed ? 'text-green-600' : 'text-red-600'"
+            >
+              {{ distributionStatus?.distributed ? 'Intereses ya distribuidos' : 'Intereses pendientes por distribuir' }}
+            </div>
+            <div
+              *ngIf="hasPreviousPendingBlock()"
+              class="text-sm text-red-600"
+            >
+              Debes cerrar primero la semana anterior: {{ distributionStatus?.previousPendingDate }}.
+            </div>
+            <div
+              *ngIf="isLoadingDistributionStatus"
+              class="text-sm text-blue-gray-500"
+            >
+              Validando estado de distribución...
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="rounded-md border border-blue-200 px-4 py-2 text-sm font-semibold text-blue-700 transition-colors hover:bg-blue-50"
+              [disabled]="!weeklySummary?.date"
+              [ngClass]="!weeklySummary?.date ? 'cursor-not-allowed opacity-60' : ''"
+              (click)="openInterestDistributionModal()"
+            >
+              Ver listado
+            </button>
+            <button
+              type="button"
+              class="rounded-md px-4 py-2 text-sm font-semibold transition-colors"
+              [ngClass]="isDistributionActionDisabled()
+                ? 'cursor-not-allowed bg-gray-200 text-gray-500'
+                : 'bg-blue-600 text-white hover:bg-blue-700'"
+              [disabled]="isDistributionActionDisabled()"
+              (click)="runWeeklyDistribution()"
+            >
+              {{ distributionStatus?.distributed ? 'Ya distribuido' : (isRunningDistribution ? 'Distribuyendo...' : 'Distribuir intereses') }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid gap-3 px-4 py-4 md:grid-cols-2 xl:grid-cols-8">
         <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
           <div class="text-xs text-blue-gray-500">AHORRO</div>
           <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.ahorro || 0 }}</div>
@@ -117,6 +165,14 @@
         <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
           <div class="text-xs text-blue-gray-500">CAPITAL EXT</div>
           <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.capitalExt || 0 }}</div>
+        </div>
+        <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
+          <div class="text-xs text-blue-gray-500">FONDO PREV. URBANO</div>
+          <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.fondoPrevisionUrbano || 0 }}</div>
+        </div>
+        <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
+          <div class="text-xs text-blue-gray-500">FONDO PREV. INTERURB.</div>
+          <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.fondoPrevisionInterurbano || 0 }}</div>
         </div>
         <div class="rounded-lg border border-blue-gray-50 px-3 py-2">
           <div class="text-xs text-blue-gray-500">INGRESOS</div>
@@ -141,6 +197,24 @@
           <div class="text-xs text-blue-gray-500">SALDO FINAL</div>
           <div class="text-lg font-semibold text-blue-gray-900">{{ weeklySummary?.saldoFinal || 0 }}</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="showInterestDistributionModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+    <div class="w-full max-w-6xl rounded-lg bg-white p-4 shadow-lg">
+      <app-interest-report
+        [interestReport]="distributionStatus?.distributions || []"
+        [reportDate]="weeklySummary?.date">
+      </app-interest-report>
+
+      <div class="mt-6 flex justify-end">
+        <button
+          type="button"
+          class="rounded-lg bg-gray-500 px-4 py-2 text-white"
+          (click)="closeInterestDistributionModal()">
+          Cerrar
+        </button>
       </div>
     </div>
   </div>
