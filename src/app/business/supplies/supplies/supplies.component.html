@@ -1,83 +1,664 @@
-<div class="w-full h-screen bg-gray-100 p-8">
-  <!-- Formulario de búsqueda de socio -->
-  <h1 class="text-xl font-bold mb-4">Gestión de Suministros</h1>
-  <div class="flex justify-between items-center mb-6">
-      <div class="mr-16 w-full">
-          <div class="mb-4">
-              <div class="mb-2">
-                  <label for="location" class="mr-4">Socio:</label>
-                  <input type="text" [(ngModel)]="associateId" class="p-2 rounded border mr-4">
-                  <button (click)="searchAssociate()" class="py-2 px-4 bg-blue-500 text-white rounded-lg">Buscar</button>
-              </div>
+<div class="supplies-page">
+  <section class="hero-card">
+    <div class="hero-copy">
+      <span class="eyebrow">Modulo operativo</span>
+      <h1>Suministros</h1>
+      <p>
+        Este módulo ahora representa el flujo completo de suministros: inventario, pedidos financiados,
+        cuotas semanales y seguimiento del saldo que se registra internamente en `supply`.
+      </p>
+    </div>
+  </section>
+
+  <section class="search-card">
+    <div class="search-card-header">
+      <div>
+        <span class="eyebrow">Busqueda global</span>
+        <h2>Seleccionar socio</h2>
+      </div>
+      <p>Busca por nombre o cédula y deja al socio listo para pedidos, historial y suministros.</p>
+    </div>
+
+    <div class="search-row">
+      <input
+        id="associateQuery"
+        type="text"
+        [(ngModel)]="associateQuery"
+        (ngModelChange)="onAssociateQueryChange()"
+        placeholder="Buscar por nombre o cédula" />
+      <button type="button" (click)="searchAssociate()">Buscar</button>
+    </div>
+
+    <div *ngIf="associateSuggestions.length > 0" class="suggestions">
+      <button
+        *ngFor="let user of associateSuggestions"
+        type="button"
+        class="suggestion-item"
+        (click)="selectAssociate(user)">
+        <span>{{ user.firstName }} {{ user.lastName }}</span>
+        <small>{{ user.numberId }}</small>
+      </button>
+    </div>
+  </section>
+
+  <section *ngIf="associateFound && associateData" class="associate-banner">
+    <div class="associate-main">
+      <span class="eyebrow">Socio activo</span>
+      <h2>{{ associateData.firstName }} {{ associateData.lastName }}</h2>
+      <p>{{ associateData.numberId }}</p>
+    </div>
+
+    <div class="associate-metrics">
+      <div class="mini-metric">
+        <span>Pedidos</span>
+        <strong>{{ associateOrders.length }}</strong>
+      </div>
+      <div class="mini-metric">
+        <span>Saldo pedidos</span>
+        <strong>{{ associatePendingBalance | currency }}</strong>
+      </div>
+      <div class="mini-metric">
+        <span>Saldo financiado</span>
+        <strong>{{ manualSuppliesBalance | currency }}</strong>
+      </div>
+    </div>
+  </section>
+
+  <nav class="module-nav">
+    <button
+      type="button"
+      [class.active]="activeLubricantView === 'summary'"
+      (click)="setActiveLubricantView('summary')">
+      Resumen
+    </button>
+    <button
+      type="button"
+      [class.active]="activeLubricantView === 'inventory'"
+      (click)="setActiveLubricantView('inventory')">
+      Inventario
+    </button>
+    <button
+      type="button"
+      [class.active]="activeLubricantView === 'orders'"
+      (click)="setActiveLubricantView('orders')">
+      Pedidos y cuotas
+    </button>
+    <button
+      type="button"
+      [class.active]="activeLubricantView === 'collection'"
+      (click)="setActiveLubricantView('collection')">
+      Cobranza
+    </button>
+  </nav>
+
+  <ng-container *ngIf="activeLubricantView === 'summary'">
+      <section class="stats-grid">
+        <article class="stat-card stat-card--blue">
+          <span class="eyebrow">Inventario</span>
+          <strong>{{ totalProducts }}</strong>
+          <p>Productos activos cargados.</p>
+        </article>
+        <article class="stat-card stat-card--amber">
+          <span class="eyebrow">Stock total</span>
+          <strong>{{ totalStockUnits }}</strong>
+          <p>Unidades disponibles en almacén.</p>
+        </article>
+        <article class="stat-card stat-card--pink">
+          <span class="eyebrow">Pendientes</span>
+          <strong>{{ pendingOrdersCount }}</strong>
+          <p>Pedidos con saldo en cobranza semanal.</p>
+        </article>
+        <article class="stat-card stat-card--dark">
+          <span class="eyebrow">Saldo por cobrar</span>
+          <strong>{{ pendingWeeklyBalance | currency }}</strong>
+          <p>Total pendiente según la fecha consultada.</p>
+        </article>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Acciones rápidas</h2>
+              <span class="helper-text">Entradas frecuentes para la operación.</span>
+            </div>
           </div>
-      </div>
-  </div>
 
-  <!-- Resumen del socio -->
-  <div *ngIf="associateFound" class="mt-8 flex space-x-8">
-      <div class="p-6 bg-white shadow rounded-lg border border-gray-200 flex-1">
-          <h2 class="text-lg font-bold">Socio</h2>
-          <p><strong>Nombre:</strong> {{ associateData?.firstName }} {{ associateData?.lastName }}</p>
-          <p><strong>Email:</strong> {{ associateData?.email }}</p>
-          <p><strong>Teléfono:</strong> {{ associateData?.mobileNumber }}</p>
-      </div>
-  </div>
+          <div class="quick-actions">
+            <button type="button" class="primary-btn" (click)="setActiveLubricantView('orders')">
+              Crear pedido
+            </button>
+            <button type="button" class="secondary-btn" (click)="setActiveLubricantView('inventory'); showProductForm = true">
+              Crear producto
+            </button>
+            <button type="button" class="ghost-btn" (click)="setActiveLubricantView('collection')">
+              Ver cobranza semanal
+            </button>
+          </div>
 
-  <!-- Mostrar suministros -->
-  <div *ngIf="associateFound" class="mt-8 flex space-x-8">
-      <div class="bg-white border rounded-lg shadow-md p-4 w-1/2">
-          <h2 class="text-lg font-bold mb-4 text-gray-800">Suministros</h2>
-          <table class="w-full text-sm">
+          <div *ngIf="associateFound && associateData" class="summary-associate">
+            <h3>Socio seleccionado</h3>
+            <p>{{ associateData.firstName }} {{ associateData.lastName }}</p>
+            <div class="summary-associate-grid">
+              <span>Pedidos: {{ associateOrders.length }}</span>
+              <span>Saldo financiado: {{ manualSuppliesBalance | currency }}</span>
+            </div>
+          </div>
+
+          <div *ngIf="!associateFound" class="callout callout--info">
+            Selecciona un socio para crear pedidos y consultar su historial.
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Alertas de inventario</h2>
+              <span class="helper-text">Productos con poco stock para reabastecer primero.</span>
+            </div>
+          </div>
+
+          <div *ngIf="lowStockProducts.length > 0; else noLowStock" class="stack-list">
+            <button
+              *ngFor="let product of lowStockProducts"
+              type="button"
+              class="stack-item"
+              (click)="setActiveLubricantView('inventory'); showMovements(product)">
+              <div>
+                <strong>{{ product.name }}</strong>
+                <span>{{ product.code }}</span>
+              </div>
+              <b>{{ product.stock }}</b>
+            </button>
+          </div>
+
+          <ng-template #noLowStock>
+            <div class="callout callout--success">No hay productos con stock crítico.</div>
+          </ng-template>
+        </article>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Vista previa de cobranza</h2>
+              <span class="helper-text">Primeros pedidos pendientes para la fecha seleccionada.</span>
+            </div>
+            <strong>{{ pendingWeeklySuggested | currency }}</strong>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
               <thead>
-                  <tr class="bg-gray-100">
-                      <th class="px-2 py-2 text-left text-gray-600">Nombre</th>
-                      <th class="px-2 py-2 text-left text-gray-600">Monto</th>
-                      <th class="px-2 py-2 text-left text-gray-600">Fecha</th>
-                      <th class="px-2 py-2 text-left text-gray-600">Detalles</th>
-                  </tr>
+                <tr>
+                  <th>Socio</th>
+                  <th>Pedido</th>
+                  <th>Saldo</th>
+                  <th>Sugerido</th>
+                </tr>
               </thead>
               <tbody>
-                  <tr *ngFor="let supply of supplies; let i = index" class="border-b">
-                      <td class="px-2 py-1 text-gray-700">{{ supply.supplyName }}</td>
-                      <td class="px-2 py-1 text-gray-700">{{ supply.supplyAmount }}</td>
-                      <td class="px-2 py-1 text-gray-700">{{ supply.supplyDate | date: 'dd/MM/yy' }}</td>
-                      <button (click)="viewDetails(supply)" class="text-red-500 hover:text-red-700 transition">
-                        Ver detalles
-                      </button>
-                  </tr>
+                <tr *ngFor="let item of collectionPreview">
+                  <td>{{ item.userName }}</td>
+                  <td>{{ item.orderDate | date: 'dd/MM/yy' }}</td>
+                  <td>{{ item.balance | currency }}</td>
+                  <td>{{ item.suggestedPayment | currency }}</td>
+                </tr>
+                <tr *ngIf="collectionPreview.length === 0">
+                  <td colspan="4" class="empty-state">No hay pedidos pendientes para esa fecha.</td>
+                </tr>
               </tbody>
-              <app-supplies-payment #paymentModal></app-supplies-payment>
-
-          </table>
-
-          <div class="mt-4">
-              <button (click)="openModal()" class="py-1 px-3 bg-green-500 text-white rounded hover:bg-green-600 transition">
-                  Crear Suministro
-              </button>
+            </table>
           </div>
-      </div>
-  </div>
+        </article>
 
-  <!-- Modal para crear suministro -->
-  <div *ngIf="isModalOpen" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-      <div class="bg-white p-6 rounded shadow-lg w-96">
-          <h2 class="text-lg font-bold mb-4">Crear Suministro</h2>
-          <form [formGroup]="supplyForm" (ngSubmit)="submitSupply()" class="space-y-4">
-              <div>
-                  <label for="supplyName" class="block font-medium">Nombre del Suministro</label>
-                  <input type="text" id="supplyName" formControlName="supplyName" class="border p-2 w-full rounded" required />
-              </div>
-              <div>
-                  <label for="supplyAmount" class="block font-medium">Monto</label>
-                  <input type="number" id="supplyAmount" formControlName="supplyAmount" class="border p-2 w-full rounded" required />
-              </div>
-              <div>
-                  <label for="supplyDate" class="block font-medium">Fecha</label>
-                  <input type="date" id="supplyDate" formControlName="supplyDate" class="border p-2 w-full rounded" required />
-              </div>
-              <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Guardar</button>
-              <button type="button" (click)="closeModal()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 ml-2">Cancelar</button>
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Valor estimado del inventario</h2>
+              <span class="helper-text">Calculado con precio de venta actual.</span>
+            </div>
+          </div>
+
+          <div class="big-figure">
+            <strong>{{ inventorySaleValue | currency }}</strong>
+            <p>Te ayuda a visualizar el peso operativo del inventario cargado.</p>
+          </div>
+        </article>
+      </section>
+  </ng-container>
+
+  <ng-container *ngIf="activeLubricantView === 'inventory'">
+      <section class="inventory-header">
+        <div>
+          <span class="eyebrow">Inventario</span>
+          <h2>Productos y movimientos</h2>
+        </div>
+        <div class="quick-actions">
+          <button type="button" class="primary-btn" (click)="toggleProductForm()">
+            {{ showProductForm ? 'Ocultar formulario' : 'Nuevo producto' }}
+          </button>
+          <button type="button" class="secondary-btn" (click)="toggleStockForm()">
+            {{ showStockForm ? 'Ocultar entrada' : 'Registrar entrada' }}
+          </button>
+        </div>
+      </section>
+
+      <section *ngIf="showProductForm" class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Crear producto</h2>
+            <span class="helper-text">Mantén el alta de productos fuera de la vista principal.</span>
+          </div>
+        </div>
+
+        <form [formGroup]="productForm" (ngSubmit)="submitProduct()" class="form-grid">
+          <label>
+            Código
+            <input type="text" formControlName="code" />
+          </label>
+          <label>
+            Nombre
+            <input type="text" formControlName="name" />
+          </label>
+          <label>
+            Costo
+            <input type="number" formControlName="costPrice" step="0.01" />
+          </label>
+          <label>
+            Precio venta
+            <input type="number" formControlName="salePrice" step="0.01" />
+          </label>
+          <label>
+            Stock inicial
+            <input type="number" formControlName="initialStock" />
+          </label>
+          <div class="form-actions full-width">
+            <button type="submit" class="primary-btn">Guardar producto</button>
+          </div>
+        </form>
+      </section>
+
+      <section *ngIf="showStockForm" class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>Registrar entrada</h2>
+            <span class="helper-text">Producto actual: {{ selectedProductNameForStock }}</span>
+          </div>
+        </div>
+
+        <div class="stock-entry-grid">
+          <label>
+            Producto
+            <select [(ngModel)]="selectedProductIdForStock" [ngModelOptions]="{standalone: true}">
+              <option [ngValue]="null">Seleccione</option>
+              <option *ngFor="let product of products" [ngValue]="product.id">
+                {{ product.code }} - {{ product.name }}
+              </option>
+            </select>
+          </label>
+        </div>
+
+        <form [formGroup]="stockForm" (ngSubmit)="submitStockEntry()" class="form-grid">
+          <label>
+            Cantidad
+            <input type="number" formControlName="quantity" />
+          </label>
+          <label>
+            Fecha
+            <input type="date" formControlName="movementDate" />
+          </label>
+          <label class="full-width">
+            Nota
+            <input type="text" formControlName="notes" />
+          </label>
+          <div class="form-actions full-width">
+            <button type="submit" class="secondary-btn">Registrar entrada</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="dashboard-grid dashboard-grid--inventory">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Listado de productos</h2>
+              <span class="helper-text">Selecciona uno para ver sus movimientos o cargar inventario.</span>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Código</th>
+                  <th>Producto</th>
+                  <th>Venta</th>
+                  <th>Stock</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let product of products">
+                  <td>{{ product.code }}</td>
+                  <td>{{ product.name }}</td>
+                  <td>{{ product.salePrice | currency }}</td>
+                  <td>{{ product.stock }}</td>
+                  <td>
+                    <div class="row-actions">
+                      <button type="button" class="link-btn" (click)="showMovements(product)">Movimientos</button>
+                      <button type="button" class="link-btn" (click)="selectedProductIdForStock = product.id; showStockForm = true">
+                        Entrada
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="products.length === 0">
+                  <td colspan="5" class="empty-state">Todavía no hay productos cargados.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Movimientos</h2>
+              <span class="helper-text">
+                {{ selectedProductForMovements ? (selectedProductForMovements.code + ' - ' + selectedProductForMovements.name) : 'Seleccione un producto' }}
+              </span>
+            </div>
+          </div>
+
+          <div *ngIf="!selectedProductForMovements" class="callout callout--info">
+            Pulsa “Movimientos” en un producto para ver su historial.
+          </div>
+
+          <div *ngIf="selectedProductForMovements" class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Tipo</th>
+                  <th>Cantidad</th>
+                  <th>Antes</th>
+                  <th>Después</th>
+                  <th>Nota</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let movement of productMovements">
+                  <td>{{ movement.movementDate | date: 'dd/MM/yy' }}</td>
+                  <td>{{ movement.movementType }}</td>
+                  <td>{{ movement.quantity }}</td>
+                  <td>{{ movement.previousStock }}</td>
+                  <td>{{ movement.newStock }}</td>
+                  <td>{{ movement.notes || '-' }}</td>
+                </tr>
+                <tr *ngIf="productMovements.length === 0">
+                  <td colspan="6" class="empty-state">Sin movimientos registrados para este producto.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+  </ng-container>
+
+  <ng-container *ngIf="activeLubricantView === 'orders'">
+      <section *ngIf="!associateFound" class="panel">
+        <div class="callout callout--info">
+          Primero selecciona un socio arriba. Después podrás armar el pedido financiado y ver su historial.
+        </div>
+      </section>
+
+      <section *ngIf="associateFound && associateData" class="dashboard-grid dashboard-grid--orders">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <span class="eyebrow">Paso 1</span>
+              <h2>Configurar pedido</h2>
+              <span class="helper-text">Agrega productos y define la cuota semanal.</span>
+            </div>
+          </div>
+
+          <form [formGroup]="orderForm" class="form-grid compact">
+            <label>
+              Fecha del pedido
+              <input type="date" formControlName="orderDate" />
+            </label>
+            <label>
+              Cuota semanal
+              <input type="number" formControlName="weeklyInstallment" step="0.01" />
+            </label>
           </form>
-      </div>
-  </div>
+
+          <form [formGroup]="orderItemForm" (ngSubmit)="addOrderItem()" class="form-grid compact">
+            <label class="full-width">
+              Producto
+              <select formControlName="productId" (change)="onOrderProductChange()">
+                <option value="">Seleccione</option>
+                <option *ngFor="let product of products" [value]="product.id">
+                  {{ product.code }} - {{ product.name }} (stock: {{ product.stock }})
+                </option>
+              </select>
+            </label>
+            <label>
+              Cantidad
+              <input type="number" formControlName="quantity" />
+            </label>
+            <label>
+              Precio unitario
+              <input type="number" formControlName="unitPrice" step="0.01" placeholder="Usar venta actual" />
+            </label>
+            <div *ngIf="selectedOrderProduct" class="full-width product-preview">
+              <div class="preview-chip">
+                <span>Precio de venta</span>
+                <strong>{{ selectedOrderProduct.salePrice | currency }}</strong>
+              </div>
+              <div class="preview-chip">
+                <span>Stock disponible</span>
+                <strong>{{ selectedOrderProduct.stock }}</strong>
+              </div>
+              <div class="preview-chip">
+                <span>Subtotal estimado</span>
+                <strong>{{ selectedOrderLineTotal | currency }}</strong>
+              </div>
+            </div>
+            <div class="form-actions full-width">
+              <button type="submit" class="secondary-btn">Agregar producto</button>
+            </div>
+          </form>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <span class="eyebrow">Paso 2</span>
+              <h2>Confirmar pedido</h2>
+              <span class="helper-text">Revisa el detalle antes de guardarlo.</span>
+            </div>
+            <strong>{{ getDraftTotal() | currency }}</strong>
+          </div>
+
+          <div class="table-wrapper draft-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th>Cantidad</th>
+                  <th>Precio</th>
+                  <th>Total</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of orderDraftItems; let i = index">
+                  <td>{{ item.productCode }} - {{ item.productName }}</td>
+                  <td>{{ item.quantity }}</td>
+                  <td>{{ item.unitPrice | currency }}</td>
+                  <td>{{ item.lineTotal | currency }}</td>
+                  <td>
+                    <button type="button" class="danger-link" (click)="removeOrderItem(i)">Quitar</button>
+                  </td>
+                </tr>
+                <tr *ngIf="orderDraftItems.length === 0">
+                  <td colspan="5" class="empty-state">Todavía no hay productos agregados al pedido.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="summary-row">
+            <span>Total del pedido</span>
+            <strong>{{ getDraftTotal() | currency }}</strong>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="primary-btn" (click)="submitLubricantOrder()">Crear pedido financiado</button>
+          </div>
+        </article>
+      </section>
+
+      <section *ngIf="associateFound && associateData" class="dashboard-grid dashboard-grid--orders">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Historial de pedidos</h2>
+              <span class="helper-text">Pedidos previos para validar saldo, cuota y estado.</span>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Total</th>
+                  <th>Saldo</th>
+                  <th>Cuota</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let order of associateOrders">
+                  <td>{{ order.orderDate | date: 'dd/MM/yy' }}</td>
+                  <td>{{ order.totalAmount | currency }}</td>
+                  <td>{{ order.balance | currency }}</td>
+                  <td>{{ order.weeklyInstallment | currency }}</td>
+                  <td><span class="status-pill">{{ order.status }}</span></td>
+                </tr>
+                <tr *ngIf="associateOrders.length === 0">
+                  <td colspan="5" class="empty-state">Este socio todavía no tiene pedidos de suministros.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <h2>Control de cuotas</h2>
+              <span class="helper-text">Estos registros nacen del pedido financiado y se cobran por `supply`.</span>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Monto</th>
+                  <th>Saldo</th>
+                  <th>Fecha</th>
+                  <th>Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let supply of supplies">
+                  <td>{{ supply.supplyName }}</td>
+                  <td>{{ supply.supplyAmount | currency }}</td>
+                  <td>{{ supply.supplyBalance | currency }}</td>
+                  <td>{{ supply.supplyDate | date: 'dd/MM/yy' }}</td>
+                  <td>
+                    <button type="button" class="link-btn" (click)="viewDetails(supply)">Ver pagos</button>
+                  </td>
+                </tr>
+                <tr *ngIf="supplies.length === 0">
+                  <td colspan="5" class="empty-state">Todavía no hay cuotas generadas para este socio.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+  </ng-container>
+
+  <ng-container *ngIf="activeLubricantView === 'collection'">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <span class="eyebrow">Cobranza</span>
+            <h2>Resumen semanal</h2>
+            <span class="helper-text">Consulta los pedidos pendientes hasta la fecha indicada.</span>
+          </div>
+        </div>
+
+        <div class="inline-filter">
+          <label>
+            Fecha
+            <input type="date" [(ngModel)]="weeklyCollectionDate" [ngModelOptions]="{standalone: true}" />
+          </label>
+          <button type="button" class="primary-btn" (click)="loadWeeklyCollection()">Consultar</button>
+        </div>
+
+        <div class="stats-grid stats-grid--compact">
+          <article class="mini-stat">
+            <span>Pedidos</span>
+            <strong>{{ pendingOrdersCount }}</strong>
+          </article>
+          <article class="mini-stat">
+            <span>Saldo total</span>
+            <strong>{{ pendingWeeklyBalance | currency }}</strong>
+          </article>
+          <article class="mini-stat">
+            <span>Cobro sugerido</span>
+            <strong>{{ pendingWeeklySuggested | currency }}</strong>
+          </article>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Socio</th>
+                <th>Cédula</th>
+                <th>Pedido</th>
+                <th>Cuota</th>
+                <th>Saldo</th>
+                <th>Sugerido</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let item of weeklyCollection">
+                <td>{{ item.userName }}</td>
+                <td>{{ item.numberId }}</td>
+                <td>{{ item.orderDate | date: 'dd/MM/yy' }}</td>
+                <td>{{ item.weeklyInstallment | currency }}</td>
+                <td>{{ item.balance | currency }}</td>
+                <td>{{ item.suggestedPayment | currency }}</td>
+              </tr>
+              <tr *ngIf="weeklyCollection.length === 0">
+                <td colspan="6" class="empty-state">No hay cobranza pendiente para esa fecha.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+  </ng-container>
+
+  <app-supplies-payment #paymentModal></app-supplies-payment>
 </div>
