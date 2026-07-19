@@ -14,6 +14,7 @@ import { InterestReportComponent } from "../interest-report/interest-report.comp
   styleUrl: './report.component.css'
 })
 export default class ReportComponent implements OnInit {
+  private readonly forecastFundTypes = ['FONDO_PREVISION_URBANO', 'FONDO_PREVISION_INTERURBANO'];
 
   reporte: any;
   fecha: string = ''; // Se carga con el último miércoles con pagos
@@ -54,6 +55,27 @@ export default class ReportComponent implements OnInit {
 
   getKeys(obj: any): string[] {
     return Object.keys(obj);
+  }
+
+  getDisplayTotals(totalPorTipoPago: Record<string, number> | null | undefined): Record<string, number> {
+    if (!totalPorTipoPago) {
+      return {};
+    }
+
+    const displayTotals = { ...totalPorTipoPago };
+    const totalForecastFunds = this.forecastFundTypes
+      .reduce((sum, type) => sum + Number(displayTotals[type] || 0), 0);
+
+    if (totalForecastFunds > 0) {
+      displayTotals['AHORRO'] = Number(displayTotals['AHORRO'] || 0) + totalForecastFunds;
+      this.forecastFundTypes.forEach((type) => delete displayTotals[type]);
+    }
+
+    return displayTotals;
+  }
+
+  getDisplayKeys(totalPorTipoPago: Record<string, number> | null | undefined): string[] {
+    return Object.keys(this.getDisplayTotals(totalPorTipoPago));
   }
 
   closeModal(): void {

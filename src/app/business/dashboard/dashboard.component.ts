@@ -181,6 +181,14 @@ export default class DashboardComponent implements OnInit {
     return !!previousPendingDate && previousPendingDate !== this.weeklySummary?.date;
   }
 
+  get consolidatedSavings(): number {
+    const ahorro = Number(this.weeklySummary?.ahorro || 0);
+    const fondoPrevisionUrbano = Number(this.weeklySummary?.fondoPrevisionUrbano || 0);
+    const fondoPrevisionInterurbano = Number(this.weeklySummary?.fondoPrevisionInterurbano || 0);
+
+    return ahorro + fondoPrevisionUrbano + fondoPrevisionInterurbano;
+  }
+
   private loadDistributionStatus(date?: string) {
     if (!date) {
       this.distributionStatus = undefined;

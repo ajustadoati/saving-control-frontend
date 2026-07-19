@@ -24,6 +24,12 @@ interface LubricantDraftItem {
   lineTotal: number;
 }
 
+interface InstallmentPreviewItem {
+  week: number;
+  date: string;
+  amount: number;
+}
+
 @Component({
   selector: 'app-supplies',
   standalone: true,
@@ -47,6 +53,7 @@ export default class SuppliesComponent implements OnInit {
   selectedProductIdForStock: number | null = null;
   showProductForm = false;
   showStockForm = false;
+  editingProductId: number | null = null;
   associateOrders: LubricantOrder[] = [];
   weeklyCollection: LubricantWeeklyCollection[] = [];
   weeklyCollectionDate: string;
@@ -82,7 +89,7 @@ export default class SuppliesComponent implements OnInit {
 
     this.orderForm = this.fb.group({
       orderDate: [today, [Validators.required]],
-      weeklyInstallment: ['', [Validators.required, Validators.min(0.01)]]
+      installmentCount: [4, [Validators.required, Validators.min(1), Validators.max(52)]]
     });
 
     this.orderItemForm = this.fb.group({
@@ -108,21 +115,33 @@ export default class SuppliesComponent implements OnInit {
       return;
     }
 
-    const currentUnitPrice = this.orderItemForm.get('unitPrice')?.value;
-    if (currentUnitPrice === '' || currentUnitPrice == null || Number(currentUnitPrice) <= 0) {
-      this.orderItemForm.patchValue({ unitPrice: Number(product.salePrice) });
-    }
+    this.orderItemForm.patchValue({ unitPrice: Number(product.salePrice) });
   }
 
   toggleProductForm(): void {
-    this.showProductForm = !this.showProductForm;
+    if (this.showProductForm) {
+      this.showProductForm = false;
+      this.resetProductEditor();
+      return;
+    }
+
+    this.startCreateProduct();
   }
 
-  toggleStockForm(product?: LubricantProduct): void {
-    this.showStockForm = !this.showStockForm;
+  openStockForm(product?: LubricantProduct): void {
+    this.showStockForm = true;
     if (product) {
       this.selectedProductIdForStock = product.id;
     }
+  }
+
+  closeStockForm(): void {
+    this.showStockForm = false;
+    this.stockForm.reset({
+      quantity: '',
+      movementDate: this.formatDate(new Date()),
+      notes: ''
+    });
   }
 
   onAssociateQueryChange(): void {
@@ -214,6 +233,7 @@ export default class SuppliesComponent implements OnInit {
     this.activeLubricantView = 'orders';
     this.loadSupplies();
     this.loadAssociateOrders();
+    this.onOrderProductChange();
   }
 
   loadSupplies(): void {
@@ -244,9 +264,33 @@ export default class SuppliesComponent implements OnInit {
         this.products = products;
       },
       error: (error) => {
-        console.error('Error al cargar productos de lubricantes:', error);
+        console.error('Error al cargar productos de suministros:', error);
         this.products = [];
       }
+    });
+  }
+
+  startCreateProduct(): void {
+    this.showProductForm = true;
+    this.editingProductId = null;
+    this.productForm.reset({
+      code: '',
+      name: '',
+      costPrice: '',
+      salePrice: '',
+      initialStock: 0
+    });
+  }
+
+  editProduct(product: LubricantProduct): void {
+    this.showProductForm = true;
+    this.editingProductId = product.id;
+    this.productForm.reset({
+      code: product.code,
+      name: product.name,
+      costPrice: Number(product.costPrice),
+      salePrice: Number(product.salePrice),
+      initialStock: Number(product.stock)
     });
   }
 
@@ -261,37 +305,77 @@ export default class SuppliesComponent implements OnInit {
     }
 
     const raw = this.productForm.getRawValue();
-    this.lubricantService.createProduct({
+    const request = {
       code: String(raw.code).trim(),
       name: String(raw.name).trim(),
       costPrice: Number(raw.costPrice),
       salePrice: Number(raw.salePrice),
-      initialStock: Number(raw.initialStock ?? 0)
-    }).subscribe({
+      initialStock: this.editingProductId ? 0 : Number(raw.initialStock ?? 0)
+    };
+
+    const request$ = this.editingProductId
+      ? this.lubricantService.updateProduct(this.editingProductId, request)
+      : this.lubricantService.createProduct(request);
+
+    request$.subscribe({
       next: () => {
         void Swal.fire({
           icon: 'success',
-          title: 'Producto creado',
-          text: 'El producto quedó disponible en inventario.'
-        });
-        this.productForm.reset({
-          code: '',
-          name: '',
-          costPrice: '',
-          salePrice: '',
-          initialStock: 0
+          title: this.editingProductId ? 'Producto actualizado' : 'Producto creado',
+          text: this.editingProductId
+            ? 'Los datos del producto quedaron guardados.'
+            : 'El producto quedó disponible en inventario.'
         });
         this.showProductForm = false;
+        this.resetProductEditor();
         this.loadProducts();
       },
       error: (error) => {
-        console.error('Error creando producto:', error);
+        console.error('Error guardando producto:', error);
         void Swal.fire({
           icon: 'error',
-          title: 'No se pudo crear',
+          title: 'No se pudo guardar',
           text: this.extractErrorMessage(error, 'Revise los datos del producto.')
         });
       }
+    });
+  }
+
+  deleteProduct(product: LubricantProduct): void {
+    void Swal.fire({
+      icon: 'warning',
+      title: 'Eliminar producto',
+      text: `Se inactivará ${product.name} para que no pueda usarse en nuevos pedidos.`,
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (!result.isConfirmed) {
+        return;
+      }
+
+      this.lubricantService.deleteProduct(product.id).subscribe({
+        next: () => {
+          void Swal.fire({
+            icon: 'success',
+            title: 'Producto inactivado',
+            text: 'Se mantuvo el historial y ya no aparecerá como opción activa de venta.'
+          });
+          if (this.editingProductId === product.id) {
+            this.showProductForm = false;
+            this.resetProductEditor();
+          }
+          this.loadProducts();
+        },
+        error: (error) => {
+          console.error('Error eliminando producto:', error);
+          void Swal.fire({
+            icon: 'error',
+            title: 'No se pudo eliminar',
+            text: this.extractErrorMessage(error, 'Intente nuevamente.')
+          });
+        }
+      });
     });
   }
 
@@ -326,12 +410,7 @@ export default class SuppliesComponent implements OnInit {
           title: 'Inventario actualizado',
           text: 'La entrada de stock fue registrada.'
         });
-        this.stockForm.reset({
-          quantity: '',
-          movementDate: this.formatDate(new Date()),
-          notes: ''
-        });
-        this.showStockForm = false;
+        this.closeStockForm();
         this.loadProducts();
         if (this.selectedProductForMovements?.id === this.selectedProductIdForStock) {
           this.showMovements(this.selectedProductForMovements);
@@ -374,7 +453,7 @@ export default class SuppliesComponent implements OnInit {
     const raw = this.orderItemForm.getRawValue();
     const productId = Number(raw.productId);
     const quantity = Number(raw.quantity);
-    const product = this.products.find((item) => item.id === productId);
+    const product = this.activeProducts.find((item) => item.id === productId);
 
     if (!product) {
       void Swal.fire({
@@ -397,6 +476,15 @@ export default class SuppliesComponent implements OnInit {
     const unitPrice = raw.unitPrice === '' || raw.unitPrice == null
       ? Number(product.salePrice)
       : Number(raw.unitPrice);
+
+    if (!unitPrice || unitPrice <= 0) {
+      void Swal.fire({
+        icon: 'warning',
+        title: 'Precio inválido',
+        text: 'El precio unitario debe ser mayor a cero.'
+      });
+      return;
+    }
 
     this.orderDraftItems = [
       ...this.orderDraftItems,
@@ -444,7 +532,7 @@ export default class SuppliesComponent implements OnInit {
       void Swal.fire({
         icon: 'warning',
         title: 'Datos incompletos',
-        text: 'Complete la fecha y la cuota semanal del pedido.'
+        text: 'Complete la fecha y la cantidad de semanas del pedido.'
       });
       return;
     }
@@ -453,7 +541,8 @@ export default class SuppliesComponent implements OnInit {
     this.lubricantService.createOrder({
       userId: this.associateData.id,
       orderDate: String(raw.orderDate),
-      weeklyInstallment: Number(raw.weeklyInstallment),
+      installmentCount: Number(raw.installmentCount),
+      weeklyInstallment: null,
       items: this.orderDraftItems.map((item) => ({
         productId: item.productId,
         quantity: item.quantity,
@@ -464,12 +553,12 @@ export default class SuppliesComponent implements OnInit {
         void Swal.fire({
           icon: 'success',
           title: 'Pedido registrado',
-          text: 'El pedido financiado quedó creado y enlazado al saldo semanal.'
+          text: 'El pedido financiado quedó creado con sus cuotas semanales automáticas.'
         });
         this.orderDraftItems = [];
         this.orderForm.reset({
           orderDate: this.formatDate(new Date()),
-          weeklyInstallment: ''
+          installmentCount: 4
         });
         this.activeLubricantView = 'summary';
         this.loadProducts();
@@ -482,7 +571,7 @@ export default class SuppliesComponent implements OnInit {
         void Swal.fire({
           icon: 'error',
           title: 'No se pudo crear el pedido',
-          text: this.extractErrorMessage(error, 'Revise stock, cuota y datos del pedido.')
+          text: this.extractErrorMessage(error, 'Revise stock, semanas y datos del pedido.')
         });
       }
     });
@@ -522,19 +611,19 @@ export default class SuppliesComponent implements OnInit {
   }
 
   get totalProducts(): number {
-    return this.products.length;
+    return this.activeProducts.length;
   }
 
   get totalStockUnits(): number {
-    return this.products.reduce((total, product) => total + product.stock, 0);
+    return this.activeProducts.reduce((total, product) => total + product.stock, 0);
   }
 
   get inventorySaleValue(): number {
-    return this.products.reduce((total, product) => total + (product.stock * Number(product.salePrice)), 0);
+    return this.activeProducts.reduce((total, product) => total + (product.stock * Number(product.salePrice)), 0);
   }
 
   get lowStockProducts(): LubricantProduct[] {
-    return this.products
+    return this.activeProducts
       .filter((product) => product.stock <= 5)
       .sort((a, b) => a.stock - b.stock)
       .slice(0, 6);
@@ -579,7 +668,7 @@ export default class SuppliesComponent implements OnInit {
       return null;
     }
 
-    return this.products.find((item) => item.id === productId) ?? null;
+    return this.activeProducts.find((item) => item.id === productId) ?? null;
   }
 
   get selectedOrderUnitPrice(): number {
@@ -602,6 +691,53 @@ export default class SuppliesComponent implements OnInit {
     return this.selectedOrderQuantity * this.selectedOrderUnitPrice;
   }
 
+  get calculatedWeeklyInstallment(): number {
+    const total = this.getDraftTotal();
+    const installments = Number(this.orderForm.get('installmentCount')?.value);
+
+    if (!total || !installments || installments <= 0) {
+      return 0;
+    }
+
+    return Number((total / installments).toFixed(2));
+  }
+
+  get installmentPreview(): InstallmentPreviewItem[] {
+    const total = this.getDraftTotal();
+    const installmentCount = Number(this.orderForm.get('installmentCount')?.value);
+    const orderDate = String(this.orderForm.get('orderDate')?.value || '');
+
+    if (!total || !installmentCount || installmentCount <= 0 || !orderDate) {
+      return [];
+    }
+
+    const baseAmount = Number((total / installmentCount).toFixed(2));
+    const preview: InstallmentPreviewItem[] = [];
+    let accumulated = 0;
+
+    for (let index = 0; index < installmentCount; index += 1) {
+      const amount = index === installmentCount - 1
+        ? Number((total - accumulated).toFixed(2))
+        : baseAmount;
+      accumulated = Number((accumulated + amount).toFixed(2));
+      preview.push({
+        week: index + 1,
+        date: this.addDays(orderDate, index * 7),
+        amount
+      });
+    }
+
+    return preview;
+  }
+
+  get activeProducts(): LubricantProduct[] {
+    return this.products.filter((product) => product.active);
+  }
+
+  get isEditingProduct(): boolean {
+    return this.editingProductId != null;
+  }
+
   private resetAssociateState(): void {
     this.associateFound = false;
     this.associateData = null;
@@ -610,12 +746,29 @@ export default class SuppliesComponent implements OnInit {
     this.orderDraftItems = [];
   }
 
+  private resetProductEditor(): void {
+    this.editingProductId = null;
+    this.productForm.reset({
+      code: '',
+      name: '',
+      costPrice: '',
+      salePrice: '',
+      initialStock: 0
+    });
+  }
+
   private formatAssociate(user: User): string {
     return `${user.firstName} ${user.lastName} - ${user.numberId}`;
   }
 
   private formatDate(date: Date): string {
     return date.toISOString().split('T')[0];
+  }
+
+  private addDays(date: string, days: number): string {
+    const localDate = new Date(`${date}T12:00:00`);
+    localDate.setDate(localDate.getDate() + days);
+    return this.formatDate(localDate);
   }
 
   private extractErrorMessage(error: unknown, fallback: string): string {

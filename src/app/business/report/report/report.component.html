@@ -22,9 +22,9 @@
         <div class="mt-6 text-center">
             <h4 class="text-lg font-medium mb-2">Total por Tipo de Pago</h4>
             <div class="inline-block text-left">
-                <div *ngFor="let tipoPago of getKeys(reporte.totalPorTipoPago)" class="flex justify-between">
+                <div *ngFor="let tipoPago of getDisplayKeys(reporte.totalPorTipoPago)" class="flex justify-between">
                     <span class="font-semibold">{{ tipoPago }}:</span>
-                    <span class="ml-4">{{ reporte.totalPorTipoPago[tipoPago] }}</span>
+                    <span class="ml-4">{{ getDisplayTotals(reporte.totalPorTipoPago)[tipoPago] }}</span>
                 </div>
             </div>
             <div class="mt-4">

@@ -30,7 +30,8 @@ export interface LubricantOrderItemRequest {
 export interface LubricantOrderRequest {
   userId: number;
   orderDate: string;
-  weeklyInstallment: number;
+  weeklyInstallment?: number | null;
+  installmentCount?: number | null;
   items: LubricantOrderItemRequest[];
 }
 
@@ -49,6 +50,14 @@ export class LubricantService {
 
   createProduct(request: LubricantProductRequest): Observable<LubricantProduct> {
     return this.http.post<LubricantProduct>(`${this.apiUrl}/products`, request);
+  }
+
+  updateProduct(productId: number, request: LubricantProductRequest): Observable<LubricantProduct> {
+    return this.http.put<LubricantProduct>(`${this.apiUrl}/products/${productId}`, request);
+  }
+
+  deleteProduct(productId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/products/${productId}`);
   }
 
   addStock(productId: number, request: LubricantStockEntryRequest): Observable<LubricantProduct> {

@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
   styleUrl: './receipt.component.css'
 })
 export class ReceiptComponent {
+  private readonly forecastFundTypes = ['FONDO_PREVISION_URBANO', 'FONDO_PREVISION_INTERURBANO'];
 
   @Input() reporte: any; // Datos del socio
   @Input() currentDate!: Date;
@@ -47,6 +48,27 @@ export class ReceiptComponent {
 
   getKeys(obj: any): string[] {
     return Object.keys(obj);
+  }
+
+  getDisplayTotals(totalPorTipoPago: Record<string, number> | null | undefined): Record<string, number> {
+    if (!totalPorTipoPago) {
+      return {};
+    }
+
+    const displayTotals = { ...totalPorTipoPago };
+    const totalForecastFunds = this.forecastFundTypes
+      .reduce((sum, type) => sum + Number(displayTotals[type] || 0), 0);
+
+    if (totalForecastFunds > 0) {
+      displayTotals['AHORRO'] = Number(displayTotals['AHORRO'] || 0) + totalForecastFunds;
+      this.forecastFundTypes.forEach((type) => delete displayTotals[type]);
+    }
+
+    return displayTotals;
+  }
+
+  getDisplayKeys(totalPorTipoPago: Record<string, number> | null | undefined): string[] {
+    return Object.keys(this.getDisplayTotals(totalPorTipoPago));
   }
 
 }

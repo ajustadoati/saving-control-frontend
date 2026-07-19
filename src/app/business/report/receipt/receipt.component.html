@@ -17,9 +17,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let tipoPago of getKeys(reporte.totalPorTipoPago)">
+          <tr *ngFor="let tipoPago of getDisplayKeys(reporte.totalPorTipoPago)">
             <td class="text-left px-1" style="line-height: 0.75;">{{ tipoPago}}</td>
-            <td class="text-right px-1 py-1" style="line-height: 0.75;">{{ reporte.totalPorTipoPago[tipoPago] }}</td>
+            <td class="text-right px-1 py-1" style="line-height: 0.75;">{{ getDisplayTotals(reporte.totalPorTipoPago)[tipoPago] }}</td>
           </tr>
         </tbody>
         <tfoot>
