@@ -42,7 +42,7 @@
           <span class="font-bold">Intereses obtenidos:</span> {{ summary?.interestEarned | currency }}
         </div>
         <div class="mb-2">
-          <span class="font-bold">Suministros:</span> {{ supplies?.supplyBalance | currency }}
+          <span class="font-bold">Suministros:</span> {{ totalSupplyBalance | currency }}
         </div>
         <div class="mb-2">
           <span class="font-bold">Préstamo:</span> {{ loans?.loanBalance | currency }}
@@ -97,14 +97,14 @@
              
             </td>
             <td class="border border-gray-300 px-4 py-2">
-              <input type="number" [(ngModel)]="payment.hourlyRate" (change)="updateTotal()"  class="p-2 rounded border">
+              <input type="number" [(ngModel)]="payment.amount" (change)="updateTotal()"  class="p-2 rounded border">
             </td>
   
             <td class="border border-gray-300 px-4 py-2">
               {{ payment.totalCost | currency }}
             </td>
             <td class="border border-gray-300 px-4 py-2">
-              <button (click)="removeAttendee(i)" class="text-red-600">
+              <button (click)="removePaymentLine(i)" class="text-red-600">
                 Eliminar
               </button>
             </td>
@@ -114,7 +114,7 @@
     </div>
   
     <div *ngIf="paymentsActivated" class="mt-8">
-      <button (click)="addAttendee()" class="py-2 px-4 bg-blue-500 text-white rounded-lg">Agregar pago</button>
+      <button (click)="addPaymentLine()" class="py-2 px-4 bg-blue-500 text-white rounded-lg">Agregar pago</button>
     </div>
   
     <div *ngIf="paymentsActivated" class="mt-8">

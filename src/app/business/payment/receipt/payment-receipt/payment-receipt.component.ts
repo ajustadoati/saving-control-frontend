@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { CommonModule } from '@angular/common';
+import { PaymentLine } from '../../../interfaces/payment-line';
 
 @Component({
   selector: 'app-payment-receipt',
@@ -12,7 +13,7 @@ import { CommonModule } from '@angular/common';
 })
 export class PaymentReceiptComponent {
   @Input() associateData: any; // Datos del socio
-  @Input() defaultPayments: any[] = []; // Lista de pagos
+  @Input() defaultPayments: PaymentLine[] = []; // Lista de pagos
   @Input() totalAmount!: number;
   @Input() total!: number;
   @Input() currentDate!: Date;

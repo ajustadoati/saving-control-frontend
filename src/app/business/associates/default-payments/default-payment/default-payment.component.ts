@@ -59,7 +59,11 @@ export class DefaultPaymentComponent implements OnInit {
     
     this.productService.getProducts().subscribe({
       next: (data: Product[]) => {
-        const optionNames = mergePaymentOptions(data.map((product) => product.name));
+        const optionNames = mergePaymentOptions(data.map((product) => product.name))
+          .filter((name) => {
+            const normalized = (name || '').trim().toLowerCase();
+            return normalized !== 'suministro' && normalized !== 'suministros';
+          });
         this.products = optionNames.map((name, index) => ({
           productId: data[index]?.productId || 0,
           name
