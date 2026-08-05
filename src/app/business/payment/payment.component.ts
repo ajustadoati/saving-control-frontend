@@ -10,16 +10,13 @@ import { ProductService } from '../core/services/product.service';
 import { LoanService } from '../core/services/loan.service';
 import { SuppliesService } from '../core/services/supplies.service';
 import { UserBalanceService } from '../core/services/user-balance.service';
-import { LubricantService } from '../core/services/lubricant.service';
 import { PaymentReceiptComponent } from './receipt/payment-receipt/payment-receipt.component';
 import { Payment } from '../interfaces/payment';
 import { Product } from '../interfaces/product';
 import { Loan } from '../interfaces/loan';
 import { PaymentLine } from '../interfaces/payment-line';
 import { Supplies } from '../interfaces/supplies';
-import { LubricantOrder } from '../interfaces/lubricant-order';
 import { SPECIAL_PAYMENT_LABELS, mergePaymentOptions } from '../core/constants/payment-catalog';
-import { forkJoin } from 'rxjs';
 
 type ResolvedPaymentType =
   | 'SAVING'
@@ -47,13 +44,6 @@ interface ResolvedPaymentSelection {
   userId: number | null;
 }
 
-interface SupplyPaymentOption {
-  label: string;
-  supplyId: number;
-  suggestedAmount: number;
-  balance: number;
-}
-
 @Component({
   selector: 'app-payment',
   standalone: true,
@@ -74,7 +64,6 @@ export default class PaymentComponent {
     private loanService: LoanService,
     private suppliesService: SuppliesService,
     private userBalance: UserBalanceService,
-    private lubricantService: LubricantService,
   ) {}
 
   showButtomPrint = false;
@@ -96,8 +85,6 @@ export default class PaymentComponent {
   paymentDate: string = new Date().toISOString().split('T')[0];
   defaultPayments: PaymentLine[] = [this.createPaymentLine('Ahorro', 10)];
   configuredPaymentLines: PaymentLine[] = [];
-  activeSupplyPaymentOptions: SupplyPaymentOption[] = [];
-  baseCatalogPaymentTypes: string[] = [];
   totalSupplyBalance = 0;
   associateQuery = '';
   associateResults: any[] = [];
@@ -158,8 +145,6 @@ export default class PaymentComponent {
     this.paymentsActivated = false;
     this.defaultPayments = [this.createPaymentLine('Ahorro', 10)];
     this.configuredPaymentLines = [];
-    this.activeSupplyPaymentOptions = [];
-    this.baseCatalogPaymentTypes = [];
     this.supplies = [];
     this.totalSupplyBalance = 0;
     this.totalSavings = 0;
@@ -253,16 +238,11 @@ export default class PaymentComponent {
       }
     });
 
-    forkJoin({
-      supplies: this.suppliesService.getSupplies(this.associateData.id),
-      orders: this.lubricantService.getOrdersByUser(this.associateData.id),
-    }).subscribe({
-      next: ({ supplies, orders }) => {
+    this.suppliesService.getSupplies(this.associateData.id).subscribe({
+      next: (supplies: Supplies[]) => {
         console.log('supplies for the user:', supplies);
         this.supplies = supplies;
         this.totalSupplyBalance = this.calculateTotalSupplyBalance(supplies);
-        this.activeSupplyPaymentOptions = this.buildSupplyPaymentOptions(supplies, orders);
-        this.syncPaymentTypes();
         if (rebuildPaymentLines) {
           this.rebuildInitialPaymentLines();
         }
@@ -271,8 +251,6 @@ export default class PaymentComponent {
         console.error('Error al obtener los suministros:', error);
         this.supplies = [];
         this.totalSupplyBalance = 0;
-        this.activeSupplyPaymentOptions = [];
-        this.syncPaymentTypes();
         if (rebuildPaymentLines) {
           this.rebuildInitialPaymentLines();
         }
@@ -307,7 +285,6 @@ export default class PaymentComponent {
   registerPayments(): void {
     if (this.isSaving) return;
     if (!this.validateOtherReasons()) return;
-    if (!this.validateSupplyPayments()) return;
 
     this.isSaving = true;
     const processedPayments = this.defaultPayments.map((paymentLine) =>
@@ -363,8 +340,6 @@ export default class PaymentComponent {
     this.paymentTypes = [];
     this.defaultPayments = [this.createPaymentLine('', 0)];
     this.configuredPaymentLines = [];
-    this.activeSupplyPaymentOptions = [];
-    this.baseCatalogPaymentTypes = [];
     this.associateData = data;
     console.log('Datos del socio:', this.associateData);
     this.associateFound = true;
@@ -377,7 +352,6 @@ export default class PaymentComponent {
       next: (response: any) => {
         console.log('defaultpayments:', response);
         this.configuredPaymentLines = response.defaultPayments
-          .filter((defaultPayment: { paymentName: string }) => !this.isGenericSupplyLabel(defaultPayment.paymentName))
           .map((defaultPayment: { paymentName: string; amount: number }) =>
             this.createPaymentLine(defaultPayment.paymentName, defaultPayment.amount)
           );
@@ -470,12 +444,10 @@ export default class PaymentComponent {
     this.productService.getProducts().subscribe({
       next: (products: Product[]) => {
         console.log('Searching products', products);
-        this.baseCatalogPaymentTypes = this.buildBasePaymentTypes(products);
-        this.syncPaymentTypes();
+        this.paymentTypes = mergePaymentOptions(products.map((product) => product.name));
       },
       error: () => {
-        this.baseCatalogPaymentTypes = [];
-        this.syncPaymentTypes();
+        this.paymentTypes = this.mergeUniquePaymentNames(this.defaultPayments.map((paymentLine) => paymentLine.paymentTitle));
       },
     });
   }
@@ -530,15 +502,8 @@ export default class PaymentComponent {
     if (paymentTitle.startsWith(SPECIAL_PAYMENT_LABELS[1])) {
       return this.buildResolvedSelection('INTERURBAN_FORECAST_FUND', null, null);
     }
-    const supplyPaymentOption = this.findSupplyPaymentOption(paymentTitle);
-    if (supplyPaymentOption) {
-      return this.buildResolvedSelection('SUPPLIES', supplyPaymentOption.supplyId, null);
-    }
     if (paymentTitle.startsWith('Suministro')) {
-      const singleSupplyOption = this.activeSupplyPaymentOptions.length === 1
-        ? this.activeSupplyPaymentOptions[0]
-        : null;
-      return this.buildResolvedSelection('SUPPLIES', singleSupplyOption?.supplyId ?? null, null);
+      return this.buildResolvedSelection('SUPPLIES', this.getLegacySupplyReferenceId(), null);
     }
     if (paymentTitle.startsWith('Cauchos')) {
       return this.buildResolvedSelection('WHEELS', null, null);
@@ -645,39 +610,17 @@ export default class PaymentComponent {
     return true;
   }
 
-  private validateSupplyPayments(): boolean {
-    const invalidSupplyLine = this.defaultPayments.find((paymentLine) => {
-      if (!paymentLine.paymentTitle.startsWith('Suministro')) {
-        return false;
-      }
-      const selection = this.resolvePaymentSelection(paymentLine.paymentTitle);
-      return selection.referenceId == null;
-    });
-
-    if (invalidSupplyLine) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Suministro no asociado',
-        text: 'Selecciona un suministro específico del socio antes de guardar el pago.'
-      });
-      return false;
-    }
-
-    return true;
-  }
-
   private rebuildInitialPaymentLines(): void {
     const configuredLines = this.configuredPaymentLines.map((paymentLine) => ({ ...paymentLine }));
-    const suggestedSupplyLines = this.activeSupplyPaymentOptions
-      .filter((supplyOption) => supplyOption.suggestedAmount > 0)
-      .map((supplyOption) => this.createPaymentLine(supplyOption.label, supplyOption.suggestedAmount));
-
-    this.defaultPayments = [...configuredLines, ...suggestedSupplyLines];
+    this.defaultPayments = [...configuredLines];
     if (this.defaultPayments.length === 0) {
       this.defaultPayments = [this.createPaymentLine('', 0)];
     }
     this.recalculateTotals();
-    this.syncPaymentTypes();
+    this.paymentTypes = this.mergeUniquePaymentNames([
+      ...this.paymentTypes,
+      ...this.defaultPayments.map((paymentLine) => paymentLine.paymentTitle),
+    ]);
   }
 
   private createPaymentLine(paymentTitle: string, amount: number): PaymentLine {
@@ -708,47 +651,6 @@ export default class PaymentComponent {
     return supplies.reduce((total, supply) => total + Number(supply.supplyBalance || 0), 0);
   }
 
-  private buildSupplyPaymentOptions(supplies: Supplies[], orders: LubricantOrder[]): SupplyPaymentOption[] {
-    const activeOrdersBySupplyId = new Map<number, LubricantOrder>();
-    orders
-      .filter((order) => this.isActiveSupplyOrder(order) && order.supplyId != null)
-      .forEach((order) => activeOrdersBySupplyId.set(order.supplyId as number, order));
-
-    return supplies
-      .filter((supply) => Number(supply.supplyBalance || 0) > 0)
-      .map((supply) => {
-        const order = supply.supplyId != null ? activeOrdersBySupplyId.get(supply.supplyId) : undefined;
-        const balance = Number(supply.supplyBalance || 0);
-        const suggestedAmount = order
-          ? Math.min(Number(order.weeklyInstallment || 0), balance)
-          : 0;
-
-        return {
-          label: order ? `Suministro #${order.orderId}` : `Suministro - ${supply.supplyName}`,
-          supplyId: supply.supplyId as number,
-          suggestedAmount: Number(suggestedAmount.toFixed(2)),
-          balance,
-        };
-      });
-  }
-
-  private isActiveSupplyOrder(order: LubricantOrder): boolean {
-    return order.status !== 'PAID' && Number(order.balance || 0) > 0;
-  }
-
-  private buildBasePaymentTypes(products: Product[]): string[] {
-    return mergePaymentOptions(products.map((product) => product.name))
-      .filter((paymentName) => !this.isGenericSupplyLabel(paymentName));
-  }
-
-  private syncPaymentTypes(): void {
-    this.paymentTypes = this.mergeUniquePaymentNames([
-      ...this.baseCatalogPaymentTypes,
-      ...this.activeSupplyPaymentOptions.map((supplyOption) => supplyOption.label),
-      ...this.defaultPayments.map((paymentLine) => paymentLine.paymentTitle),
-    ]);
-  }
-
   private mergeUniquePaymentNames(paymentNames: string[]): string[] {
     const seen = new Set<string>();
     const merged: string[] = [];
@@ -771,12 +673,8 @@ export default class PaymentComponent {
     return merged;
   }
 
-  private isGenericSupplyLabel(paymentName: string): boolean {
-    const normalized = (paymentName || '').trim().toLowerCase();
-    return normalized === 'suministro' || normalized === 'suministros';
-  }
-
-  private findSupplyPaymentOption(paymentTitle: string): SupplyPaymentOption | undefined {
-    return this.activeSupplyPaymentOptions.find((supplyOption) => supplyOption.label === paymentTitle);
+  private getLegacySupplyReferenceId(): number | null {
+    const activeSupply = this.supplies.find((supply) => Number(supply.supplyBalance || 0) > 0);
+    return activeSupply?.supplyId ?? null;
   }
 }
