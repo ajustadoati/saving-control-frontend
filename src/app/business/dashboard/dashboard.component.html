@@ -1,4 +1,4 @@
-  <div class="mb-12 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
+  <div class="mb-8 grid gap-y-10 gap-x-6 md:grid-cols-2 xl:grid-cols-4">
     <div class="relative flex flex-col bg-clip-border rounded-xl bg-white text-gray-700 shadow-md">
       <div class="bg-clip-border mx-4 rounded-xl overflow-hidden bg-gradient-to-tr from-blue-600 to-blue-400 text-white shadow-blue-500/40 shadow-lg absolute -mt-4 grid h-16 w-16 place-items-center">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="w-6 h-6 text-white">
@@ -60,11 +60,50 @@
       </div>
       <div class="p-4 text-right">
         <p class="block antialiased font-sans text-sm leading-normal font-normal text-blue-gray-600">Efectivo</p>
-        <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ funds?.currentBalance | number:'1.2-2' }}</h4>
+        <h4 class="block antialiased tracking-normal font-sans text-2xl font-semibold leading-snug text-blue-gray-900">{{ weeklySummary?.totalDia != null ? (weeklySummary?.totalDia | number:'1.2-2') : '—' }}</h4>
       </div>
       <div class="border-t border-blue-gray-50 p-4">
         <p class="block antialiased font-sans text-base leading-relaxed font-normal text-blue-gray-600">
+          <span class="text-xs">{{ weeklySummaryDate ? 'Neto del resumen · ' + weeklySummaryDate : 'Sin fecha de resumen' }}</span>
         </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-8 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+    <div class="flex min-w-0 flex-wrap items-center gap-4 rounded-xl bg-white p-4 text-gray-700 shadow-md">
+      <div class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-tr from-blue-700 to-blue-500 text-white shadow-md" aria-hidden="true">
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M3 8h18v12H3zM3 8l9-5 9 5M8 12v4M12 12v4M16 12v4" />
+        </svg>
+      </div>
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-medium">Total caja</p>
+        <h4 class="break-words text-2xl font-semibold tabular-nums">{{ funds ? (funds.currentBalance | number:'1.2-2') : '—' }}</h4>
+      </div>
+      <div class="w-full border-t border-gray-100 pt-3">
+        <p class="mb-2 text-xs text-gray-500">Saldo registrado de caja</p>
+        <p *ngIf="fundsError" role="alert" class="mb-2 text-xs text-red-600">{{ fundsError }}</p>
+        <button *ngIf="fundsError" type="button" class="text-sm font-semibold text-blue-700" (click)="loadBalance()">Reintentar</button>
+      </div>
+    </div>
+    <div class="flex min-w-0 flex-wrap items-center gap-4 rounded-xl bg-white p-4 text-gray-700 shadow-md">
+      <div class="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-gradient-to-tr from-teal-700 to-teal-500 text-white shadow-md" aria-hidden="true">
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h4" />
+        </svg>
+      </div>
+      <div class="min-w-0 flex-1">
+        <p class="text-sm font-medium">Lógica</p>
+        <h4 class="break-words text-2xl font-semibold tabular-nums">{{ logicBalance ? (logicBalance.currentBalance | number:'1.2-2') : '—' }}</h4>
+      </div>
+      <div class="w-full border-t border-gray-100 pt-3">
+        <p *ngIf="logicBalanceError" class="mb-2 text-xs text-red-600" role="alert">{{ logicBalanceError }}</p>
+        <button *ngIf="logicBalanceError" type="button" class="text-sm font-semibold text-teal-700" (click)="loadLogicBalance()">Reintentar</button>
+        <button *ngIf="!logicBalanceError" type="button" class="w-full rounded-md bg-teal-700 px-3 py-2 text-sm font-semibold text-white hover:bg-teal-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+          [disabled]="!logicBalance || logicBalance.currentBalance <= 0" (click)="openLogicPaymentModal()">
+          {{ logicBalance?.currentBalance === 0 ? 'Saldo cancelado' : 'Registrar abono' }}
+        </button>
       </div>
     </div>
   </div>
@@ -221,3 +260,25 @@
   </div>
   
  
+
+<div *ngIf="showLogicPaymentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" (click)="closeLogicPaymentModal()">
+  <section role="dialog" aria-modal="true" aria-labelledby="logicPaymentTitle" class="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl" (click)="$event.stopPropagation()" (keydown.escape)="closeLogicPaymentModal()">
+    <h3 id="logicPaymentTitle" class="text-xl font-semibold text-gray-800">Abono a Lógica</h3>
+    <p class="mt-2 text-sm text-gray-600">Saldo pendiente: {{ logicBalance?.currentBalance | number:'1.2-2' }}</p>
+    <form #logicPaymentForm="ngForm" (ngSubmit)="saveLogicPayment()" class="mt-5 space-y-4">
+      <div>
+        <label for="logicPaymentDate" class="mb-1 block text-sm font-medium">Fecha</label>
+        <input id="logicPaymentDate" name="logicPaymentDate" type="date" required [(ngModel)]="logicPaymentDate" [disabled]="isSavingLogicPayment" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+      </div>
+      <div>
+        <label for="logicPaymentAmount" class="mb-1 block text-sm font-medium">Monto del abono</label>
+        <input id="logicPaymentAmount" name="logicPaymentAmount" type="number" required min="0.01" step="0.01" [max]="logicBalance?.currentBalance ?? 0" [(ngModel)]="logicPaymentAmount" [disabled]="isSavingLogicPayment" class="w-full rounded-md border border-gray-300 px-3 py-2" />
+      </div>
+      <p *ngIf="logicPaymentError" role="alert" class="text-sm text-red-600">{{ logicPaymentError }}</p>
+      <div class="flex justify-end gap-2">
+        <button type="button" [disabled]="isSavingLogicPayment" (click)="closeLogicPaymentModal()" class="rounded-md border border-gray-300 px-4 py-2 text-sm">Cancelar</button>
+        <button type="submit" [disabled]="logicPaymentForm.invalid || isSavingLogicPayment" class="rounded-md bg-teal-700 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{{ isSavingLogicPayment ? 'Guardando...' : 'Guardar abono' }}</button>
+      </div>
+    </form>
+  </section>
+</div>

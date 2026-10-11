@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SavingService } from '../core/services/saving.service';
 import { BalanceService } from '../core/services/balance.service';
+import { Funds } from '../interfaces/funds';
 import { ReportService } from '../core/services/report.service';
 import { DistributionService } from '../core/services/distribution.service';
 import { LoanService } from '../core/services/loan.service';
@@ -11,6 +12,7 @@ import { Loan } from '../interfaces/loan';
 import { WeeklySummaryResponse } from '../interfaces/weeklySummaryResponse';
 import { InterestReportComponent } from '../report/interest-report/interest-report.component';
 import Swal from 'sweetalert2';
+import { LogicBalance, LogicBalanceService } from '../core/services/logic-balance.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -26,13 +28,15 @@ export default class DashboardComponent implements OnInit {
     private balanceService: BalanceService,
     private reportService: ReportService,
     private distributionService: DistributionService,
-    private loanService: LoanService
+    private loanService: LoanService,
+    private logicBalanceService: LogicBalanceService
   ){}
   
 
   totalSavings: number = 0;
   totalUsers: number = 0;
-  funds: any;
+  funds?: Funds;
+  fundsError = '';
   loanBalanceP1: number = 0;
   loanBalanceP2: number = 0;
   loanBalanceExternal: number = 0;
@@ -43,6 +47,14 @@ export default class DashboardComponent implements OnInit {
   isLoadingDistributionStatus: boolean = false;
   isRunningDistribution: boolean = false;
   showInterestDistributionModal: boolean = false;
+  logicBalance?: LogicBalance;
+  logicBalanceError = '';
+  showLogicPaymentModal = false;
+  logicPaymentDate = '';
+  logicPaymentAmount: number | null = null;
+  logicPaymentError = '';
+  isSavingLogicPayment = false;
+  private logicPaymentRequest?: { date: string; amount: number; id: string };
 
 
   ngOnInit(): void {
@@ -50,6 +62,61 @@ export default class DashboardComponent implements OnInit {
     this.loadSavingsResume();
     this.loadLoanBalances();
     this.loadLatestWednesdaySummary();
+    this.loadLogicBalance();
+  }
+
+  loadLogicBalance() {
+    this.logicBalanceError = '';
+    this.logicBalanceService.getBalance().subscribe({
+      next: balance => this.logicBalance = balance,
+      error: () => this.logicBalanceError = 'No se pudo cargar el saldo.'
+    });
+  }
+
+  openLogicPaymentModal() {
+    if (!this.logicBalance || this.logicBalance.currentBalance <= 0) return;
+    const today = new Date();
+    this.logicPaymentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    this.logicPaymentAmount = null;
+    this.logicPaymentError = '';
+    this.logicPaymentRequest = undefined;
+    this.showLogicPaymentModal = true;
+  }
+
+  closeLogicPaymentModal() {
+    if (!this.isSavingLogicPayment) this.showLogicPaymentModal = false;
+  }
+
+  saveLogicPayment() {
+    if (this.isSavingLogicPayment) return;
+    const amount = Number(this.logicPaymentAmount);
+    if (!this.logicPaymentDate || !Number.isFinite(amount) || amount <= 0
+        || !this.logicBalance || amount > this.logicBalance.currentBalance
+        || Math.abs(amount * 100 - Math.round(amount * 100)) > 0.000001) {
+      this.logicPaymentError = 'Indica una fecha y un monto positivo, con hasta dos decimales, que no supere el saldo.';
+      return;
+    }
+    // Keep the same identifier when retrying after a lost response.
+    if (!this.logicPaymentRequest || this.logicPaymentRequest.date !== this.logicPaymentDate
+        || this.logicPaymentRequest.amount !== amount) {
+      this.logicPaymentRequest = { date: this.logicPaymentDate, amount, id: crypto.randomUUID() };
+    }
+    this.isSavingLogicPayment = true;
+    this.logicPaymentError = '';
+    this.logicBalanceService.registerPayment(this.logicPaymentDate, amount, this.logicPaymentRequest.id).subscribe({
+      next: balance => {
+        this.logicBalance = balance;
+        this.isSavingLogicPayment = false;
+        this.showLogicPaymentModal = false;
+        Swal.fire({ icon: 'success', title: 'Abono registrado', text: 'El saldo de Lógica ha sido actualizado.' });
+      },
+      error: error => {
+        this.isSavingLogicPayment = false;
+        this.logicPaymentError = error.status === 400
+          ? 'Revisa la fecha y el monto. El abono no puede superar el saldo actual.'
+          : 'No se pudo confirmar el abono. Puedes reintentar con los mismos datos.';
+      }
+    });
   }
 
   loadSavingsResume(){
@@ -66,12 +133,12 @@ export default class DashboardComponent implements OnInit {
   }
 
   loadBalance(){
+    this.fundsError = '';
     this.balanceService.getBalance().subscribe({
-      next: (response: any) => {
-        console.log('Fondos obtenidos:', response); // Verificar los fondos obtenidos
+      next: (response) => {
         this.funds = response;
       },
-      error: (e) => console.error(e),
+      error: () => this.fundsError = 'No se pudo cargar el fondo de caja.',
     });
   }
 
