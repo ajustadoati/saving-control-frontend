@@ -66,7 +66,15 @@
 
     <div *ngIf="paymentsActivated" class="mb-4 mt-8">
       <label for="paymentDate" class="block text-sm font-medium text-gray-700">Fecha del pago:</label>
-      <input [(ngModel)]="paymentDate" id="paymentDate" type="date" class="mt-1 p-2 border rounded-md" />
+      <input [(ngModel)]="paymentDate" (ngModelChange)="syncFinancedSupplyLines()" id="paymentDate" type="date" class="mt-1 p-2 border rounded-md" />
+    </div>
+    <p *ngIf="financedSupplyError" class="mt-3 text-red-600">{{ financedSupplyError }}</p>
+    <p *ngIf="paymentsActivated && availableSupplyOrders.length" class="mt-3 text-sm text-gray-600">
+      Para abonar a una deuda elige Suministro #pedido. También puedes seleccionarlo para un abono anticipado; las cuotas automáticas aparecen desde la fecha del pedido.
+    </p>
+    <div *ngIf="paymentsActivated && hasLegacySupplyDefault && financedSupplyOrders.length" class="my-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm">
+      <p>Este socio ya tiene un pago de suministro por defecto. Se conserva sin cambios; revisa que no corresponda a la misma deuda antes de agregar una cuota adicional.</p>
+      <label><input type="checkbox" [(ngModel)]="includeFinancedSupplies" (ngModelChange)="syncFinancedSupplyLines()"> Agregar también las cuotas de los pedidos financiados</label>
     </div>
   
     <div *ngIf="paymentsActivated" class="overflow-x-auto mt-8">
@@ -83,9 +91,10 @@
           <tr *ngFor="let payment of defaultPayments; let i = index">
             
             <td class="border border-gray-300 px-4 py-2">
-              <select [(ngModel)]="payment.paymentTitle" (change)="updateTotal()" class="p-2 rounded border bg-white">
+              <select [(ngModel)]="payment.paymentTitle" [disabled]="payment.supplyLineOrigin === 'automatic'" (change)="onPaymentTypeChange(payment)" class="p-2 rounded border bg-white">
                 <option *ngFor="let type of paymentTypes" [value]="type">{{ type }}</option>
               </select>
+              <span *ngIf="payment.supplyId != null" class="ml-2 text-xs text-gray-600">Saldo: {{ payment.supplyBalance | currency }}</span>
               <div *ngIf="isOtherPayment(payment.paymentTitle)" class="mt-2">
                 <input
                   type="text"
@@ -123,7 +132,7 @@
     </div>
 
     <div *ngIf="paymentsActivated" class="mt-8 mb-16">
-        <button (click)="registerPayments()"  [disabled]="isSaving" class="py-2 px-4 bg-green-500 text-white rounded-lg mr-4">Guardar pagos</button>
+        <button (click)="registerPayments()"  [disabled]="isSaving || isLoadingFinancedSupplies" class="py-2 px-4 bg-green-500 text-white rounded-lg mr-4">Guardar pagos</button>
         <button (click)="openReceiptModal()"  class="py-2 px-4 bg-red-500 text-white rounded-lg">Ver Recibo</button>
       </div>
   </div>

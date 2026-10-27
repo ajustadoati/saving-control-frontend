@@ -17,6 +17,9 @@ import { Loan } from '../interfaces/loan';
 import { PaymentLine } from '../interfaces/payment-line';
 import { Supplies } from '../interfaces/supplies';
 import { SPECIAL_PAYMENT_LABELS, mergePaymentOptions } from '../core/constants/payment-catalog';
+import { LubricantService } from '../core/services/lubricant.service';
+import { LubricantOrder } from '../interfaces/lubricant-order';
+import { availableFinancedSupplies, buildFinancedSupplyLines, financedSupplyTitle, selectFinancedSupply } from './financed-supply-lines';
 
 type ResolvedPaymentType =
   | 'SAVING'
@@ -64,6 +67,7 @@ export default class PaymentComponent {
     private loanService: LoanService,
     private suppliesService: SuppliesService,
     private userBalance: UserBalanceService,
+    private lubricantService: LubricantService,
   ) {}
 
   showButtomPrint = false;
@@ -73,6 +77,10 @@ export default class PaymentComponent {
   contributions: any[] = [];
   loans: any;
   supplies: Supplies[] = [];
+  financedSupplyOrders: LubricantOrder[] = [];
+  includeFinancedSupplies = false;
+  financedSupplyError = '';
+  isLoadingFinancedSupplies = false;
   summary: any;
   isSaving = false;
   loanBalanceTotal = 0;
@@ -137,6 +145,9 @@ export default class PaymentComponent {
   }
 
   resetData(): void {
+    this.financedSupplyOrders = [];
+    this.includeFinancedSupplies = false;
+    this.financedSupplyError = '';
     this.associateId = '';
     this.associateQuery = '';
     this.associateResults = [];
@@ -213,6 +224,22 @@ export default class PaymentComponent {
   }
 
   loadBalance(rebuildPaymentLines: boolean = false) {
+    const userId = this.associateData.id;
+    this.isLoadingFinancedSupplies = true;
+    this.lubricantService.getOrdersByUser(userId).subscribe({
+      next: orders => {
+        if (this.associateData.id !== userId) return;
+        this.financedSupplyOrders = orders;
+        this.isLoadingFinancedSupplies = false;
+        this.financedSupplyError = '';
+        if (rebuildPaymentLines) this.syncFinancedSupplyLines();
+      },
+      error: () => {
+        if (this.associateData.id !== userId) return;
+        this.isLoadingFinancedSupplies = false;
+        this.financedSupplyError = 'No se pudieron consultar las cuotas financiadas. Los pagos por defecto se mantienen.';
+      },
+    });
     this.loanService.getLoans(this.associateData.id).subscribe({
       next: (data: Loan[]) => {
         console.log('loans for the user:', data);
@@ -283,8 +310,24 @@ export default class PaymentComponent {
   }
 
   registerPayments(): void {
-    if (this.isSaving) return;
+    if (this.isSaving || this.isLoadingFinancedSupplies) return;
     if (!this.validateOtherReasons()) return;
+    if (this.defaultPayments.some(line => line.paymentTitle.startsWith('Suministro')
+        && line.supplyId == null && !line.legacySupplyDefault && this.availableSupplyOrders.length > 0)) {
+      Swal.fire({ icon: 'warning', title: 'Selecciona el pedido',
+        text: 'Elige Suministro #pedido para descontar de esa deuda. El concepto genérico no queda vinculado a un pedido.' });
+      return;
+    }
+    const selectedSupplies = this.defaultPayments.filter(line => line.supplyId != null).map(line => line.supplyId);
+    if (new Set(selectedSupplies).size !== selectedSupplies.length) {
+      Swal.fire({ icon: 'warning', title: 'Cuota duplicada', text: 'Hay más de una línea para la misma deuda de suministro.' });
+      return;
+    }
+    if (this.defaultPayments.some(line => line.supplyId != null
+        && (!Number.isFinite(line.amount) || line.amount <= 0 || line.amount > (line.supplyBalance ?? 0)))) {
+      Swal.fire({ icon: 'error', title: 'Cuota inválida', text: 'El abono de suministro debe ser positivo y no superar su saldo.' });
+      return;
+    }
 
     this.isSaving = true;
     const processedPayments = this.defaultPayments.map((paymentLine) =>
@@ -298,12 +341,24 @@ export default class PaymentComponent {
     this.paymentService.addPaymentListByUserId(this.associateData.id, this.payment).subscribe({
       next: (response: any) => {
         console.log('Pagos registrados exitosamente:', response);
+        const result = response.paymentResponse ?? response;
+        const failed = result.paymentStatuses?.filter((status: { status: string }) => status.status !== 'SUCCESS') || [];
+        if (failed.length) {
+          this.isSaving = false;
+          this.paymentsActivated = false;
+          this.isPrintEnabled = false;
+          this.showButtomPrint = false;
+          Swal.fire({ icon: 'warning', title: 'Revisar resultado del pago',
+            text: 'Hay conceptos que no se pudieron registrar. Revisa el reporte antes de reintentar para no duplicar los pagos confirmados.' });
+          return;
+        }
         this.paymentsActivated = false;
 
         this.userService.getAssociateById(this.associateData.id).subscribe({
           next: (associateResponse: any) => {
             this.totalSavings = associateResponse.totalSavings;
             this.refreshLoanBalances(() => {
+              this.isSaving = false;
               this.isPrintEnabled = true;
               this.showButtomPrint = true;
               this.loadBalance(false);
@@ -315,17 +370,25 @@ export default class PaymentComponent {
             });
           },
           error: (error) => {
+            this.isSaving = false;
             console.error('Error al obtener los ahorros:', error);
             this.totalSavings = 0;
           },
         });
       },
       error: (error) => {
+        this.isSaving = false;
         console.error('Error al registrar los pagos:', error);
+        const detail = error.error?.detail;
+        const alreadyRegistered = detail === 'Payments already registered for user';
         Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Posiblemente el usuario ya tiene pagos registrados para la fecha, inténtalo de nuevo.',
+          icon: alreadyRegistered ? 'warning' : 'error',
+          title: alreadyRegistered ? 'Pago ya registrado' : 'No se pudo registrar el pago',
+          text: alreadyRegistered
+            ? `Este socio ya tiene pagos registrados para el ${this.payment.date}. No se ha guardado otro pago. Revisa el reporte; para corregir el existente utiliza la opción de reversión.`
+            : typeof detail === 'string' && detail.trim()
+              ? detail
+              : 'No se pudo confirmar el pago. Revisa el reporte antes de reintentar para evitar duplicados.',
         });
       },
     });
@@ -337,6 +400,9 @@ export default class PaymentComponent {
   }
 
   private handleAssociateFound(data: any) {
+    this.financedSupplyOrders = [];
+    this.includeFinancedSupplies = false;
+    this.financedSupplyError = '';
     this.paymentTypes = [];
     this.defaultPayments = [this.createPaymentLine('', 0)];
     this.configuredPaymentLines = [];
@@ -353,7 +419,8 @@ export default class PaymentComponent {
         console.log('defaultpayments:', response);
         this.configuredPaymentLines = response.defaultPayments
           .map((defaultPayment: { paymentName: string; amount: number }) =>
-            this.createPaymentLine(defaultPayment.paymentName, defaultPayment.amount)
+            ({ ...this.createPaymentLine(defaultPayment.paymentName, defaultPayment.amount),
+              legacySupplyDefault: defaultPayment.paymentName.startsWith('Suministro') })
           );
         this.rebuildInitialPaymentLines();
       },
@@ -444,7 +511,8 @@ export default class PaymentComponent {
     this.productService.getProducts().subscribe({
       next: (products: Product[]) => {
         console.log('Searching products', products);
-        this.paymentTypes = mergePaymentOptions(products.map((product) => product.name));
+        this.paymentTypes = mergePaymentOptions([...products.map((product) => product.name),
+          ...this.availableSupplyOrders.map(financedSupplyTitle)]);
       },
       error: () => {
         this.paymentTypes = this.mergeUniquePaymentNames(this.defaultPayments.map((paymentLine) => paymentLine.paymentTitle));
@@ -513,6 +581,9 @@ export default class PaymentComponent {
   }
 
   private mapPaymentToPayload(payment: PaymentLine): any {
+    if (payment.supplyId != null) {
+      return { paymentType: 'SUPPLIES', referenceId: payment.supplyId, amount: payment.amount };
+    }
     const selection = this.resolvePaymentSelection(payment.paymentTitle);
 
     switch (selection.paymentType) {
@@ -616,6 +687,7 @@ export default class PaymentComponent {
     if (this.defaultPayments.length === 0) {
       this.defaultPayments = [this.createPaymentLine('', 0)];
     }
+    this.syncFinancedSupplyLines();
     this.recalculateTotals();
     this.paymentTypes = this.mergeUniquePaymentNames([
       ...this.paymentTypes,
@@ -674,7 +746,32 @@ export default class PaymentComponent {
   }
 
   private getLegacySupplyReferenceId(): number | null {
-    const activeSupply = this.supplies.find((supply) => Number(supply.supplyBalance || 0) > 0);
+    const financedIds = new Set(this.financedSupplyOrders.map(order => order.supplyId));
+    const activeSupply = this.supplies.find((supply) => Number(supply.supplyBalance || 0) > 0
+      && supply.supplyId != null && !financedIds.has(supply.supplyId));
     return activeSupply?.supplyId ?? null;
+  }
+
+  get hasLegacySupplyDefault(): boolean {
+    return this.configuredPaymentLines.some(line => line.paymentTitle.startsWith('Suministro'));
+  }
+
+  syncFinancedSupplyLines(): void {
+    const legacy = this.defaultPayments.filter(line => line.supplyLineOrigin !== 'automatic');
+    const manualIds = new Set(legacy.map(line => line.supplyId));
+    const financed = !this.hasLegacySupplyDefault || this.includeFinancedSupplies
+      ? buildFinancedSupplyLines(this.financedSupplyOrders, this.paymentDate).filter(line => !manualIds.has(line.supplyId)) : [];
+    this.defaultPayments = [...legacy.filter(line => line.paymentTitle || legacy.length > 1 || !financed.length), ...financed];
+    this.paymentTypes = this.mergeUniquePaymentNames([...this.paymentTypes, ...this.availableSupplyOrders.map(financedSupplyTitle)]);
+    this.recalculateTotals();
+  }
+
+  get availableSupplyOrders(): LubricantOrder[] {
+    return availableFinancedSupplies(this.financedSupplyOrders);
+  }
+
+  onPaymentTypeChange(line: PaymentLine): void {
+    Object.assign(line, selectFinancedSupply(line, this.financedSupplyOrders));
+    this.recalculateTotals();
   }
 }
