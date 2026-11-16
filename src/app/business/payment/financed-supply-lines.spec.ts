@@ -1,44 +1,35 @@
-import { availableFinancedSupplies, buildFinancedSupplyLines, financedSupplyTitle, selectFinancedSupply } from './financed-supply-lines';
 import { LubricantOrder } from '../interfaces/lubricant-order';
+import { Supplies } from '../interfaces/supplies';
+import { buildGlobalSupplyLine, summarizeSupplyDebt } from './financed-supply-lines';
 
-const order = (changes: Partial<LubricantOrder> = {}): LubricantOrder => ({
-  orderId: 1, userId: 1, userName: 'Test', numberId: 'test', orderDate: '2026-10-28',
-  totalAmount: 195, balance: 195, weeklyInstallment: 75, installmentCount: 3,
-  status: 'PENDING', supplyId: 10, items: [], ...changes,
-});
+const debt = (supplyId: number, supplyBalance: number): Supplies =>
+  ({ supplyId, supplyBalance, userId: 1, supplyName: '', supplyAmount: 120, supplyDate: '2026-10-01' });
 
-describe('buildFinancedSupplyLines', () => {
-  it('links each installment to its own supply', () => {
-    const lines = buildFinancedSupplyLines([order(), order({ orderId: 2, supplyId: 20 })], '2026-10-28');
-    expect(lines.map(line => line.supplyId)).toEqual([10, 20]);
-    expect(lines[0].amount).toBe(75);
-    expect(lines[0].paymentTitle).toBe('Suministro #1');
+const order = (supplyId: number, weeklyInstallment: number, orderDate = '2026-10-28'): LubricantOrder =>
+  ({ supplyId, weeklyInstallment, orderDate, status: 'PENDING' } as LubricantOrder);
+
+describe('global supplies', () => {
+  it('sums real balances and caps each due installment', () => {
+    const result = summarizeSupplyDebt([debt(1, 80), debt(2, 18), debt(3, 22)],
+      [order(1, 30), order(2, 52)], '2026-10-28');
+    expect(result).toEqual({ balance: 120, suggestedAmount: 48 });
   });
-  it('caps the last installment at the remaining balance', () => {
-    expect(buildFinancedSupplyLines([order({ balance: 18, weeklyInstallment: 52 })], '2026-10-28')[0].amount).toBe(18);
+
+  it('displays future debt without suggesting an installment before its date', () => {
+    expect(summarizeSupplyDebt([debt(1, 80)], [order(1, 30)], '2026-10-27'))
+      .toEqual({ balance: 80, suggestedAmount: 0 });
   });
-  it('does not include future, paid, zero or unlinked debts', () => {
-    expect(buildFinancedSupplyLines([
-      order({ orderDate: '2026-11-04' }), order({ status: 'PAID' }),
-      order({ balance: 0 }), order({ supplyId: null }),
-    ], '2026-10-28')).toEqual([]);
+
+  it('rounds in cents and ignores fully paid or unlinked orders', () => {
+    expect(summarizeSupplyDebt([debt(1, 0.1), debt(2, 0.2), debt(3, 0)],
+      [order(1, 5), order(2, 5), order(3, 5), order(4, 5)], '2026-10-28'))
+      .toEqual({ balance: 0.3, suggestedAmount: 0.3 });
   });
-  it('offers future orders for explicit early payments, without generating an automatic installment', () => {
-    expect(availableFinancedSupplies([order()]).length).toBe(1);
-    expect(buildFinancedSupplyLines([order()], '2026-10-26')).toEqual([]);
-  });
-  it('links a manually selected short label and preserves the entered 100 payment', () => {
-    const line = selectFinancedSupply({ paymentTitle: financedSupplyTitle(order()), amount: 100,
-      totalCost: 100, defaultPaymentsCount: 1, reason: '' }, [order()]);
-    expect(line.supplyId).toBe(10);
-    expect(line.supplyOrderId).toBe(1);
-    expect(line.amount).toBe(100);
-    expect(line.supplyLineOrigin).toBe('manual');
-  });
-  it('clears the previous reference when changing the payment type', () => {
-    const line = selectFinancedSupply({ ...buildFinancedSupplyLines([order()], '2026-10-28')[0],
-      paymentTitle: 'Administrativo' }, [order()]);
-    expect(line.supplyId).toBe(undefined);
-    expect(line.supplyOrderId).toBe(undefined);
+
+  it('uses one generic line for the amount and receipt', () => {
+    expect(buildGlobalSupplyLine(48)).toEqual({
+      paymentTitle: 'Suministros', amount: 48, totalCost: 48,
+      defaultPaymentsCount: 1, reason: '', automaticSupplyLine: true,
+    });
   });
 });

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
+import { EMPTY, Observable, expand, map, reduce } from 'rxjs';
 import { environment } from '../../../../environments/environments';
 import { DefaultPayment } from '../../interfaces/defaultPayments';
 
@@ -10,9 +10,6 @@ import { DefaultPayment } from '../../interfaces/defaultPayments';
 export class DefaultPaymentService {
 
   private apiUrl = environment.baseUrl + '/api/users';
-
-  private defaultPayments: DefaultPayment[] = [];
-  private pageData: any; 
 
   constructor(private http: HttpClient) {}
 
@@ -25,15 +22,19 @@ export class DefaultPaymentService {
     );
   }
 
-  getDefaultPaymentsByUserId(userId: number): Observable<any> {
-    console.log("Getting default Payments: ", userId)
-    return this.http.get<any>(`${this.apiUrl}/${userId}/defaultPayments`).pipe(
-      map((response) => {
-        // Extrae los usuarios desde _embedded.collection y los datos de paginación
-        this.defaultPayments  = response._embedded ? response._embedded.collection : [];
-
-        return { defaultPayments: this.defaultPayments };
-      })
+  getDefaultPaymentsByUserId(userId: number): Observable<{ defaultPayments: DefaultPayment[] }> {
+    type Page = {
+      _embedded?: { collection: DefaultPayment[] };
+      page?: { number: number; totalPages: number };
+    };
+    const getPage = (page: number) => this.http.get<Page>(`${this.apiUrl}/${userId}/defaultPayments`, {
+      params: { page, sort: 'id,asc' },
+    });
+    return getPage(0).pipe(
+      expand(response => response.page && response.page.number + 1 < response.page.totalPages
+        ? getPage(response.page.number + 1) : EMPTY),
+      reduce((payments, response) => payments.concat(response._embedded?.collection ?? []), [] as DefaultPayment[]),
+      map(defaultPayments => ({ defaultPayments }))
     );
   }
 

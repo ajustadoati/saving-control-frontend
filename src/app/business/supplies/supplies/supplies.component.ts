@@ -12,6 +12,7 @@ import { LubricantWeeklyCollection } from '../../interfaces/lubricant-weekly-col
 import { Supplies } from '../../interfaces/supplies';
 import { User } from '../../interfaces/user';
 import { SuppliesPaymentComponent } from '../../supplies-payment/supplies-payment/supplies-payment.component';
+import { SupplyNamePipe } from '../supply-name.pipe';
 
 type LubricantView = 'summary' | 'inventory' | 'orders' | 'collection';
 
@@ -33,12 +34,18 @@ interface InstallmentPreviewItem {
 @Component({
   selector: 'app-supplies',
   standalone: true,
-  imports: [FormsModule, CommonModule, ReactiveFormsModule, SuppliesPaymentComponent],
+  imports: [FormsModule, CommonModule, ReactiveFormsModule, SuppliesPaymentComponent, SupplyNamePipe],
   templateUrl: './supplies.component.html',
   styleUrl: './supplies.component.css'
 })
 export default class SuppliesComponent implements OnInit {
   @ViewChild('paymentModal') paymentModal!: SuppliesPaymentComponent;
+
+  readonly orderStatusLabels: Record<LubricantOrder['status'], string> = {
+    PENDING: 'Pendiente',
+    PARTIALLY_PAID: 'Pagado parcialmente',
+    PAID: 'Pagado',
+  };
 
   activeLubricantView: LubricantView = 'summary';
   associateQuery = '';

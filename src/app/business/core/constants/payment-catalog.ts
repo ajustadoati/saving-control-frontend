@@ -24,3 +24,9 @@ export function mergePaymentOptions(optionNames: string[]): string[] {
 
   return merged;
 }
+
+export const GLOBAL_SUPPLY_LABEL = 'Suministros';
+
+export function isSupplyPaymentName(name: string): boolean {
+  return name.trim().toLowerCase().startsWith('suministro');
+}

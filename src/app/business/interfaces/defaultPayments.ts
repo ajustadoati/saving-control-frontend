@@ -1,5 +1,5 @@
 export interface DefaultPayment {
   id: number;
-  defaultPaymentName: string;
+  paymentName: string;
   amount: number
 }

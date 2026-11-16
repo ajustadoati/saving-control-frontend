@@ -16,13 +16,14 @@ import { SuppliesPaymentComponent } from '../../supplies-payment/supplies-paymen
 import { LoanService } from '../../core/services/loan.service';
 import { LoanPaymentComponent } from '../../loan-payment/loan-payment/loan-payment.component';
 import { UserBalanceService } from '../../core/services/user-balance.service';
+import { SupplyNamePipe } from '../../supplies/supply-name.pipe';
 
 
 
 @Component({
   selector: 'app-summary',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule,UserSavingBoxComponent,SuppliesPaymentComponent,LoanPaymentComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, UserSavingBoxComponent, SuppliesPaymentComponent, LoanPaymentComponent, SupplyNamePipe],
   templateUrl: './summary.component.html',
   styleUrl: './summary.component.css'
 })

@@ -603,7 +603,7 @@
                 <td>{{ order.balance | currency }}</td>
                 <td>{{ order.weeklyInstallment | currency }}</td>
                 <td>{{ order.installmentCount }}</td>
-                <td><span class="status-pill">{{ order.status }}</span></td>
+                <td><span class="status-pill">{{ orderStatusLabels[order.status] }}</span></td>
               </tr>
               <tr *ngIf="associateOrders.length === 0">
                 <td colspan="6" class="empty-state">Este socio todavía no tiene pedidos de suministros.</td>
@@ -634,7 +634,7 @@
             </thead>
             <tbody>
               <tr *ngFor="let supply of supplies">
-                <td>{{ supply.supplyName }}</td>
+                <td>{{ supply.supplyName | supplyName }}</td>
                 <td>{{ supply.supplyAmount | currency }}</td>
                 <td>{{ supply.supplyBalance | currency }}</td>
                 <td>{{ supply.supplyDate | date: 'dd/MM/yy' }}</td>

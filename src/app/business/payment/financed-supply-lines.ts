@@ -1,35 +1,29 @@
+import { GLOBAL_SUPPLY_LABEL } from '../core/constants/payment-catalog';
 import { LubricantOrder } from '../interfaces/lubricant-order';
 import { PaymentLine } from '../interfaces/payment-line';
+import { Supplies } from '../interfaces/supplies';
 
-export function financedSupplyTitle(order: LubricantOrder): string {
-  return `Suministro #${order.orderId}`;
+export function summarizeSupplyDebt(supplies: Supplies[], orders: LubricantOrder[], date: string) {
+  const balances = new Map(supplies
+    .filter(supply => supply.supplyId != null && Number(supply.supplyBalance) > 0)
+    .map(supply => [supply.supplyId!, Math.round(Number(supply.supplyBalance) * 100)]));
+  const totalCents = [...balances.values()].reduce((sum, balance) => sum + balance, 0);
+  let installmentCents = 0;
+  for (const order of orders) {
+    if (order.supplyId == null || !date || order.orderDate > date || order.status === 'PAID') continue;
+    installmentCents += Math.min(balances.get(order.supplyId) ?? 0,
+      Math.max(0, Math.round(Number(order.weeklyInstallment || 0) * 100)));
+  }
+  return { balance: totalCents / 100, suggestedAmount: installmentCents / 100 };
 }
 
-export function availableFinancedSupplies(orders: LubricantOrder[]): LubricantOrder[] {
-  return orders.filter(order => order.supplyId != null && order.balance > 0
-    && order.status !== 'PAID' && order.weeklyInstallment > 0);
-}
-
-export function selectFinancedSupply(line: PaymentLine, orders: LubricantOrder[]): PaymentLine {
-  const order = availableFinancedSupplies(orders).find(order => financedSupplyTitle(order) === line.paymentTitle);
-  const cleared = { ...line, supplyId: undefined, supplyOrderId: undefined, supplyBalance: undefined,
-    supplyLineOrigin: undefined, legacySupplyDefault: false };
-  if (!order) return cleared;
-  const suggested = Math.round(Math.min(Number(order.weeklyInstallment), Number(order.balance)) * 100) / 100;
-  return { ...cleared, supplyId: order.supplyId!, supplyOrderId: order.orderId,
-    supplyBalance: Number(order.balance), supplyLineOrigin: 'manual',
-    amount: Number.isFinite(line.amount) && line.amount > 0 ? line.amount : suggested };
-}
-
-export function buildFinancedSupplyLines(orders: LubricantOrder[], date: string): PaymentLine[] {
-  return availableFinancedSupplies(orders).filter(order => order.orderDate <= date)
-    .map(order => {
-      const amount = Math.round(Math.min(Number(order.weeklyInstallment), Number(order.balance)) * 100) / 100;
-      return {
-        paymentTitle: financedSupplyTitle(order),
-        amount, totalCost: amount, defaultPaymentsCount: 1, reason: '',
-        supplyId: order.supplyId!, supplyOrderId: order.orderId, supplyBalance: Number(order.balance),
-        supplyLineOrigin: 'automatic',
-      };
-    });
+export function buildGlobalSupplyLine(amount: number): PaymentLine {
+  return {
+    paymentTitle: GLOBAL_SUPPLY_LABEL,
+    amount,
+    totalCost: amount,
+    defaultPaymentsCount: 1,
+    reason: '',
+    automaticSupplyLine: true,
+  };
 }

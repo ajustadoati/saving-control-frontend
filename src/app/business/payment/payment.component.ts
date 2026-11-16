@@ -1,5 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, ViewChild } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { UserService } from '../core/services/user.service';
@@ -16,10 +18,10 @@ import { Product } from '../interfaces/product';
 import { Loan } from '../interfaces/loan';
 import { PaymentLine } from '../interfaces/payment-line';
 import { Supplies } from '../interfaces/supplies';
-import { SPECIAL_PAYMENT_LABELS, mergePaymentOptions } from '../core/constants/payment-catalog';
+import { GLOBAL_SUPPLY_LABEL, SPECIAL_PAYMENT_LABELS, isSupplyPaymentName, mergePaymentOptions } from '../core/constants/payment-catalog';
 import { LubricantService } from '../core/services/lubricant.service';
 import { LubricantOrder } from '../interfaces/lubricant-order';
-import { availableFinancedSupplies, buildFinancedSupplyLines, financedSupplyTitle, selectFinancedSupply } from './financed-supply-lines';
+import { buildGlobalSupplyLine, summarizeSupplyDebt } from './financed-supply-lines';
 
 type ResolvedPaymentType =
   | 'SAVING'
@@ -37,7 +39,7 @@ type ResolvedPaymentType =
   | 'LOAN_SHARING_INTEREST'
   | 'URBAN_FORECAST_FUND'
   | 'INTERURBAN_FORECAST_FUND'
-  | 'SUPPLIES'
+  | 'SUPPLIES_GLOBAL'
   | 'WHEELS'
   | 'OTHER_PAYMENTS';
 
@@ -50,7 +52,7 @@ interface ResolvedPaymentSelection {
 @Component({
   selector: 'app-payment',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, FormsModule, PaymentReceiptComponent],
+  imports: [ReactiveFormsModule, CommonModule, FormsModule, PaymentReceiptComponent, RouterLink],
   templateUrl: './payment.component.html',
   styleUrl: './payment.component.css'
 })
@@ -78,7 +80,9 @@ export default class PaymentComponent {
   loans: any;
   supplies: Supplies[] = [];
   financedSupplyOrders: LubricantOrder[] = [];
-  includeFinancedSupplies = false;
+  hasLegacySupplyDefault = false;
+  isLoadingDefaultPayments = false;
+  defaultPaymentsError = '';
   financedSupplyError = '';
   isLoadingFinancedSupplies = false;
   summary: any;
@@ -104,7 +108,21 @@ export default class PaymentComponent {
   };
   showReceiptModal = false;
   totalPaid = 0;
-  paymentTypes: string[] = [];
+  private catalogPaymentTypes: string[] = [];
+  readonly globalSupplyLabel = GLOBAL_SUPPLY_LABEL;
+
+  get paymentTypes(): string[] {
+    return mergePaymentOptions([
+      ...this.catalogPaymentTypes,
+      ...this.configuredPaymentLines.map(line => line.paymentTitle),
+      ...(!this.hasLegacySupplyDefault && this.totalSupplyBalance > 0 ? [GLOBAL_SUPPLY_LABEL] : []),
+    ]);
+  }
+
+  get canSavePayments(): boolean {
+    return !this.isSaving && !this.isLoadingFinancedSupplies && !this.isLoadingDefaultPayments
+      && !this.hasLegacySupplyDefault && !this.financedSupplyError && !this.defaultPaymentsError;
+  }
   location = 'US';
   frequency = 'daily';
   duration = 1;
@@ -146,7 +164,12 @@ export default class PaymentComponent {
 
   resetData(): void {
     this.financedSupplyOrders = [];
-    this.includeFinancedSupplies = false;
+    this.supplies = [];
+    this.totalSupplyBalance = 0;
+    this.hasLegacySupplyDefault = false;
+    this.defaultPaymentsError = '';
+    this.isLoadingDefaultPayments = false;
+    this.isLoadingFinancedSupplies = false;
     this.financedSupplyError = '';
     this.associateId = '';
     this.associateQuery = '';
@@ -156,10 +179,8 @@ export default class PaymentComponent {
     this.paymentsActivated = false;
     this.defaultPayments = [this.createPaymentLine('Ahorro', 10)];
     this.configuredPaymentLines = [];
-    this.supplies = [];
-    this.totalSupplyBalance = 0;
     this.totalSavings = 0;
-    this.paymentTypes = [];
+    this.catalogPaymentTypes = [];
     this.isPrintEnabled = false;
     this.isSaving = false;
   }
@@ -226,18 +247,23 @@ export default class PaymentComponent {
   loadBalance(rebuildPaymentLines: boolean = false) {
     const userId = this.associateData.id;
     this.isLoadingFinancedSupplies = true;
-    this.lubricantService.getOrdersByUser(userId).subscribe({
-      next: orders => {
-        if (this.associateData.id !== userId) return;
+    forkJoin({
+      orders: this.lubricantService.getOrdersByUser(userId),
+      supplies: this.suppliesService.getSupplies(userId),
+    }).subscribe({
+      next: ({ orders, supplies }) => {
+        if (!this.associateFound || this.associateData.id !== userId) return;
         this.financedSupplyOrders = orders;
+        this.supplies = supplies;
+        this.totalSupplyBalance = summarizeSupplyDebt(supplies, orders, this.paymentDate).balance;
         this.isLoadingFinancedSupplies = false;
         this.financedSupplyError = '';
-        if (rebuildPaymentLines) this.syncFinancedSupplyLines();
+        if (rebuildPaymentLines) this.syncGlobalSupplyLine();
       },
       error: () => {
-        if (this.associateData.id !== userId) return;
+        if (!this.associateFound || this.associateData.id !== userId) return;
         this.isLoadingFinancedSupplies = false;
-        this.financedSupplyError = 'No se pudieron consultar las cuotas financiadas. Los pagos por defecto se mantienen.';
+        this.financedSupplyError = 'No se pudo consultar la deuda de suministros. Vuelve a buscar al socio antes de registrar pagos.';
       },
     });
     this.loanService.getLoans(this.associateData.id).subscribe({
@@ -262,25 +288,6 @@ export default class PaymentComponent {
       },
       error: (error) => {
         console.error('Error al obtener los préstamos:', error);
-      }
-    });
-
-    this.suppliesService.getSupplies(this.associateData.id).subscribe({
-      next: (supplies: Supplies[]) => {
-        console.log('supplies for the user:', supplies);
-        this.supplies = supplies;
-        this.totalSupplyBalance = this.calculateTotalSupplyBalance(supplies);
-        if (rebuildPaymentLines) {
-          this.rebuildInitialPaymentLines();
-        }
-      },
-      error: (error) => {
-        console.error('Error al obtener los suministros:', error);
-        this.supplies = [];
-        this.totalSupplyBalance = 0;
-        if (rebuildPaymentLines) {
-          this.rebuildInitialPaymentLines();
-        }
       }
     });
 
@@ -310,22 +317,17 @@ export default class PaymentComponent {
   }
 
   registerPayments(): void {
-    if (this.isSaving || this.isLoadingFinancedSupplies) return;
-    if (!this.validateOtherReasons()) return;
-    if (this.defaultPayments.some(line => line.paymentTitle.startsWith('Suministro')
-        && line.supplyId == null && !line.legacySupplyDefault && this.availableSupplyOrders.length > 0)) {
-      Swal.fire({ icon: 'warning', title: 'Selecciona el pedido',
-        text: 'Elige Suministro #pedido para descontar de esa deuda. El concepto genérico no queda vinculado a un pedido.' });
+    if (!this.canSavePayments || !this.validateOtherReasons()) return;
+    const supplyLines = this.defaultPayments.filter(line => line.paymentTitle === GLOBAL_SUPPLY_LABEL);
+    if (supplyLines.length > 1) {
+      Swal.fire({ icon: 'warning', title: 'Abono duplicado', text: 'Usa una sola línea de Suministros.' });
       return;
     }
-    const selectedSupplies = this.defaultPayments.filter(line => line.supplyId != null).map(line => line.supplyId);
-    if (new Set(selectedSupplies).size !== selectedSupplies.length) {
-      Swal.fire({ icon: 'warning', title: 'Cuota duplicada', text: 'Hay más de una línea para la misma deuda de suministro.' });
-      return;
-    }
-    if (this.defaultPayments.some(line => line.supplyId != null
-        && (!Number.isFinite(line.amount) || line.amount <= 0 || line.amount > (line.supplyBalance ?? 0)))) {
-      Swal.fire({ icon: 'error', title: 'Cuota inválida', text: 'El abono de suministro debe ser positivo y no superar su saldo.' });
+    if (supplyLines.some(line => !Number.isFinite(line.amount) || line.amount <= 0
+        || Math.abs(line.amount * 100 - Math.round(line.amount * 100)) > 1e-7
+        || line.amount > this.totalSupplyBalance)) {
+      Swal.fire({ icon: 'error', title: 'Abono inválido',
+        text: 'El abono debe ser positivo, tener hasta dos decimales y no superar el saldo global.' });
       return;
     }
 
@@ -401,9 +403,12 @@ export default class PaymentComponent {
 
   private handleAssociateFound(data: any) {
     this.financedSupplyOrders = [];
-    this.includeFinancedSupplies = false;
+    this.supplies = [];
+    this.totalSupplyBalance = 0;
+    this.hasLegacySupplyDefault = false;
+    this.defaultPaymentsError = '';
     this.financedSupplyError = '';
-    this.paymentTypes = [];
+    this.catalogPaymentTypes = [];
     this.defaultPayments = [this.createPaymentLine('', 0)];
     this.configuredPaymentLines = [];
     this.associateData = data;
@@ -414,20 +419,21 @@ export default class PaymentComponent {
     this.isSaving = false;
     this.loadPaymentOptions();
 
-    this.defaultPaymentService.getDefaultPaymentsByUserId(this.associateData.id).subscribe({
-      next: (response: any) => {
-        console.log('defaultpayments:', response);
-        this.configuredPaymentLines = response.defaultPayments
-          .map((defaultPayment: { paymentName: string; amount: number }) =>
-            ({ ...this.createPaymentLine(defaultPayment.paymentName, defaultPayment.amount),
-              legacySupplyDefault: defaultPayment.paymentName.startsWith('Suministro') })
-          );
+    const userId = this.associateData.id;
+    this.isLoadingDefaultPayments = true;
+    this.defaultPaymentService.getDefaultPaymentsByUserId(userId).subscribe({
+      next: ({ defaultPayments: defaults }) => {
+        if (!this.associateFound || this.associateData.id !== userId) return;
+        this.hasLegacySupplyDefault = defaults.some(payment => isSupplyPaymentName(payment.paymentName));
+        this.configuredPaymentLines = defaults.filter(payment => !isSupplyPaymentName(payment.paymentName))
+          .map(payment => this.createPaymentLine(payment.paymentName, payment.amount));
+        this.isLoadingDefaultPayments = false;
         this.rebuildInitialPaymentLines();
       },
-      error: (error) => {
-        console.error('Error al obtener los pagos por defecto:', error);
-        this.configuredPaymentLines = [];
-        this.rebuildInitialPaymentLines();
+      error: () => {
+        if (!this.associateFound || this.associateData.id !== userId) return;
+        this.isLoadingDefaultPayments = false;
+        this.defaultPaymentsError = 'No se pudieron consultar los pagos por defecto. Vuelve a buscar al socio.';
       }
     });
 
@@ -510,13 +516,9 @@ export default class PaymentComponent {
   private loadPaymentOptions(): void {
     this.productService.getProducts().subscribe({
       next: (products: Product[]) => {
-        console.log('Searching products', products);
-        this.paymentTypes = mergePaymentOptions([...products.map((product) => product.name),
-          ...this.availableSupplyOrders.map(financedSupplyTitle)]);
+        this.catalogPaymentTypes = products.map(product => product.name).filter(name => !isSupplyPaymentName(name));
       },
-      error: () => {
-        this.paymentTypes = this.mergeUniquePaymentNames(this.defaultPayments.map((paymentLine) => paymentLine.paymentTitle));
-      },
+      error: error => console.error('No se pudo cargar el catálogo de pagos', error),
     });
   }
 
@@ -570,8 +572,8 @@ export default class PaymentComponent {
     if (paymentTitle.startsWith(SPECIAL_PAYMENT_LABELS[1])) {
       return this.buildResolvedSelection('INTERURBAN_FORECAST_FUND', null, null);
     }
-    if (paymentTitle.startsWith('Suministro')) {
-      return this.buildResolvedSelection('SUPPLIES', this.getLegacySupplyReferenceId(), null);
+    if (paymentTitle === GLOBAL_SUPPLY_LABEL) {
+      return this.buildResolvedSelection('SUPPLIES_GLOBAL', null, null);
     }
     if (paymentTitle.startsWith('Cauchos')) {
       return this.buildResolvedSelection('WHEELS', null, null);
@@ -581,9 +583,6 @@ export default class PaymentComponent {
   }
 
   private mapPaymentToPayload(payment: PaymentLine): any {
-    if (payment.supplyId != null) {
-      return { paymentType: 'SUPPLIES', referenceId: payment.supplyId, amount: payment.amount };
-    }
     const selection = this.resolvePaymentSelection(payment.paymentTitle);
 
     switch (selection.paymentType) {
@@ -636,9 +635,9 @@ export default class PaymentComponent {
         return this.buildLoanPaymentPayload('LOAN_PAYMENT_EXTERNAL', payment.amount);
       case 'LOAN_INTEREST_PAYMENT_EXTERNAL':
         return this.buildLoanPaymentPayload('LOAN_INTEREST_PAYMENT_EXTERNAL', payment.amount);
-      case 'SUPPLIES':
+      case 'SUPPLIES_GLOBAL':
         return {
-          paymentType: 'SUPPLIES',
+          paymentType: 'SUPPLIES_GLOBAL',
           referenceId: selection.referenceId,
           amount: payment.amount,
         };
@@ -687,12 +686,7 @@ export default class PaymentComponent {
     if (this.defaultPayments.length === 0) {
       this.defaultPayments = [this.createPaymentLine('', 0)];
     }
-    this.syncFinancedSupplyLines();
-    this.recalculateTotals();
-    this.paymentTypes = this.mergeUniquePaymentNames([
-      ...this.paymentTypes,
-      ...this.defaultPayments.map((paymentLine) => paymentLine.paymentTitle),
-    ]);
+    this.syncGlobalSupplyLine();
   }
 
   private createPaymentLine(paymentTitle: string, amount: number): PaymentLine {
@@ -719,59 +713,22 @@ export default class PaymentComponent {
     return this.contributions.find((contribution: { description: string }) => contribution.description === paymentTitle);
   }
 
-  private calculateTotalSupplyBalance(supplies: Supplies[]): number {
-    return supplies.reduce((total, supply) => total + Number(supply.supplyBalance || 0), 0);
-  }
-
-  private mergeUniquePaymentNames(paymentNames: string[]): string[] {
-    const seen = new Set<string>();
-    const merged: string[] = [];
-
-    paymentNames.forEach((paymentName) => {
-      const value = (paymentName || '').trim();
-      if (!value) {
-        return;
-      }
-
-      const key = value.toLowerCase();
-      if (seen.has(key)) {
-        return;
-      }
-
-      seen.add(key);
-      merged.push(value);
-    });
-
-    return merged;
-  }
-
-  private getLegacySupplyReferenceId(): number | null {
-    const financedIds = new Set(this.financedSupplyOrders.map(order => order.supplyId));
-    const activeSupply = this.supplies.find((supply) => Number(supply.supplyBalance || 0) > 0
-      && supply.supplyId != null && !financedIds.has(supply.supplyId));
-    return activeSupply?.supplyId ?? null;
-  }
-
-  get hasLegacySupplyDefault(): boolean {
-    return this.configuredPaymentLines.some(line => line.paymentTitle.startsWith('Suministro'));
-  }
-
-  syncFinancedSupplyLines(): void {
-    const legacy = this.defaultPayments.filter(line => line.supplyLineOrigin !== 'automatic');
-    const manualIds = new Set(legacy.map(line => line.supplyId));
-    const financed = !this.hasLegacySupplyDefault || this.includeFinancedSupplies
-      ? buildFinancedSupplyLines(this.financedSupplyOrders, this.paymentDate).filter(line => !manualIds.has(line.supplyId)) : [];
-    this.defaultPayments = [...legacy.filter(line => line.paymentTitle || legacy.length > 1 || !financed.length), ...financed];
-    this.paymentTypes = this.mergeUniquePaymentNames([...this.paymentTypes, ...this.availableSupplyOrders.map(financedSupplyTitle)]);
+  syncGlobalSupplyLine(): void {
+    const lines = this.defaultPayments.filter(line => !line.automaticSupplyLine);
+    const suggested = summarizeSupplyDebt(this.supplies, this.financedSupplyOrders, this.paymentDate).suggestedAmount;
+    if (!this.hasLegacySupplyDefault && !this.isLoadingDefaultPayments && suggested > 0
+        && !lines.some(line => line.paymentTitle === GLOBAL_SUPPLY_LABEL)) {
+      this.defaultPayments = [...lines.filter(line => line.paymentTitle || lines.length > 1), buildGlobalSupplyLine(suggested)];
+    } else {
+      this.defaultPayments = lines;
+    }
     this.recalculateTotals();
   }
 
-  get availableSupplyOrders(): LubricantOrder[] {
-    return availableFinancedSupplies(this.financedSupplyOrders);
-  }
-
   onPaymentTypeChange(line: PaymentLine): void {
-    Object.assign(line, selectFinancedSupply(line, this.financedSupplyOrders));
+    if (line.paymentTitle === GLOBAL_SUPPLY_LABEL && !(line.amount > 0)) {
+      line.amount = summarizeSupplyDebt(this.supplies, this.financedSupplyOrders, this.paymentDate).suggestedAmount;
+    }
     this.recalculateTotals();
   }
 }

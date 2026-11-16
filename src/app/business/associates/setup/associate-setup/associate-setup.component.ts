@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import Swal from 'sweetalert2';
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
 import { SavingService } from '../../../core/services/saving.service';
 import { UserService } from '../../../core/services/user.service';
@@ -12,6 +12,7 @@ import { UserSavingBoxService } from '../../../core/services/user-saving-box.ser
 import { UserBalanceService } from '../../../core/services/user-balance.service';
 import { UserSavingsBox } from '../../../interfaces/userSavingBox';
 import { Summary } from '../../../interfaces/summary';
+import { isSupplyPaymentName } from '../../../core/constants/payment-catalog';
 
 @Component({
   selector: 'app-associate-setup',
@@ -20,7 +21,8 @@ import { Summary } from '../../../interfaces/summary';
   templateUrl: './associate-setup.component.html',
   styleUrl: './associate-setup.component.css'
 })
-export default class AssociateSetupComponent {
+export default class AssociateSetupComponent implements OnInit {
+  readonly isSupplyPaymentName = isSupplyPaymentName;
   defaultPayments: any;
   associateMembers: any;
   summary: Summary | null = null;
@@ -52,6 +54,7 @@ export default class AssociateSetupComponent {
     private associateService: AssociateService,
     private userSavingBoxService: UserSavingBoxService,
     private userBalanceService: UserBalanceService,
+    private location: Location,
     private fb: FormBuilder
   ) {
     this.onboardingForm = this.fb.group({
@@ -61,6 +64,18 @@ export default class AssociateSetupComponent {
       boxCount: [1, [Validators.required, Validators.min(1)]],
       boxValue: [18, [Validators.required, Validators.min(0)]],
       effectiveDate: [this.formatDate(new Date()), [Validators.required]]
+    });
+  }
+
+  ngOnInit(): void {
+    const userId = Number((this.location.getState() as { supplySetupUserId?: number })?.supplySetupUserId);
+    if (!Number.isInteger(userId) || userId <= 0) return;
+    this.userService.getAssociateById(userId).subscribe({
+      next: data => {
+        this.associateQuery = data.numberId || '';
+        this.handleAssociateFound(data);
+      },
+      error: () => void Swal.fire({ icon: 'error', title: 'No se pudo abrir el socio', text: 'Búscalo para retirar el suministro por defecto.' }),
     });
   }
 

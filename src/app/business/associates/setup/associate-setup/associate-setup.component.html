@@ -104,7 +104,10 @@
         </thead>
         <tbody>
           <tr *ngFor="let payment of defaultPayments; let i = index" class="border-b">
-            <td class="px-2 py-1 text-gray-700">{{ payment.paymentName }}</td>
+            <td class="px-2 py-1 text-gray-700">
+              {{ payment.paymentName }}
+              <span *ngIf="isSupplyPaymentName(payment.paymentName)" class="block text-xs font-semibold text-amber-800">Obsoleto: retíralo para registrar pagos</span>
+            </td>
             <td class="px-2 py-1 text-gray-700">{{ payment.amount | currency }}</td>
             <td class="px-2 py-1 text-right">
               <button
